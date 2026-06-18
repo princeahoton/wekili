@@ -61,6 +61,7 @@ export default function Settings() {
     email_conseils: false,
   });
   const [errMdp, setErrMdp] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -101,11 +102,15 @@ export default function Settings() {
     <div className="flex min-h-screen bg-gray-50">
 
       {/* ── Sidebar ── */}
-      <aside className="hidden md:flex w-56 bg-white border-r border-gray-100 min-h-screen fixed left-0 top-0 flex-col">
-        <div className="px-5 py-5 border-b border-gray-100">
+      {sidebarOpen && <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />}
+      <aside className={`fixed left-0 top-0 h-full w-64 md:w-56 bg-white border-r border-gray-100 flex flex-col z-40 transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
+        <div className="px-5 py-5 border-b border-gray-100 flex items-center justify-between">
           <a href="/dashboard">
             <img src="/logo.svg" alt="Wekili" className="h-9 w-auto" />
           </a>
+          <button onClick={() => setSidebarOpen(false)} className="md:hidden text-gray-400 hover:text-gray-600 p-1">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1">
@@ -135,10 +140,15 @@ export default function Settings() {
       <main className="md:ml-56 flex-1">
 
         {/* Topbar */}
-        <div className="bg-white border-b border-gray-100 px-8 py-4 flex items-center justify-between sticky top-0 z-10">
-          <div>
-            <h1 className="text-lg font-bold text-gray-800">Paramètres</h1>
-            <p className="text-xs text-gray-400">Gérez votre compte et vos préférences</p>
+        <div className="bg-white border-b border-gray-100 px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-10">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setSidebarOpen(true)} className="md:hidden text-gray-500 hover:text-[#1a3a6b] p-1">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+            </button>
+            <div>
+              <h1 className="text-lg font-bold text-gray-800">Paramètres</h1>
+              <p className="text-xs text-gray-400">Gérez votre compte et vos préférences</p>
+            </div>
           </div>
           {saved && (
             <span className="text-sm text-green-600 flex items-center gap-2 bg-green-50 px-4 py-2 rounded-xl">
