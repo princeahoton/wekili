@@ -37,10 +37,25 @@ async function runAll() {
       CREATE TABLE IF NOT EXISTS profiles (
         id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id               UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-        niveau_etudes         VARCHAR(100),
-        domaine_etudes        VARCHAR(200),
-        moyenne_generale      DECIMAL(4,2),
+        nationalite           VARCHAR(100),
         pays_residence        VARCHAR(100),
+        telephone             VARCHAR(30),
+        date_naissance        DATE,
+        niveau_etudes         VARCHAR(100),
+        domaine               VARCHAR(200),
+        domaine_etudes        VARCHAR(200),
+        etablissement         VARCHAR(200),
+        moyenne               DECIMAL(4,2),
+        moyenne_generale      DECIMAL(4,2),
+        langue_principale     VARCHAR(100),
+        niveau_langue         VARCHAR(50),
+        certification         VARCHAR(100),
+        langue2               VARCHAR(100),
+        niveau_langue2        VARCHAR(50),
+        pays_cibles           TEXT[],
+        niveau_vise           VARCHAR(100),
+        domaine_vise          VARCHAR(200),
+        budget                INTEGER,
         pays_destination      VARCHAR(100),
         langues               TEXT[],
         experience_pro        TEXT,
@@ -52,6 +67,21 @@ async function runAll() {
         updated_at            TIMESTAMPTZ DEFAULT NOW()
       )
     `);
+    await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS nationalite VARCHAR(100)`);
+    await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS telephone VARCHAR(30)`);
+    await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS date_naissance DATE`);
+    await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS domaine VARCHAR(200)`);
+    await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS etablissement VARCHAR(200)`);
+    await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS moyenne DECIMAL(4,2)`);
+    await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS langue_principale VARCHAR(100)`);
+    await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS niveau_langue VARCHAR(50)`);
+    await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS certification VARCHAR(100)`);
+    await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS langue2 VARCHAR(100)`);
+    await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS niveau_langue2 VARCHAR(50)`);
+    await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS pays_cibles TEXT[]`);
+    await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS niveau_vise VARCHAR(100)`);
+    await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS domaine_vise VARCHAR(200)`);
+    await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS budget INTEGER`);
 
     // ── TABLE DOCUMENTS ────────────────────────────────────────────────
     await client.query(`
