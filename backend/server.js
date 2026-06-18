@@ -1,8 +1,9 @@
+require('dotenv').config();  // doit être en premier
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-require('dotenv').config();
 
 const app = express();
 
