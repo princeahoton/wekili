@@ -61,10 +61,14 @@ async function runAll() {
         type         VARCHAR(100) NOT NULL,
         nom_fichier  VARCHAR(500),
         url          TEXT,
+        url_s3       TEXT,
+        taille       INTEGER,
         statut       VARCHAR(50) DEFAULT 'en_attente',
         created_at   TIMESTAMPTZ DEFAULT NOW()
       )
     `);
+    await client.query(`ALTER TABLE documents ADD COLUMN IF NOT EXISTS url_s3 TEXT`);
+    await client.query(`ALTER TABLE documents ADD COLUMN IF NOT EXISTS taille INTEGER`);
 
     // ── TABLE ANALYSES ─────────────────────────────────────────────────
     await client.query(`
@@ -83,22 +87,46 @@ async function runAll() {
     // ── TABLE BOURSES ──────────────────────────────────────────────────
     await client.query(`
       CREATE TABLE IF NOT EXISTS scholarships (
-        id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        nom               VARCHAR(300) NOT NULL,
-        organisme         VARCHAR(200),
-        pays              VARCHAR(100),
-        niveau            VARCHAR(100),
-        domaines          TEXT[],
-        montant           VARCHAR(200),
-        type_financement  VARCHAR(100),
-        description       TEXT,
-        criteres          TEXT,
-        date_limite       DATE,
-        lien              TEXT,
-        actif             BOOLEAN DEFAULT true,
-        created_at        TIMESTAMPTZ DEFAULT NOW()
+        id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        nom                     VARCHAR(300) NOT NULL,
+        organisme               VARCHAR(200),
+        pays                    VARCHAR(100),
+        code_pays               VARCHAR(10),
+        niveau                  VARCHAR(100),
+        domaine                 VARCHAR(200),
+        domaines                TEXT[],
+        montant                 VARCHAR(200),
+        type_financement        VARCHAR(100),
+        description             TEXT,
+        criteres                TEXT,
+        date_limite             DATE,
+        deadline                DATE,
+        date_debut              DATE,
+        duree                   VARCHAR(100),
+        lien                    TEXT,
+        avantages               TEXT,
+        documents_requis        TEXT[],
+        nationalites_eligibles  TEXT[],
+        langue_requise          VARCHAR(100),
+        niveau_langue_requis    VARCHAR(50),
+        age_max                 INTEGER,
+        nb_places               INTEGER,
+        actif                   BOOLEAN DEFAULT true,
+        created_at              TIMESTAMPTZ DEFAULT NOW()
       )
     `);
+    await client.query(`ALTER TABLE scholarships ADD COLUMN IF NOT EXISTS code_pays VARCHAR(10)`);
+    await client.query(`ALTER TABLE scholarships ADD COLUMN IF NOT EXISTS domaine VARCHAR(200)`);
+    await client.query(`ALTER TABLE scholarships ADD COLUMN IF NOT EXISTS deadline DATE`);
+    await client.query(`ALTER TABLE scholarships ADD COLUMN IF NOT EXISTS date_debut DATE`);
+    await client.query(`ALTER TABLE scholarships ADD COLUMN IF NOT EXISTS duree VARCHAR(100)`);
+    await client.query(`ALTER TABLE scholarships ADD COLUMN IF NOT EXISTS avantages TEXT`);
+    await client.query(`ALTER TABLE scholarships ADD COLUMN IF NOT EXISTS documents_requis TEXT[]`);
+    await client.query(`ALTER TABLE scholarships ADD COLUMN IF NOT EXISTS nationalites_eligibles TEXT[]`);
+    await client.query(`ALTER TABLE scholarships ADD COLUMN IF NOT EXISTS langue_requise VARCHAR(100)`);
+    await client.query(`ALTER TABLE scholarships ADD COLUMN IF NOT EXISTS niveau_langue_requis VARCHAR(50)`);
+    await client.query(`ALTER TABLE scholarships ADD COLUMN IF NOT EXISTS age_max INTEGER`);
+    await client.query(`ALTER TABLE scholarships ADD COLUMN IF NOT EXISTS nb_places INTEGER`);
 
     // ── TABLE MATCHES BOURSES ──────────────────────────────────────────
     await client.query(`

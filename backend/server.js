@@ -7,6 +7,9 @@ const rateLimit = require('express-rate-limit');
 
 const app = express();
 
+// ── Trust proxy (Render, Railway, etc.) ─────────────────────────────
+app.set('trust proxy', 1);
+
 // ── Sécurité : headers HTTP ──────────────────────────────────────────
 app.use(helmet());
 
