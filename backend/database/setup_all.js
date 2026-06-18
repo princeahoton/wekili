@@ -103,16 +103,26 @@ async function runAll() {
     // ── TABLE ANALYSES ─────────────────────────────────────────────────
     await client.query(`
       CREATE TABLE IF NOT EXISTS analyses (
-        id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id       UUID REFERENCES users(id) ON DELETE CASCADE,
-        score_global  INTEGER,
-        synthese      TEXT,
-        points_forts  JSONB,
-        axes_amelioration JSONB,
-        raw_response  TEXT,
-        created_at    TIMESTAMPTZ DEFAULT NOW()
+        id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id               UUID REFERENCES users(id) ON DELETE CASCADE,
+        score_global          INTEGER,
+        synthese              TEXT,
+        points_forts          JSONB,
+        axes_amelioration     JSONB,
+        forces                JSONB,
+        faiblesses            JSONB,
+        recommandations       JSONB,
+        programmes_recommandes JSONB,
+        estimation_chances    JSONB,
+        raw_response          TEXT,
+        created_at            TIMESTAMPTZ DEFAULT NOW()
       )
     `);
+    await client.query(`ALTER TABLE analyses ADD COLUMN IF NOT EXISTS forces JSONB`);
+    await client.query(`ALTER TABLE analyses ADD COLUMN IF NOT EXISTS faiblesses JSONB`);
+    await client.query(`ALTER TABLE analyses ADD COLUMN IF NOT EXISTS recommandations JSONB`);
+    await client.query(`ALTER TABLE analyses ADD COLUMN IF NOT EXISTS programmes_recommandes JSONB`);
+    await client.query(`ALTER TABLE analyses ADD COLUMN IF NOT EXISTS estimation_chances JSONB`);
 
     // ── TABLE BOURSES ──────────────────────────────────────────────────
     await client.query(`

@@ -189,7 +189,8 @@ exports.launchAnalysis = async (req, res) => {
     } catch (apiErr) {
       const isCreditsError = apiErr?.status === 400 || apiErr?.status === 401 || apiErr?.status === 429;
       const isNetworkError = apiErr?.code === 'ECONNREFUSED' || apiErr?.code === 'ENOTFOUND';
-      if (isCreditsError || isNetworkError) {
+      const isAuthError = apiErr?.message?.includes('authentication') || apiErr?.message?.includes('apiKey') || apiErr?.message?.includes('authToken');
+      if (isCreditsError || isNetworkError || isAuthError) {
         console.warn('⚠️  API Claude indisponible — utilisation de l\'analyse locale');
         analysisData = analyseLocale(profile, docs);
         source = 'local';
