@@ -283,7 +283,7 @@ export default function Logement() {
     <div className="flex min-h-screen bg-gray-50">
 
       {/* ── Sidebar ──────────────────────────────────────────────────────── */}
-      <aside className="w-56 bg-white border-r border-gray-100 min-h-screen fixed left-0 top-0 flex flex-col">
+      <aside className="hidden md:flex w-56 bg-white border-r border-gray-100 min-h-screen fixed left-0 top-0 flex-col">
         <div className="px-5 py-5 border-b border-gray-100">
           <a href="/dashboard">
             <img src="/logo.svg" alt="Wekili" className="h-9 w-auto" />
@@ -324,10 +324,10 @@ export default function Logement() {
       </aside>
 
       {/* ── Contenu principal ─────────────────────────────────────────────── */}
-      <main className="ml-56 flex-1">
+      <main className="md:ml-56 flex-1">
 
         {/* Topbar sticky */}
-        <div className="bg-white border-b border-gray-100 px-8 py-4 sticky top-0 z-10">
+        <div className="bg-white border-b border-gray-100 px-4 md:px-8 py-4 sticky top-0 z-10">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-lg font-bold text-gray-800 flex items-center gap-2">
@@ -395,7 +395,7 @@ export default function Logement() {
         </div>
 
         {/* ── Contenu scrollable ─────────────────────────────────── */}
-        <div className="px-8 py-6 space-y-8">
+        <div className="px-4 md:px-8 py-4 md:py-6 pb-24 md:pb-6 space-y-8">
 
           {/* Statut actuel (si sauvegardé) */}
           {logement?.ville_destination && (

@@ -129,7 +129,7 @@ export default function Profile() {
     <div className="flex min-h-screen bg-gray-50">
 
       {/* ── Sidebar (mini) ── */}
-      <aside className="w-56 bg-white border-r border-gray-100 min-h-screen fixed left-0 top-0 flex flex-col">
+      <aside className="hidden md:flex w-56 bg-white border-r border-gray-100 min-h-screen fixed left-0 top-0 flex-col">
         <div className="px-5 py-5 border-b border-gray-100">
           <a href="/dashboard" className="flex items-center gap-2">
             <img src="/logo.svg" alt="Wekili" className="h-9 w-auto" />
@@ -185,7 +185,7 @@ export default function Profile() {
       </aside>
 
       {/* ── Contenu principal ── */}
-      <main className="ml-56 flex-1 flex flex-col">
+      <main className="md:ml-56 flex-1 flex flex-col">
 
         {/* Topbar */}
         <div className="bg-white border-b border-gray-100 px-8 py-4 flex items-center justify-between sticky top-0 z-10">
