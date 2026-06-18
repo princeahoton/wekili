@@ -50,7 +50,17 @@ app.get('/', (req, res) => {
   res.json({ message: 'Wekili API' });
 });
 
+const { runAll } = require('./database/setup_all');
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Serveur Wekili démarré sur le port ${PORT}`);
-});
+
+runAll()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Serveur Wekili démarré sur le port ${PORT}`);
+    });
+  })
+  .catch(err => {
+    console.error('❌ Échec des migrations — serveur non démarré:', err.message);
+    process.exit(1);
+  });
