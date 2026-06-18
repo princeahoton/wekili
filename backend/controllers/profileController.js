@@ -37,9 +37,9 @@ exports.saveProfile = async (req, res) => {
            pays_cibles, niveau_vise, domaine_vise, budget, updated_at)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,NOW())`,
         [req.userId, nationalite, pays_residence, telephone, date_naissance || null,
-         niveau_etudes, domaine, etablissement, moyenne || null,
+         niveau_etudes, domaine, etablissement, moyenne ? parseFloat(moyenne) : null,
          langue_principale, niveau_langue, certification, langue2, niveau_langue2,
-         pays_cibles, niveau_vise, domaine_vise, budget]
+         pays_cibles, niveau_vise, domaine_vise, budget ? parseInt(budget) : null]
       );
     } else {
       await pool.query(
@@ -51,9 +51,9 @@ exports.saveProfile = async (req, res) => {
           niveau_vise=$16, domaine_vise=$17, budget=$18, updated_at=NOW()
          WHERE user_id=$1`,
         [req.userId, nationalite, pays_residence, telephone, date_naissance || null,
-         niveau_etudes, domaine, etablissement, moyenne || null,
+         niveau_etudes, domaine, etablissement, moyenne ? parseFloat(moyenne) : null,
          langue_principale, niveau_langue, certification, langue2, niveau_langue2,
-         pays_cibles, niveau_vise, domaine_vise, budget]
+         pays_cibles, niveau_vise, domaine_vise, budget ? parseInt(budget) : null]
       );
     }
 
