@@ -17,8 +17,15 @@ const ALLOWED_MIMES = [
 const ALLOWED_EXTS = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx'];
 
 const ALLOWED_TYPES = [
-  'releve_notes', 'diplome', 'passeport', 'lettre_motivation',
-  'lettre_recommandation', 'cv', 'justificatif_domicile', 'autre',
+  'releve_notes', 'releves',
+  'diplome',
+  'passeport',
+  'lettre_motivation', 'motivation',
+  'lettre_recommandation', 'recommandation',
+  'cv',
+  'justificatif_domicile',
+  'langue',
+  'autre',
 ];
 
 const upload = multer({
