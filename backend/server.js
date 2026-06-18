@@ -11,20 +11,15 @@ const app = express();
 app.use(helmet());
 
 // ── CORS restreint à l'origine frontend ─────────────────────────────
-const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:3000',
-];
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error(`CORS bloqué : ${origin}`));
-    }
-  },
+  origin: [
+    'https://wekili.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000'
+  ],
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // ── Rate limiting global ─────────────────────────────────────────────
