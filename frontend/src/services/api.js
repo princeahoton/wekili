@@ -248,6 +248,14 @@ export const sauvegarderCV = async (data) => {
   return res.json();
 };
 
+export const uploadCVPDF = async (file) => {
+  const token = localStorage.getItem('token');
+  const form = new FormData();
+  form.append('cv', file);
+  const res = await fetch(`${API_URL}/cv/upload`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: form });
+  return res.json();
+};
+
 // ── Logement ─────────────────────────────────────────────────────────
 export const getLogement = async () => {
   const token = localStorage.getItem('token');

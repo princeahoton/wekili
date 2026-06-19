@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { launchAnalysis, getAnalysis, getBourses, getLMVersions, genererLM, corrigerLM, sauvegarderLM, getCVVersions, corrigerCV, sauvegarderCV } from '../services/api';
+import { launchAnalysis, getAnalysis, getBourses, getLMVersions, genererLM, corrigerLM, sauvegarderLM, getCVVersions, corrigerCV, sauvegarderCV, uploadCVPDF } from '../services/api';
 import 'flag-icons/css/flag-icons.min.css';
 
 function toArr(val) {
@@ -650,8 +650,22 @@ function SectionCV() {
   const [paysCible, setPaysCible] = useState('France');
   const [analyse, setAnalyse] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [vue, setVue] = useState('edit');
   const [errMsg, setErrMsg] = useState('');
+  const fileInputRef = useRef(null);
+
+  const handleUploadPDF = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true); setErrMsg('');
+    try {
+      const r = await uploadCVPDF(file);
+      if (r.texte) { setTexte(r.texte); }
+      else setErrMsg(r.message || 'Impossible de lire ce PDF.');
+    } catch { setErrMsg('Erreur réseau.'); }
+    finally { setUploading(false); e.target.value = ''; }
+  };
 
   const chargeVersions = async () => {
     try {
@@ -756,9 +770,22 @@ function SectionCV() {
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1">
-              Contenu de votre CV <span className="font-normal text-gray-400">(collez le texte de votre CV)</span>
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-semibold text-gray-500">Contenu de votre CV</label>
+              <div>
+                <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden" onChange={handleUploadPDF} />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-[#1a3a6b] border border-[#1a3a6b] px-3 py-1.5 rounded-lg hover:bg-[#1a3a6b] hover:text-white disabled:opacity-50 transition-colors"
+                >
+                  {uploading
+                    ? <><div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />Extraction...</>
+                    : <><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>Importer un PDF</>}
+                </button>
+              </div>
+            </div>
             <textarea
               value={texte} onChange={e => setTexte(e.target.value)}
               placeholder={"Prénom Nom\nEmail · Téléphone · Pays\n\nFORMATION\n2022-2024 — Master Informatique — Université de ...\n\nEXPÉRIENCE\n...\n\nCOMPÉTENCES\n..."}
