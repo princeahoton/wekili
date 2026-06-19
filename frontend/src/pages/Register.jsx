@@ -94,7 +94,7 @@ function Register() {
     try {
       const result = await register(form);
       if (result.success && result.requiresVerification) {
-        navigate('/verify-email', { state: { email: result.email || form.email } });
+        navigate('/verify-email', { state: { email: result.email || form.email, emailError: result.emailError } });
       } else if (result.success) {
         navigate('/verify-email', { state: { email: form.email } });
       } else {

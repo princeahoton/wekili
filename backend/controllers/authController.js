@@ -133,13 +133,26 @@ exports.register = async (req, res) => {
 
     const code = otpNs.makeCode();
     otpNs.storeOtp('email-verify', emailNorm, code);
-    sendEmail({
-      to:      emailNorm,
-      subject: 'Activez votre compte Wekili',
-      html:    otpHtml(code, `Bienvenue ${user.prenom} ! Entrez ce code pour activer votre compte Wekili.`),
-    }).catch(err => console.error('[email:verify-register]', err.message));
 
-    res.status(201).json({ success: true, requiresVerification: true, email: emailNorm });
+    let emailSent = true;
+    try {
+      await sendEmail({
+        to:      emailNorm,
+        subject: 'Activez votre compte Wekili',
+        html:    otpHtml(code, `Bienvenue ${user.prenom} ! Entrez ce code pour activer votre compte Wekili.`),
+      });
+    } catch (err) {
+      console.error('[email:verify-register]', err.message);
+      emailSent = false;
+    }
+
+    res.status(201).json({
+      success: true,
+      requiresVerification: true,
+      email: emailNorm,
+      emailSent,
+      emailError: emailSent ? undefined : 'L\'email n\'a pas pu être envoyé. Utilisez le bouton "Renvoyer le code" sur la page suivante.',
+    });
   } catch (err) {
     console.error('Erreur register:', err.message);
     res.status(500).json({ success: false, message: 'Erreur serveur' });
@@ -175,16 +188,22 @@ exports.login = async (req, res) => {
     if (!user.email_verified) {
       const code = otpNs.makeCode();
       otpNs.storeOtp('email-verify', emailNorm, code);
-      sendEmail({
-        to:      emailNorm,
-        subject: 'Activez votre compte Wekili',
-        html:    otpHtml(code, 'Entrez ce code pour activer votre compte. Valable 10 minutes.'),
-      }).catch(err => console.error('[email:verify-login]', err.message));
+      let emailSentMsg = 'Un code vient de vous être envoyé.';
+      try {
+        await sendEmail({
+          to:      emailNorm,
+          subject: 'Activez votre compte Wekili',
+          html:    otpHtml(code, 'Entrez ce code pour activer votre compte. Valable 10 minutes.'),
+        });
+      } catch (err) {
+        console.error('[email:verify-login]', err.message);
+        emailSentMsg = 'Votre email n\'est pas encore vérifié. L\'envoi du code a échoué — utilisez "Renvoyer le code" sur la page suivante.';
+      }
       return res.status(403).json({
         success: false,
         requiresVerification: true,
         email: emailNorm,
-        message: 'Votre adresse email n\'est pas encore vérifiée. Un code vient de vous être envoyé.',
+        message: `Votre adresse email n'est pas encore vérifiée. ${emailSentMsg}`,
       });
     }
 
