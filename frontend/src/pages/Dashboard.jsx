@@ -475,7 +475,7 @@ export default function Dashboard() {
                       <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" /></svg>
                     </div>
                     <p className="text-sm text-gray-400 mb-1">Aucune bourse trouvée</p>
-                    <p className="text-xs text-gray-300">Lancez <code className="bg-gray-100 px-1 rounded">npm run setup:full</code> dans le backend</p>
+                    <p className="text-xs text-gray-300">Complétez votre profil et lancez une analyse pour voir vos bourses.</p>
                   </div>
 
                 ) : (

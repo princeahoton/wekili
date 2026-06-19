@@ -609,7 +609,7 @@ export default function Universities() {
                 <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
               </div>
               <p className="text-gray-500 font-medium mb-1">Aucune université trouvée</p>
-              <p className="text-gray-400 text-sm mb-4">Lancez <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">npm run setup:universities</code> dans le backend</p>
+              <p className="text-gray-400 text-sm mb-4">Aucune université ne correspond à vos critères actuels.</p>
               <button onClick={() => { setFilterPays('Tous'); setFilterNiveau('Tous'); setSearch(''); }}
                 className="text-sm text-[#1a3a6b] font-semibold hover:underline">
                 Réinitialiser les filtres

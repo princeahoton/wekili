@@ -113,7 +113,7 @@ exports.saveProfile = async (req, res) => {
          date_naissance || null,
          niveau_etudes, domaine, etablissement, moyenne ? parseFloat(moyenne) : null,
          langue_principale, niveau_langue, certification, langue2, niveau_langue2,
-         pays_cibles, niveau_vise, domaine_vise, budget ? parseInt(budget) : null]
+         pays_cibles, niveau_vise, domaine_vise, budget || null]
       );
     } else {
       // Profil existant — conserver phone_verified si le numéro n'a pas changé
@@ -133,7 +133,7 @@ exports.saveProfile = async (req, res) => {
          date_naissance || null,
          niveau_etudes, domaine, etablissement, moyenne ? parseFloat(moyenne) : null,
          langue_principale, niveau_langue, certification, langue2, niveau_langue2,
-         pays_cibles, niveau_vise, domaine_vise, budget ? parseInt(budget) : null]
+         pays_cibles, niveau_vise, domaine_vise, budget || null]
       );
     }
 

@@ -11,7 +11,7 @@ const ETAPES = [
 ];
 
 const NIVEAUX_ETUDES = ['Bac', 'Bac+1', 'Bac+2 (Licence 2)', 'Bac+3 (Licence)', 'Bac+4 (Master 1)', 'Bac+5 (Master)', 'Bac+8 (Doctorat)'];
-const DOMAINES = ['Informatique / Numérique', 'Droit', 'Économie / Gestion', 'Médecine / Santé', 'Ingénierie', 'Sciences', 'Lettres / Langues', 'Sciences sociales', 'Architecture', 'Agriculture', 'Autre'];
+const DOMAINES = ['Informatique / Numérique', 'Droit', 'Économie / Gestion', 'Médecine / Santé', 'Ingénierie', 'Sciences', 'Sciences Politiques', 'Lettres / Langues', 'Sciences sociales', 'Architecture', 'Agriculture', 'Autre'];
 const LANGUES = ['Français', 'Anglais', 'Allemand', 'Espagnol', 'Portugais', 'Arabe'];
 const NIVEAUX_LANGUE = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Langue maternelle'];
 const CERTIFICATIONS = ['Aucune', 'DELF/DALF', 'TCF', 'IELTS', 'TOEFL', 'TOEIC', 'TestDaF', 'Autre'];
@@ -144,7 +144,16 @@ export default function Profile() {
     if (!getUser()) { navigate('/login'); return; }
     getProfile().then((res) => {
       if (res?.profile) {
-        setForm((prev) => ({ ...prev, ...res.profile }));
+        const p = res.profile;
+        // PostgreSQL DATE → JS Date object; normalize to YYYY-MM-DD for the input
+        if (p.date_naissance && typeof p.date_naissance !== 'string') {
+          p.date_naissance = new Date(p.date_naissance).toISOString().slice(0, 10);
+        } else if (typeof p.date_naissance === 'string' && p.date_naissance.length > 10) {
+          p.date_naissance = p.date_naissance.slice(0, 10);
+        }
+        // budget was stored as INTEGER (now TEXT), treat NULL gracefully
+        if (p.budget === null || p.budget === undefined) p.budget = '';
+        setForm((prev) => ({ ...prev, ...p }));
         if (res.profile.phone_verified && res.profile.telephone) {
           setPhoneOtpStep('verified');
           setVerifiedPhone(res.profile.telephone);
@@ -207,26 +216,29 @@ export default function Profile() {
 
   const handleSave = async () => {
     const errDate = validateDateNaissance(form.date_naissance);
-    if (errDate) { setDateErreur(errDate); setError(errDate); return; }
+    if (errDate) { setDateErreur(errDate); setError(errDate); return false; }
     if (form.telephone) {
       const errPhone = validatePhone(form.telephone);
-      if (errPhone) { setPhoneErreur(errPhone); setError(errPhone); return; }
+      if (errPhone) { setPhoneErreur(errPhone); setError(errPhone); return false; }
     }
     setSaving(true);
     setError('');
     try {
       const result = await saveProfile(form);
-      if (!result.profile) setError(result.message || 'Erreur de sauvegarde.');
-      else setSaved(true);
+      if (!result.profile) { setError(result.message || 'Erreur de sauvegarde.'); return false; }
+      setSaved(true);
+      return true;
     } catch {
       setError('Erreur de sauvegarde. Réessayez.');
+      return false;
     } finally {
       setSaving(false);
     }
   };
 
   const handleNext = async () => {
-    await handleSave();
+    const ok = await handleSave();
+    if (!ok) return;
     if (etape < 4) setEtape(etape + 1);
     else navigate('/dashboard');
   };

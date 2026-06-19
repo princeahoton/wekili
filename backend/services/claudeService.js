@@ -67,7 +67,7 @@ Domaine d'études : ${profil.domaine || 'Non précisé'}
 Spécialisation   : ${profil.specialisation || 'Non précisé'}
 Moyenne générale : ${profil.moyenne || 'Non précisé'}/20
 Langue principale: ${profil.langue_principale || 'Non précisé'} — niveau ${profil.niveau_langue || 'Non précisé'}
-Certification    : ${profil.certification || 'Aucune'}
+Certification    : ${(profil.certification && profil.certification !== 'Aucune') ? profil.certification : 'Aucune certification linguistique'}
 Pays cibles      : ${(profil.pays_cibles || []).join(', ') || 'Non précisé'}
 Niveau visé      : ${profil.niveau_vise || 'Non précisé'}
 Objectif bourse  : ${profil.objectif_bourse || 'Non précisé'}
@@ -110,6 +110,7 @@ RÈGLES ABSOLUES — NE PAS ENFREINDRE
 5. Les montants de bourses doivent être qualifiés de "environ" ou "à vérifier officiellement"
 6. Le score_global doit être HONNÊTE — ne pas surestimer pour faire plaisir
 7. Préférer MOINS de recommandations VRAIES que PLUS d'inventées
+8. JAMAIS recommander des bourses ou universités dans un pays NON listé dans "Pays cibles" — respecter STRICTEMENT la sélection de l'étudiant
 
 Réponds UNIQUEMENT en JSON valide (sans markdown, sans texte autour) :
 
@@ -129,11 +130,7 @@ Réponds UNIQUEMENT en JSON valide (sans markdown, sans texte autour) :
     {"nom": "<nom EXACT de la bourse — doit exister réellement>", "pays": "<pays>", "organisme": "<organisme>", "lien": "<URL officielle ou 'À vérifier sur le site officiel'>"}
   ],
   "estimation_chances": {
-    "France": <0-100>,
-    "Canada": <0-100>,
-    "Belgique": <0-100>,
-    "Allemagne": <0-100>,
-    "Royaume-Uni": <0-100>
+${(profil.pays_cibles && profil.pays_cibles.length > 0 ? profil.pays_cibles : ['France']).map(p => `    "${p}": <0-100>`).join(',\n')}
   }
 }`;
 };

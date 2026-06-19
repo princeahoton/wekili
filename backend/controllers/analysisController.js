@@ -22,10 +22,12 @@ function analyseLocale(profile, docs) {
   else if (userLvl >= 1) score += 5;
   score = Math.min(100, Math.round(score));
 
+  const hasCertif = profile.certification && profile.certification !== 'Aucune';
+
   const forces = [];
   if (moy >= 14) forces.push({ titre: 'Excellente moyenne académique', description: `Votre moyenne de ${moy}/20 est un atout majeur pour les dossiers de bourse.` });
   if (userLvl >= 4) forces.push({ titre: 'Bon niveau de langue', description: `Votre niveau ${profile.niveau_langue} en ${profile.langue_principale} vous ouvre l'accès à de nombreux programmes.` });
-  if (profile.certification) forces.push({ titre: 'Certification linguistique', description: `La certification ${profile.certification} renforce significativement votre dossier.` });
+  if (hasCertif) forces.push({ titre: 'Certification linguistique', description: `La certification ${profile.certification} renforce significativement votre dossier.` });
   if (nbDocs >= 4) forces.push({ titre: 'Dossier bien constitué', description: `${nbDocs} documents uploadés — votre dossier est presque complet.` });
   if (profile.niveau_etudes === 'Master' || profile.niveau_etudes === 'Doctorat') forces.push({ titre: 'Niveau d\'études avancé', description: 'Votre niveau ouvre l\'accès aux bourses d\'excellence les plus compétitives.' });
   if (forces.length === 0) forces.push({ titre: 'Profil en cours de constitution', description: 'Complétez votre profil pour mettre en valeur vos atouts.' });
@@ -33,12 +35,12 @@ function analyseLocale(profile, docs) {
   const faiblesses = [];
   if (moy < 12 && moy > 0) faiblesses.push({ titre: 'Moyenne à améliorer', description: 'Une moyenne inférieure à 12/20 peut limiter l\'accès aux bourses d\'excellence.', priorite: 'haute' });
   if (userLvl < 3) faiblesses.push({ titre: 'Niveau de langue insuffisant', description: 'La plupart des bourses exigent au minimum un niveau B1-B2.', priorite: 'haute' });
-  if (!profile.certification) faiblesses.push({ titre: 'Pas de certification linguistique', description: 'Un DELF, DALF, IELTS ou TOEFL renforce considérablement votre dossier.', priorite: 'moyenne' });
+  if (!hasCertif) faiblesses.push({ titre: 'Pas de certification linguistique', description: 'Un DELF, DALF, IELTS ou TOEFL renforce considérablement votre dossier.', priorite: 'moyenne' });
   if (nbDocs < 4) faiblesses.push({ titre: 'Dossier incomplet', description: `Seulement ${nbDocs}/6 documents uploadés.`, priorite: 'haute' });
 
   const recommandations = [];
   if (nbDocs < 6) recommandations.push({ action: 'Compléter votre dossier de documents', impact: `Passer de ${nbDocs}/6 à 6/6 documents augmente le score de 10-15 points.`, priorite: 'haute' });
-  if (!profile.certification) recommandations.push({ action: `Passer une certification en ${profile.langue_principale || 'français'} (DELF/DALF ou IELTS)`, impact: 'Exigée par la majorité des programmes d\'excellence.', priorite: 'haute' });
+  if (!hasCertif) recommandations.push({ action: `Passer une certification en ${profile.langue_principale || 'français'} (DELF/DALF ou IELTS)`, impact: 'Exigée par la majorité des programmes d\'excellence.', priorite: 'haute' });
   if (userLvl < 4) recommandations.push({ action: 'Améliorer votre niveau de langue', impact: 'Atteindre B2 ou C1 augmente considérablement vos chances.', priorite: 'moyenne' });
   recommandations.push({ action: 'Rédiger une lettre de motivation percutante', impact: 'Peut faire la différence entre deux candidats à profils similaires.', priorite: 'moyenne' });
   recommandations.push({ action: 'Obtenir des lettres de recommandation', impact: 'Requises par 80% des bourses d\'excellence.', priorite: 'basse' });
@@ -55,13 +57,18 @@ function analyseLocale(profile, docs) {
   if (pays.includes('Royaume-Uni')) programmes.push({ nom: 'Bourse Chevening', pays: 'Royaume-Uni', organisme: 'FCDO', lien: 'https://www.chevening.org' });
 
   const baseChance = Math.min(score + 5, 95);
-  const estimation_chances = {
+  const allChances = {
     France: profile.langue_principale === 'Français' ? Math.min(baseChance + 10, 95) : baseChance,
-    Canada: pays.includes('Canada') ? baseChance : Math.max(baseChance - 10, 5),
+    Canada: baseChance,
     Belgique: profile.langue_principale === 'Français' ? Math.min(baseChance + 5, 90) : Math.max(baseChance - 5, 5),
-    Allemagne: pays.includes('Allemagne') ? Math.max(baseChance - 15, 5) : Math.max(baseChance - 20, 5),
-    'Royaume-Uni': pays.includes('Royaume-Uni') ? Math.max(baseChance - 10, 5) : Math.max(baseChance - 20, 5),
+    Allemagne: Math.max(baseChance - 15, 5),
+    'Royaume-Uni': Math.max(baseChance - 10, 5),
   };
+  // N'inclure que les pays sélectionnés par l'utilisateur (ou tous si aucun n'est précisé)
+  const paysCibles = pays.length > 0 ? pays : Object.keys(allChances);
+  const estimation_chances = Object.fromEntries(
+    paysCibles.filter(p => allChances[p] !== undefined).map(p => [p, allChances[p]])
+  );
 
   const synthese = `${profile.prenom || 'L\'étudiant'} présente un profil ${score >= 70 ? 'solide' : score >= 50 ? 'prometteur' : 'en développement'} avec un score de ${score}/100. ${
     moy >= 14 ? `La moyenne de ${moy}/20 est un atout majeur.` : `La moyenne de ${moy > 0 ? moy + '/20' : 'non renseignée'} devra être mise en valeur.`

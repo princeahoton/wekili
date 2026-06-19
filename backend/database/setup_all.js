@@ -82,6 +82,8 @@ async function runAll() {
     await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS niveau_vise VARCHAR(100)`);
     await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS domaine_vise VARCHAR(200)`);
     await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS budget INTEGER`);
+    // Migration : budget doit stocker une chaîne (ex. "Moins de 5 000 €/an"), pas un entier
+    await client.query(`ALTER TABLE profiles ALTER COLUMN budget TYPE TEXT USING NULL`);
     await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN DEFAULT FALSE`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS two_fa_enabled   BOOLEAN DEFAULT FALSE`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified  BOOLEAN DEFAULT FALSE`);
