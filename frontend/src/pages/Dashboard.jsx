@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getProfile, getDocuments, getAnalysis, getAllAnalyses, getBourses } from '../services/api';
 import { getUser, clearAuth } from '../utils/auth';
+import Toast from '../components/Toast';
 import 'flag-icons/css/flag-icons.min.css';
 
 const DOC_TYPES = ['cv', 'releves', 'diplome', 'langue', 'motivation', 'recommandation'];
@@ -221,9 +222,11 @@ function BottomNav() {
 // ── Page principale ──────────────────────────────────────────────────────────
 export default function Dashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState(location.state?.toast || null);
 
   const [profile, setProfile] = useState(null);
   const [docs, setDocs] = useState([]);
@@ -303,6 +306,13 @@ export default function Dashboard() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
+      {toast && (
+        <Toast
+          message={toast.msg}
+          type={toast.type || 'success'}
+          onDismiss={() => setToast(null)}
+        />
+      )}
       <Sidebar user={user} onLogout={handleLogout} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main — pousse à droite sur lg, plein écran sur mobile */}

@@ -337,7 +337,15 @@ exports.googleLogin = async (req, res) => {
       );
       user = updated[0];
     } else {
-      // Nouveau compte via Google
+      // Pas de compte existant
+      if (!req.body.signup) {
+        return res.status(404).json({
+          success: false,
+          noAccount: true,
+          message: 'Aucun compte Wekili associé à ce compte Google. Créez un compte d\'abord.',
+        });
+      }
+      // Nouveau compte via Google (inscription)
       const { rows: created } = await pool.query(
         `INSERT INTO users (email, google_id, prenom, nom, pays, avatar_url, auth_method, email_verified)
          VALUES ($1, $2, $3, $4, '', $5, 'google', true)
@@ -404,6 +412,13 @@ exports.facebookLogin = async (req, res) => {
       );
       user = updated[0];
     } else {
+      if (!req.body.signup) {
+        return res.status(404).json({
+          success: false,
+          noAccount: true,
+          message: 'Aucun compte Wekili associé à ce compte Facebook. Créez un compte d\'abord.',
+        });
+      }
       const { rows: created } = await pool.query(
         `INSERT INTO users (email, facebook_id, prenom, nom, pays, avatar_url, auth_method, email_verified)
          VALUES ($1, $2, $3, $4, '', $5, 'facebook', true)

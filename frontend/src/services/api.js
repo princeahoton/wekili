@@ -177,20 +177,20 @@ export const deleteCandidature = async (universityId) => {
 };
 
 // ── Auth sociale & téléphone ─────────────────────────────────────────
-export const googleLogin = async (credential) => {
+export const googleLogin = async (credential, signup = false) => {
   const response = await fetch(`${API_URL}/auth/google`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ credential }),
+    body: JSON.stringify({ credential, signup }),
   });
   return response.json();
 };
 
-export const facebookLogin = async (accessToken) => {
+export const facebookLogin = async (accessToken, signup = false) => {
   const response = await fetch(`${API_URL}/auth/facebook`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ accessToken }),
+    body: JSON.stringify({ accessToken, signup }),
   });
   return response.json();
 };

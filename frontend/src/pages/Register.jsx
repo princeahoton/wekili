@@ -60,13 +60,13 @@ function Register() {
 
   function saveAndRedirect(result) {
     saveAuth(result.token, result.user, true);
-    navigate('/dashboard');
+    navigate('/dashboard', { state: { toast: { type: 'success', msg: `Bienvenue sur Wekili, ${result.user?.prenom || ''} ! Votre compte Google est activé.` } } });
   }
 
   const handleGoogleCredential = async (response) => {
     setLoading(true); setError('');
     try {
-      const result = await googleLogin(response.credential);
+      const result = await googleLogin(response.credential, true);
       if (result.success) saveAndRedirect(result);
       else setError(result.message || 'Erreur Google');
     } catch { setError('Erreur lors de la connexion Google.'); }

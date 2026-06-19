@@ -36,7 +36,7 @@ function VerifyEmail() {
       const result = await verifyEmailOTP(email, code);
       if (result.success) {
         saveAuth(result.token, result.user, true);
-        navigate('/dashboard', { replace: true });
+        navigate('/dashboard', { replace: true, state: { toast: { type: 'success', msg: `Bienvenue sur Wekili, ${result.user?.prenom || ''} ! Votre compte est activé.` } } });
       } else {
         setError(result.message || 'Code incorrect ou expiré.');
       }
