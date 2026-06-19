@@ -24,7 +24,11 @@ function toStr(val) {
   return String(val);
 }
 
-const VIDEOS = ['/video1.mp4', '/video2.mp4', '/video3.mp4'];
+const VIDEOS = [
+  'https://res.cloudinary.com/dar0rgdfl/video/upload/v1781831864/video1_v62lsz.mp4',
+  'https://res.cloudinary.com/dar0rgdfl/video/upload/v1781832397/video2_jiedkp.mp4',
+  'https://res.cloudinary.com/dar0rgdfl/video/upload/v1781833109/video3_im6cby.mp4',
+];
 
 const PAYS = [
   {
