@@ -85,6 +85,8 @@ async function runAll() {
     await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN DEFAULT FALSE`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS two_fa_enabled   BOOLEAN DEFAULT FALSE`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified  BOOLEAN DEFAULT FALSE`);
+    // Les comptes créés avant la vérification email sont considérés vérifiés
+    await client.query(`UPDATE users SET email_verified = true WHERE email_verified = false AND created_at < NOW() - INTERVAL '1 hour'`);
 
     // ── TABLE LOGIN_SESSIONS ───────────────────────────────────────────
     await client.query(`
