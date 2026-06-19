@@ -6,7 +6,8 @@ exports.getUniversitiesPublic = async (req, res) => {
     const { pays, niveau, limit = 6 } = req.query;
     let query = `
       SELECT id, nom, pays, ville, code_pays, type, domaines, niveaux,
-             langue, taux_admission, frais_scolarite, classement_mondial,
+             langue, taux_admission, frais_scolarite,
+             COALESCE(classement_mondial, classement_monde) AS classement_mondial,
              classement_national, description, points_forts, plateforme,
              cout_plateforme, lien_candidature, lien_officiel, date_cloture
       FROM universities
@@ -18,7 +19,7 @@ exports.getUniversitiesPublic = async (req, res) => {
     if (pays) { conds.push(`pays = $${idx++}`); params.push(pays); }
     if (niveau) { conds.push(`$${idx++} = ANY(niveaux)`); params.push(niveau); }
     if (conds.length) query += ' WHERE ' + conds.join(' AND ');
-    query += ` ORDER BY classement_mondial ASC NULLS LAST LIMIT $${idx}`;
+    query += ` ORDER BY COALESCE(classement_mondial, classement_monde) ASC NULLS LAST LIMIT $${idx}`;
     params.push(parseInt(limit));
 
     const { rows } = await pool.query(query, params);
@@ -38,7 +39,7 @@ exports.getUniversities = async (req, res) => {
       SELECT u.id, u.nom, u.pays, u.ville, u.code_pays, u.type,
              u.domaines, u.niveaux, u.langue, u.niveau_langue,
              u.taux_admission, u.frais_scolarite, u.frais_inscription,
-             u.moyenne_requise, u.classement_mondial, u.classement_national,
+             u.moyenne_requise, COALESCE(u.classement_mondial, u.classement_monde) AS classement_mondial, u.classement_national,
              u.description, u.points_forts, u.documents_requis,
              u.plateforme, u.cout_plateforme,
              u.lien_candidature, u.lien_officiel,
@@ -62,11 +63,11 @@ exports.getUniversities = async (req, res) => {
     if (conds.length) baseQuery += ' WHERE ' + conds.join(' AND ');
 
     if (sort === 'classement') {
-      baseQuery += ' ORDER BY u.classement_mondial ASC NULLS LAST';
+      baseQuery += ' ORDER BY COALESCE(u.classement_mondial, u.classement_monde) ASC NULLS LAST';
     } else if (sort === 'taux') {
       baseQuery += ' ORDER BY u.taux_admission DESC NULLS LAST';
     } else {
-      baseQuery += ' ORDER BY COALESCE(um.score_admission, 0) DESC, u.classement_mondial ASC NULLS LAST';
+      baseQuery += ' ORDER BY COALESCE(um.score_admission, 0) DESC, COALESCE(u.classement_mondial, u.classement_monde) ASC NULLS LAST';
     }
 
     if (limit) { baseQuery += ` LIMIT $${idx}`; params.push(parseInt(limit)); }

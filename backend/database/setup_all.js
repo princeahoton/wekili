@@ -204,6 +204,24 @@ async function runAll() {
       )
     `);
 
+    // ── COLONNES MANQUANTES universities ──────────────────────────────
+    await client.query(`ALTER TABLE universities ADD COLUMN IF NOT EXISTS code_pays VARCHAR(10)`);
+    await client.query(`ALTER TABLE universities ADD COLUMN IF NOT EXISTS domaines TEXT[]`);
+    await client.query(`ALTER TABLE universities ADD COLUMN IF NOT EXISTS niveaux TEXT[]`);
+    await client.query(`ALTER TABLE universities ADD COLUMN IF NOT EXISTS langue VARCHAR(100)`);
+    await client.query(`ALTER TABLE universities ADD COLUMN IF NOT EXISTS niveau_langue VARCHAR(50)`);
+    await client.query(`ALTER TABLE universities ADD COLUMN IF NOT EXISTS frais_inscription VARCHAR(200)`);
+    await client.query(`ALTER TABLE universities ADD COLUMN IF NOT EXISTS moyenne_requise DECIMAL(4,2)`);
+    await client.query(`ALTER TABLE universities ADD COLUMN IF NOT EXISTS classement_mondial INTEGER`);
+    await client.query(`ALTER TABLE universities ADD COLUMN IF NOT EXISTS points_forts TEXT[]`);
+    await client.query(`ALTER TABLE universities ADD COLUMN IF NOT EXISTS documents_requis TEXT[]`);
+    await client.query(`ALTER TABLE universities ADD COLUMN IF NOT EXISTS plateforme VARCHAR(200)`);
+    await client.query(`ALTER TABLE universities ADD COLUMN IF NOT EXISTS cout_plateforme VARCHAR(200)`);
+    await client.query(`ALTER TABLE universities ADD COLUMN IF NOT EXISTS lien_candidature TEXT`);
+    await client.query(`ALTER TABLE universities ADD COLUMN IF NOT EXISTS lien_officiel TEXT`);
+    await client.query(`ALTER TABLE universities ADD COLUMN IF NOT EXISTS date_ouverture DATE`);
+    await client.query(`ALTER TABLE universities ADD COLUMN IF NOT EXISTS date_cloture DATE`);
+
     // ── TABLE UNIVERSITY MATCHES ───────────────────────────────────────
     await client.query(`
       CREATE TABLE IF NOT EXISTS university_matches (
@@ -231,6 +249,7 @@ async function runAll() {
         UNIQUE(user_id, university_id)
       )
     `);
+    await client.query(`ALTER TABLE candidatures ADD COLUMN IF NOT EXISTS date_soumission DATE`);
 
     // ── TABLE LOGEMENTS ────────────────────────────────────────────────
     await client.query(`
