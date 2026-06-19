@@ -438,6 +438,86 @@ exports.facebookLogin = async (req, res) => {
 
 // ─── MODULE 4 — Téléphone (OTP SMS via Twilio) ───────────────────────────────
 
+// ─── MODULE 3b — Mot de passe oublié (OTP par email) ────────────────────────
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || !isValidEmail(email))
+      return res.status(400).json({ success: false, message: 'Adresse email invalide.' });
+
+    const emailNorm = email.trim().toLowerCase();
+    const { rows } = await pool.query(
+      'SELECT id, prenom, auth_method FROM users WHERE email = $1',
+      [emailNorm]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Aucun compte n\'est associé à cette adresse email.',
+      });
+    }
+
+    const user = rows[0];
+    if (user.auth_method && user.auth_method !== 'email') {
+      const label = user.auth_method === 'google' ? 'Google' : user.auth_method;
+      return res.status(400).json({
+        success: false,
+        message: `Ce compte utilise la connexion ${label}. Connectez-vous via ce service — pas de mot de passe à réinitialiser.`,
+      });
+    }
+
+    const code = otpNs.makeCode();
+    otpNs.storeOtp('pwd-reset', emailNorm, code);
+
+    await sendEmail({
+      to:      emailNorm,
+      subject: 'Réinitialisation de votre mot de passe Wekili',
+      html:    otpHtml(code, `Bonjour ${user.prenom} ! Entrez ce code pour réinitialiser votre mot de passe Wekili.`),
+    });
+
+    res.json({ success: true, message: 'Un code de réinitialisation a été envoyé à votre adresse email.' });
+  } catch (err) {
+    console.error('Erreur forgotPassword:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur lors de l\'envoi de l\'email. Réessayez dans quelques instants.' });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, code, newPassword } = req.body;
+    if (!email || !code || !newPassword)
+      return res.status(400).json({ success: false, message: 'Email, code et nouveau mot de passe requis.' });
+
+    const emailNorm = email.trim().toLowerCase();
+
+    if (!otpNs.checkOtp('pwd-reset', emailNorm, code))
+      return res.status(401).json({ success: false, message: 'Code incorrect ou expiré. Cliquez sur "Renvoyer le code".' });
+
+    if (newPassword.length < 8)
+      return res.status(400).json({ success: false, message: 'Mot de passe trop court (8 caractères min.)' });
+    if (!/[A-Z]/.test(newPassword) || !/[0-9]/.test(newPassword))
+      return res.status(400).json({ success: false, message: 'Mot de passe faible : ajoutez au moins une majuscule et un chiffre.' });
+
+    const hashed = await bcrypt.hash(newPassword, 12);
+    const { rows } = await pool.query(
+      'UPDATE users SET password = $1 WHERE email = $2 RETURNING id',
+      [hashed, emailNorm]
+    );
+
+    if (!rows.length)
+      return res.status(404).json({ success: false, message: 'Compte introuvable.' });
+
+    res.json({ success: true, message: 'Mot de passe réinitialisé avec succès.' });
+  } catch (err) {
+    console.error('Erreur resetPassword:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur.' });
+  }
+};
+
+// ─── MODULE 4 — Téléphone (OTP SMS via Africa's Talking) ─────────────────────
+
 exports.sendPhoneOTP = async (req, res) => {
   const { phone } = req.body;
   if (!phone) return res.status(400).json({ success: false, message: 'Numéro de téléphone requis' });

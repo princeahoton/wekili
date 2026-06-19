@@ -29,4 +29,8 @@ router.post('/2fa-verify', authLimit, authController.verify2FA);
 router.post('/verify-email',  authLimit, authController.verifyEmail);
 router.post('/resend-verify', authLimit, authController.resendVerificationEmail);
 
+// Mot de passe oublié
+router.post('/forgot-password', authLimit, authController.forgotPassword);
+router.post('/reset-password',  authLimit, authController.resetPassword);
+
 module.exports = router;

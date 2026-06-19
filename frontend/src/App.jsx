@@ -14,6 +14,7 @@ import Universities from './pages/Universities';
 import Logement from './pages/Logement';
 import Settings from './pages/Settings';
 import VerifyEmail from './pages/VerifyEmail';
+import ForgotPassword from './pages/ForgotPassword';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import LegalNotice from './pages/LegalNotice';
@@ -49,7 +50,8 @@ function App() {
         <Route path="/logement"     element={<ProtectedRoute><Logement /></ProtectedRoute>} />
         <Route path="/settings"       element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         {/* Vérification email (public) */}
-        <Route path="/verify-email"   element={<VerifyEmail />} />
+        <Route path="/verify-email"     element={<VerifyEmail />} />
+        <Route path="/forgot-password"  element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
         {/* Pages légales (publiques) */}
         <Route path="/confidentialite"  element={<PrivacyPolicy />} />
         <Route path="/cgu"              element={<TermsOfService />} />

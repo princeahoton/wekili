@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { login, googleLogin, verify2FA } from '../services/api';
 import { saveAuth } from '../utils/auth';
+import Toast from '../components/Toast';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -20,6 +21,7 @@ function Login() {
   const [tempToken, setTempToken]         = useState('');
   const googleBtnRef = useRef(null);
   const registered = location.state?.registered;
+  const [toast, setToast] = useState(location.state?.toast || null);
 
   // ── Initialiser Google Identity Services ─────────────────────────────
   useEffect(() => {
@@ -159,6 +161,7 @@ function Login() {
   // ── Rendu principal ───────────────────────────────────────────────────
   return (
     <div className="min-h-screen flex">
+      {toast && <Toast message={toast.msg} type={toast.type} onDismiss={() => setToast(null)} />}
 
       {/* ── Panneau gauche ─────────────────────────────────────────── */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">

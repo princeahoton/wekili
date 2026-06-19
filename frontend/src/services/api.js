@@ -357,6 +357,24 @@ export const resendVerificationEmail = async (email) => {
   return res.json();
 };
 
+export const forgotPassword = async (email) => {
+  const res = await fetch(`${API_URL}/auth/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  return res.json();
+};
+
+export const resetPassword = async (email, code, newPassword) => {
+  const res = await fetch(`${API_URL}/auth/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, code, newPassword }),
+  });
+  return res.json();
+};
+
 export const verify2FA = async (tempToken, code) => {
   const res = await fetch(`${API_URL}/auth/2fa-verify`, {
     method: 'POST',
