@@ -44,6 +44,8 @@ app.use('/api/analysis',     require('./routes/analysis'));
 app.use('/api/bourses',      require('./routes/bourses'));
 app.use('/api/universities', require('./routes/universities'));
 app.use('/api/logement',    require('./routes/logement'));
+app.use('/api/lm',          require('./routes/lm'));
+app.use('/api/cv',          require('./routes/cv'));
 
 app.get('/', (req, res) => {
   res.json({ message: 'Wekili API' });

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { launchAnalysis, getAnalysis, getBourses } from '../services/api';
+import { launchAnalysis, getAnalysis, getBourses, getLMVersions, genererLM, corrigerLM, sauvegarderLM, getCVVersions, corrigerCV, sauvegarderCV } from '../services/api';
 import 'flag-icons/css/flag-icons.min.css';
 
 function toArr(val) {
@@ -320,6 +320,567 @@ function Rapport({ analyse, onRegenerate, regenerating, onProgrammeClick }) {
   );
 }
 
+/* ─── helpers JSON ─── */
+function parseJ(v) {
+  if (!v) return [];
+  if (Array.isArray(v)) return v;
+  if (typeof v === 'object') return v;
+  try { return JSON.parse(v); } catch { return []; }
+}
+function parseObj(v) {
+  if (!v) return {};
+  if (typeof v === 'object' && !Array.isArray(v)) return v;
+  try { return JSON.parse(v); } catch { return {}; }
+}
+
+/* ─── Score badge ─── */
+function ScoreBadge({ score }) {
+  const color = score >= 70 ? 'bg-green-50 text-green-700 border-green-200' : score >= 50 ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-red-50 text-red-700 border-red-200';
+  return (
+    <div className={`flex items-center gap-2 px-4 py-2 rounded-full border font-bold text-lg ${color}`}>
+      <span>{score}</span><span className="text-sm font-normal opacity-70">/ 100</span>
+    </div>
+  );
+}
+
+/* ─── Section Lettre de motivation ─── */
+function SectionLM() {
+  const [versions, setVersions] = useState([]);
+  const [activeIdx, setActiveIdx] = useState(null);
+  const [texte, setTexte] = useState('');
+  const [universite, setUniversite] = useState('');
+  const [analyse, setAnalyse] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [vue, setVue] = useState('edit');
+  const [showCompare, setShowCompare] = useState(false);
+  const [errMsg, setErrMsg] = useState('');
+
+  const chargeVersions = async () => {
+    try {
+      const r = await getLMVersions();
+      if (r.versions?.length) {
+        setVersions(r.versions);
+        const last = r.versions[r.versions.length - 1];
+        setActiveIdx(r.versions.length - 1);
+        setTexte(last.contenu);
+        setUniversite(last.universite || '');
+        if (last.score) { setAnalyse(last); setVue('result'); }
+      }
+    } catch { /* ignore */ }
+  };
+
+  useEffect(() => { chargeVersions(); }, []);
+
+  const handleGenerer = async () => {
+    setGenerating(true); setErrMsg('');
+    try {
+      const r = await genererLM({ universite });
+      if (r.lettre) {
+        setTexte(r.lettre);
+        await chargeVersions();
+        setVue('edit');
+      } else setErrMsg(r.message || 'Erreur lors de la génération.');
+    } catch { setErrMsg('Erreur réseau.'); }
+    finally { setGenerating(false); }
+  };
+
+  const handleCorriger = async () => {
+    if (!texte.trim()) return;
+    setLoading(true); setErrMsg('');
+    try {
+      const r = await corrigerLM({ contenu: texte, universite });
+      if (r.analyse) {
+        setAnalyse(r.analyse);
+        await chargeVersions();
+        setVue('result');
+        setShowCompare(false);
+      } else setErrMsg(r.message || 'Erreur lors de la correction.');
+    } catch { setErrMsg('Erreur réseau.'); }
+    finally { setLoading(false); }
+  };
+
+  const handleUtiliserVersion = async () => {
+    const corrigee = analyse.version_corrigee_complete || analyse.version_corrigee || '';
+    if (!corrigee) return;
+    await sauvegarderLM({ contenu: corrigee, universite });
+    await chargeVersions();
+    setTexte(corrigee);
+    setAnalyse(null);
+    setVue('edit');
+  };
+
+  const chargerVersion = (idx) => {
+    const v = versions[idx];
+    setActiveIdx(idx);
+    setTexte(v.contenu);
+    setUniversite(v.universite || '');
+    if (v.score) { setAnalyse(v); setVue('result'); }
+    else { setAnalyse(null); setVue('edit'); }
+  };
+
+  const versionCorrigee = analyse ? (analyse.version_corrigee_complete || analyse.version_corrigee || '') : '';
+  const pointsForts = analyse ? parseJ(analyse.points_forts) : [];
+  const pointsAmeliorer = analyse ? parseJ(analyse.points_ameliorer || analyse.points_a_ameliorer) : [];
+  const evaluation = analyse ? parseObj(analyse.evaluation || analyse.evaluation_par_critere) : {};
+
+  return (
+    <div className="space-y-6">
+      {/* Historique versions */}
+      {versions.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-gray-400 font-medium">Versions :</span>
+          {versions.map((v, i) => (
+            <button
+              key={v.id}
+              onClick={() => chargerVersion(i)}
+              className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${i === activeIdx ? 'bg-[#1a3a6b] text-white border-[#1a3a6b]' : 'bg-white text-gray-500 border-gray-200 hover:border-[#1a3a6b]'}`}
+            >
+              v{v.version} {v.score ? `· ${v.score}/100` : ''}
+            </button>
+          ))}
+          <button onClick={() => { setTexte(''); setAnalyse(null); setVue('edit'); setActiveIdx(null); }}
+            className="px-3 py-1 rounded-full text-xs font-semibold border border-dashed border-gray-300 text-gray-400 hover:border-[#F5A623] hover:text-[#F5A623] transition-all">
+            + Nouvelle
+          </button>
+        </div>
+      )}
+
+      {/* Vue édition */}
+      {vue === 'edit' && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Université / Programme cible</label>
+              <input
+                value={universite} onChange={e => setUniversite(e.target.value)}
+                placeholder="ex : Sorbonne Université — Master Informatique"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#1a3a6b] transition"
+              />
+            </div>
+          </div>
+
+          {!texte && !versions.length ? (
+            <div className="text-center py-10 space-y-4">
+              <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto">
+                <svg className="w-8 h-8 text-[#1a3a6b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <p className="text-gray-500 text-sm">Vous n'avez pas encore de lettre de motivation.</p>
+              <div className="flex flex-col sm:flex-row items-center gap-3 justify-center">
+                <button
+                  onClick={handleGenerer} disabled={generating}
+                  className="flex items-center gap-2 bg-[#1a3a6b] text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-[#0f2550] disabled:opacity-50 transition-colors"
+                >
+                  {generating ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Génération...</> : <>✨ Générer une première version avec l'IA</>}
+                </button>
+                <span className="text-gray-300 text-xs">ou</span>
+                <button onClick={() => setTexte(' ')} className="text-sm text-[#1a3a6b] underline underline-offset-2">
+                  Coller ma lettre existante
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 mb-1">Votre lettre de motivation</label>
+                <textarea
+                  value={texte} onChange={e => setTexte(e.target.value)}
+                  placeholder="Collez votre lettre ici..."
+                  rows={16}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-mono leading-relaxed focus:outline-none focus:border-[#1a3a6b] transition resize-none"
+                />
+                <p className="text-right text-xs text-gray-400 mt-1">{texte.trim().split(/\s+/).filter(Boolean).length} mots</p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={handleCorriger} disabled={loading || !texte.trim()}
+                  className="flex-1 flex items-center justify-center gap-2 bg-[#1a3a6b] text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-[#0f2550] disabled:opacity-50 transition-colors"
+                >
+                  {loading ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Correction en cours...</> : <>🤖 Faire corriger par l'IA</>}
+                </button>
+                <button
+                  onClick={handleGenerer} disabled={generating}
+                  className="flex items-center gap-2 border border-[#1a3a6b] text-[#1a3a6b] px-5 py-3 rounded-xl text-sm font-bold hover:bg-[#1a3a6b] hover:text-white disabled:opacity-50 transition-colors"
+                >
+                  {generating ? '...' : '✨ Régénérer'}
+                </button>
+              </div>
+            </>
+          )}
+          {errMsg && <p className="text-red-500 text-sm text-center">{errMsg}</p>}
+        </div>
+      )}
+
+      {/* Vue résultat */}
+      {vue === 'result' && analyse && (
+        <div className="space-y-5">
+          {/* Score */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-gray-800">Score de votre lettre</h3>
+              <div className="flex gap-2">
+                <button onClick={() => setVue('edit')} className="text-xs text-gray-400 hover:text-[#1a3a6b] underline">Modifier</button>
+              </div>
+            </div>
+            <div className="flex items-center gap-6">
+              <ScoreBadge score={analyse.score_global ?? analyse.score ?? 0} />
+              <div className="flex-1">
+                {Object.entries(evaluation).map(([cle, val]) => {
+                  const s = typeof val === 'object' ? val.score : val;
+                  const label = { accroche: 'Accroche', presentation_parcours: 'Parcours', motivation_specifique: 'Motivation', projet_professionnel: 'Projet pro', qualite_redaction: 'Rédaction', longueur_format: 'Format' }[cle] || cle;
+                  const color = s >= 70 ? 'bg-green-400' : s >= 50 ? 'bg-orange-400' : 'bg-red-400';
+                  return (
+                    <div key={cle} className="mb-2">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="text-xs text-gray-500">{label}</span>
+                        <span className="text-xs font-bold text-gray-700">{s}/100</span>
+                      </div>
+                      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div className={`h-full ${color} rounded-full`} style={{ width: `${s}%` }} />
+                      </div>
+                      {typeof val === 'object' && val.commentaire && (
+                        <p className="text-xs text-gray-400 mt-0.5">{val.commentaire}</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Points forts & à améliorer */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {pointsForts.length > 0 && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <span className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-xs">✓</span>
+                  Points forts
+                </h3>
+                <ul className="space-y-2">
+                  {pointsForts.map((p, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                      <span className="text-green-500 mt-0.5 shrink-0">✓</span>
+                      {typeof p === 'string' ? p : p.titre || JSON.stringify(p)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {pointsAmeliorer.length > 0 && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <span className="w-5 h-5 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 text-xs">!</span>
+                  À améliorer
+                </h3>
+                <div className="space-y-3">
+                  {pointsAmeliorer.map((p, i) => (
+                    <div key={i} className="bg-orange-50 rounded-xl p-3 border border-orange-100">
+                      <p className="text-xs font-bold text-orange-700 mb-1">{p.probleme || p}</p>
+                      {p.suggestion && <p className="text-xs text-gray-600"><span className="font-semibold">Suggestion :</span> {p.suggestion}</p>}
+                      {p.exemple && <p className="text-xs text-gray-400 mt-1 italic">"{p.exemple}"</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Version corrigée */}
+          {versionCorrigee && (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-gray-800">Version corrigée proposée par l'IA</h3>
+                <button onClick={() => setShowCompare(!showCompare)} className="text-xs text-[#1a3a6b] underline underline-offset-2">
+                  {showCompare ? 'Vue simple' : 'Comparer côte à côte'}
+                </button>
+              </div>
+
+              {showCompare ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 mb-2 uppercase tracking-wide">Original</p>
+                    <div className="bg-gray-50 rounded-xl p-4 text-xs font-mono leading-relaxed text-gray-600 whitespace-pre-wrap max-h-80 overflow-y-auto border border-gray-200">
+                      {texte}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-green-600 mb-2 uppercase tracking-wide">Corrigée par l'IA</p>
+                    <div className="bg-green-50 rounded-xl p-4 text-xs font-mono leading-relaxed text-gray-700 whitespace-pre-wrap max-h-80 overflow-y-auto border border-green-100">
+                      {versionCorrigee}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-green-50 rounded-xl p-4 text-sm font-mono leading-relaxed text-gray-700 whitespace-pre-wrap max-h-80 overflow-y-auto border border-green-100">
+                  {versionCorrigee}
+                </div>
+              )}
+
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={handleUtiliserVersion}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors"
+                >
+                  Utiliser cette version
+                </button>
+                <button
+                  onClick={() => { setVue('edit'); setShowCompare(false); }}
+                  className="flex-1 border border-gray-200 text-gray-600 font-bold py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-colors"
+                >
+                  Garder la mienne
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Section CV ─── */
+function SectionCV() {
+  const PAYS = ['France', 'Canada', 'Belgique', 'Allemagne', 'Royaume-Uni'];
+  const [versions, setVersions] = useState([]);
+  const [activeIdx, setActiveIdx] = useState(null);
+  const [texte, setTexte] = useState('');
+  const [paysCible, setPaysCible] = useState('France');
+  const [analyse, setAnalyse] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [vue, setVue] = useState('edit');
+  const [errMsg, setErrMsg] = useState('');
+
+  const chargeVersions = async () => {
+    try {
+      const r = await getCVVersions();
+      if (r.versions?.length) {
+        setVersions(r.versions);
+        const last = r.versions[r.versions.length - 1];
+        setActiveIdx(r.versions.length - 1);
+        setTexte(last.contenu);
+        setPaysCible(last.pays_cible || 'France');
+        if (last.score) { setAnalyse(last); setVue('result'); }
+      }
+    } catch { /* ignore */ }
+  };
+
+  useEffect(() => { chargeVersions(); }, []);
+
+  const handleCorriger = async () => {
+    if (!texte.trim()) return;
+    setLoading(true); setErrMsg('');
+    try {
+      const r = await corrigerCV({ contenu: texte, pays_cible: paysCible });
+      if (r.analyse) {
+        setAnalyse(r.analyse);
+        await chargeVersions();
+        setVue('result');
+      } else setErrMsg(r.message || 'Erreur lors de la correction.');
+    } catch { setErrMsg('Erreur réseau.'); }
+    finally { setLoading(false); }
+  };
+
+  const handleUtiliserVersion = async () => {
+    const corrigee = analyse.version_corrigee || '';
+    if (!corrigee) return;
+    await sauvegarderCV({ contenu: corrigee, pays_cible: paysCible });
+    await chargeVersions();
+    setTexte(corrigee);
+    setAnalyse(null);
+    setVue('edit');
+  };
+
+  const chargerVersion = (idx) => {
+    const v = versions[idx];
+    setActiveIdx(idx);
+    setTexte(v.contenu);
+    setPaysCible(v.pays_cible || 'France');
+    if (v.score) { setAnalyse(v); setVue('result'); }
+    else { setAnalyse(null); setVue('edit'); }
+  };
+
+  const corrections = analyse ? parseJ(analyse.corrections) : [];
+  const sectionsMq = analyse ? parseJ(analyse.sections_manquantes) : [];
+  const pointsForts = analyse ? parseJ(analyse.points_forts) : [];
+  const normePays = analyse ? parseObj(analyse.norme_pays) : {};
+  const versionCorrigee = analyse ? (analyse.version_corrigee || '') : '';
+
+  return (
+    <div className="space-y-6">
+      {/* Historique versions */}
+      {versions.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-gray-400 font-medium">Versions :</span>
+          {versions.map((v, i) => (
+            <button
+              key={v.id}
+              onClick={() => chargerVersion(i)}
+              className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${i === activeIdx ? 'bg-[#1a3a6b] text-white border-[#1a3a6b]' : 'bg-white text-gray-500 border-gray-200 hover:border-[#1a3a6b]'}`}
+            >
+              v{v.version} {v.score ? `· ${v.score}/100` : ''} {v.pays_cible ? `· ${v.pays_cible}` : ''}
+            </button>
+          ))}
+          <button onClick={() => { setTexte(''); setAnalyse(null); setVue('edit'); setActiveIdx(null); }}
+            className="px-3 py-1 rounded-full text-xs font-semibold border border-dashed border-gray-300 text-gray-400 hover:border-[#F5A623] hover:text-[#F5A623] transition-all">
+            + Nouveau
+          </button>
+        </div>
+      )}
+
+      {/* Vue édition */}
+      {vue === 'edit' && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row gap-3 items-end">
+            <div className="flex-1">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Pays cible</label>
+              <select
+                value={paysCible} onChange={e => setPaysCible(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#1a3a6b] transition bg-white"
+              >
+                {PAYS.map(p => <option key={p}>{p}</option>)}
+              </select>
+            </div>
+            <p className="text-xs text-gray-400 pb-2.5">Le format CV varie selon le pays (photo, longueur, état civil…)</p>
+          </div>
+
+          {normePays.photo && vue === 'result' && (
+            <div className="bg-blue-50 rounded-xl p-3 border border-blue-100 text-xs text-blue-700 grid grid-cols-2 gap-2">
+              <p><span className="font-bold">Photo :</span> {normePays.photo}</p>
+              <p><span className="font-bold">Longueur :</span> {normePays.longueur}</p>
+              <p><span className="font-bold">Langue :</span> {normePays.langue}</p>
+              <p><span className="font-bold">Âge/état civil :</span> {normePays.age_etat_civil}</p>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1">
+              Contenu de votre CV <span className="font-normal text-gray-400">(collez le texte de votre CV)</span>
+            </label>
+            <textarea
+              value={texte} onChange={e => setTexte(e.target.value)}
+              placeholder={"Prénom Nom\nEmail · Téléphone · Pays\n\nFORMATION\n2022-2024 — Master Informatique — Université de ...\n\nEXPÉRIENCE\n...\n\nCOMPÉTENCES\n..."}
+              rows={18}
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-mono leading-relaxed focus:outline-none focus:border-[#1a3a6b] transition resize-none"
+            />
+            <p className="text-right text-xs text-gray-400 mt-1">{texte.trim().split(/\s+/).filter(Boolean).length} mots</p>
+          </div>
+
+          <button
+            onClick={handleCorriger} disabled={loading || !texte.trim()}
+            className="w-full flex items-center justify-center gap-2 bg-[#1a3a6b] text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-[#0f2550] disabled:opacity-50 transition-colors"
+          >
+            {loading ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Analyse en cours...</> : <>🤖 Analyser et corriger mon CV pour {paysCible}</>}
+          </button>
+          {errMsg && <p className="text-red-500 text-sm text-center">{errMsg}</p>}
+        </div>
+      )}
+
+      {/* Vue résultat */}
+      {vue === 'result' && analyse && (
+        <div className="space-y-5">
+          {/* Score + normes */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-gray-800">Score de votre CV pour {paysCible}</h3>
+              <button onClick={() => setVue('edit')} className="text-xs text-gray-400 hover:text-[#1a3a6b] underline">Modifier</button>
+            </div>
+            <div className="flex items-center gap-6 mb-4">
+              <ScoreBadge score={analyse.score_global ?? analyse.score ?? 0} />
+              {normePays.photo && (
+                <div className="flex-1 grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-blue-50 rounded-lg p-2"><span className="text-gray-400">Photo</span><br /><span className="font-semibold text-gray-700">{normePays.photo}</span></div>
+                  <div className="bg-blue-50 rounded-lg p-2"><span className="text-gray-400">Longueur</span><br /><span className="font-semibold text-gray-700">{normePays.longueur}</span></div>
+                  <div className="bg-blue-50 rounded-lg p-2"><span className="text-gray-400">Langue</span><br /><span className="font-semibold text-gray-700">{normePays.langue}</span></div>
+                  <div className="bg-blue-50 rounded-lg p-2"><span className="text-gray-400">État civil</span><br /><span className="font-semibold text-gray-700">{normePays.age_etat_civil}</span></div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Sections manquantes */}
+          {sectionsMq.length > 0 && (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <h3 className="font-bold text-gray-800 mb-3">Sections manquantes</h3>
+              <div className="flex flex-wrap gap-2">
+                {sectionsMq.map((s, i) => (
+                  <span key={i} className="bg-red-50 text-red-600 text-xs px-3 py-1 rounded-full border border-red-100 font-medium">
+                    + {typeof s === 'string' ? s : JSON.stringify(s)}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Points forts + corrections */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {pointsForts.length > 0 && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <span className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-xs">✓</span>
+                  Points forts
+                </h3>
+                <ul className="space-y-2">
+                  {pointsForts.map((p, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                      <span className="text-green-500 mt-0.5 shrink-0">✓</span>
+                      {typeof p === 'string' ? p : JSON.stringify(p)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {corrections.length > 0 && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <span className="w-5 h-5 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 text-xs">!</span>
+                  Corrections section par section
+                </h3>
+                <div className="space-y-3">
+                  {corrections.map((c, i) => (
+                    <div key={i} className="bg-orange-50 rounded-xl p-3 border border-orange-100">
+                      <p className="text-xs font-bold text-orange-700 mb-0.5">{c.section}</p>
+                      <p className="text-xs text-gray-600">{c.probleme}</p>
+                      {c.suggestion && <p className="text-xs text-[#1a3a6b] mt-1"><span className="font-semibold">→</span> {c.suggestion}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Version corrigée */}
+          {versionCorrigee && (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <h3 className="font-bold text-gray-800 mb-3">Version corrigée proposée pour {paysCible}</h3>
+              <div className="bg-green-50 rounded-xl p-4 text-sm font-mono leading-relaxed text-gray-700 whitespace-pre-wrap max-h-96 overflow-y-auto border border-green-100">
+                {versionCorrigee}
+              </div>
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={handleUtiliserVersion}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors"
+                >
+                  Utiliser cette version
+                </button>
+                <button
+                  onClick={() => setVue('edit')}
+                  className="flex-1 border border-gray-200 text-gray-600 font-bold py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-colors"
+                >
+                  Garder la mienne
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── Page principale ─── */
 export default function Analysis() {
   const navigate = useNavigate();
@@ -333,6 +894,7 @@ export default function Analysis() {
   const [selectedBourse, setSelectedBourse] = useState(null);
   const [loadingBourse, setLoadingBourse] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [section, setSection] = useState('rapport'); // 'rapport' | 'lm' | 'cv'
 
   const handleProgrammeClick = async (p) => {
     setLoadingBourse(true);
@@ -400,24 +962,45 @@ export default function Analysis() {
           </button>
         </div>
 
-        <div className="flex-1 px-4 py-6 space-y-2">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+          {/* Sections principales */}
           {[
-            { label: 'Score global',         done: !!analyse },
-            { label: 'Forces & faiblesses',  done: !!analyse },
-            { label: 'Recommandations',      done: !!analyse },
-            { label: 'Programmes',           done: !!analyse },
-            { label: 'Chances admission',    done: !!analyse },
-          ].map((item) => (
-            <div key={item.label} className="flex items-center gap-3 px-3 py-2.5 rounded-xl">
-              <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${item.done ? 'bg-green-100' : 'bg-gray-100'}`}>
-                {item.done
-                  ? <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                  : <div className="w-2 h-2 rounded-full bg-gray-300" />}
-              </div>
-              <span className={`text-xs font-medium ${item.done ? 'text-gray-700' : 'text-gray-400'}`}>{item.label}</span>
-            </div>
+            { id: 'rapport', icon: '🤖', label: 'Analyse IA' },
+            { id: 'lm',      icon: '📄', label: 'Lettre de motivation' },
+            { id: 'cv',      icon: '📋', label: 'CV' },
+          ].map(s => (
+            <button
+              key={s.id}
+              onClick={() => { setSection(s.id); setSidebarOpen(false); }}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors ${section === s.id ? 'bg-[#1a3a6b] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+            >
+              <span className="text-base">{s.icon}</span>
+              <span className="text-xs font-semibold">{s.label}</span>
+            </button>
           ))}
-        </div>
+
+          {/* Sous-items Analyse IA */}
+          {section === 'rapport' && (
+            <div className="mt-2 pl-4 space-y-1 border-l border-gray-100 ml-3">
+              {[
+                { label: 'Score global',        done: !!analyse },
+                { label: 'Forces & faiblesses', done: !!analyse },
+                { label: 'Recommandations',     done: !!analyse },
+                { label: 'Programmes',          done: !!analyse },
+                { label: 'Chances admission',   done: !!analyse },
+              ].map(item => (
+                <div key={item.label} className="flex items-center gap-2 px-2 py-1.5">
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${item.done ? 'bg-green-100' : 'bg-gray-100'}`}>
+                    {item.done
+                      ? <svg className="w-2.5 h-2.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                      : <div className="w-1.5 h-1.5 rounded-full bg-gray-300" />}
+                  </div>
+                  <span className={`text-xs ${item.done ? 'text-gray-600' : 'text-gray-400'}`}>{item.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </nav>
 
         <div className="px-4 py-4 border-t border-gray-100">
           <button onClick={() => navigate('/dashboard')} className="w-full flex items-center gap-2 text-sm text-gray-500 hover:text-[#1a3a6b] transition-colors px-3 py-2">
@@ -437,11 +1020,17 @@ export default function Analysis() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
             <div>
-              <h1 className="text-lg font-bold text-gray-800">Analyse IA du dossier</h1>
-              <p className="text-xs text-gray-400">Rapport personnalisé généré par l'intelligence artificielle</p>
+              <h1 className="text-lg font-bold text-gray-800">
+                {section === 'rapport' ? 'Analyse IA du dossier' : section === 'lm' ? 'Lettre de motivation' : 'CV'}
+              </h1>
+              <p className="text-xs text-gray-400">
+                {section === 'rapport' ? 'Rapport personnalisé généré par l\'intelligence artificielle'
+                  : section === 'lm' ? 'Rédaction et correction par l\'IA'
+                  : 'Analyse et correction CV adaptée au pays cible'}
+              </p>
             </div>
           </div>
-          {etat === 'idle' && !analyse && (
+          {section === 'rapport' && etat === 'idle' && !analyse && (
             <button
               onClick={() => lancerAnalyse(false)}
               className="bg-[#1a3a6b] text-white text-sm font-bold px-6 py-2.5 rounded-xl hover:bg-[#0f2550] transition-colors flex items-center gap-2"
@@ -455,6 +1044,13 @@ export default function Analysis() {
         </div>
 
         <div className="p-4 md:p-8 pb-24 md:pb-8">
+
+          {/* Sections LM et CV */}
+          {section === 'lm' && <SectionLM />}
+          {section === 'cv' && <SectionCV />}
+
+          {/* Section Rapport IA */}
+          {section === 'rapport' && <>
 
           {/* État : idle (pas d'analyse) */}
           {etat === 'idle' && !analyse && (
@@ -519,6 +1115,8 @@ export default function Analysis() {
               onProgrammeClick={handleProgrammeClick}
             />
           )}
+
+          </>}
 
         </div>
       </main>

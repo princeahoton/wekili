@@ -384,6 +384,40 @@ Réponds en JSON :
   "deadlines_2026": {"deadline_principale": "<date>", "deadline_art": "<date>"}
 }`;
 
+// ── MODULE 5 — Génération lettre de motivation ───────────────────────
+const promptGenererLM = (profil, universite_cible) => `
+Tu es Wekili, expert senior en admissions universitaires internationales, spécialiste de l'accompagnement des étudiants africains francophones.
+
+Génère une lettre de motivation professionnelle, personnalisée et convaincante pour :
+
+PROFIL DE L'ÉTUDIANT :
+- Prénom         : ${profil.prenom || 'L\'étudiant'}
+- Nationalité    : ${profil.nationalite || profil.pays_residence || 'Non précisé'}
+- Niveau actuel  : ${profil.niveau_etudes || 'Non précisé'} en ${profil.domaine || 'Non précisé'}
+- Spécialisation : ${profil.specialisation || 'Non précisé'}
+- Moyenne        : ${profil.moyenne || '--'}/20
+- Langue         : ${profil.langue_principale || 'Français'} — niveau ${profil.niveau_langue || 'B2'}
+- Niveau visé    : ${profil.niveau_vise || 'Master'}
+- Pays cibles    : ${(profil.pays_cibles || []).join(', ') || 'Non précisé'}
+- Université     : ${universite_cible || 'Non précisée'}
+- Projet pro     : ${profil.projet_professionnel || 'Non précisé'}
+
+RÈGLES ABSOLUES :
+1. Lettre entièrement en français, ton professionnel mais authentique
+2. Structure en 4-5 paragraphes : accroche → parcours académique → motivation spécifique → projet professionnel → conclusion
+3. Citer les vraies données du profil (domaine, niveau, nationalité, pays cible)
+4. Mentionner l'université si précisée — sinon formulation générale
+5. Entre 400 et 600 mots — ni trop courte ni trop longue
+6. Zéro placeholder entre crochets — chaque élément doit être rédigé
+7. Commencer par "Madame, Monsieur," et terminer par une formule de politesse complète
+
+Réponds UNIQUEMENT en JSON valide :
+{
+  "lettre_complete": "<lettre entière prête à copier-coller>",
+  "structure": ["§1 : Accroche et contexte", "§2 : Parcours académique", "§3 : Motivation spécifique", "§4 : Projet professionnel", "§5 : Conclusion"],
+  "conseil": "<un conseil de personnalisation pour renforcer encore cette lettre>"
+}`;
+
 // ── MODULE 5 — Correction lettre de motivation ───────────────────────
 const promptCorrectionLM = (lm_texte, profil, universite_cible) => `
 Tu es un expert en rédaction de lettres de motivation pour les admissions
@@ -682,6 +716,10 @@ class ClaudeService {
   }
 
   // ── Module 5 ──────────────────────────────────────────────────────
+  async genererLM(profil, universite_cible) {
+    return this.appeler(promptGenererLM(profil, universite_cible), 3000);
+  }
+
   async corrigerLM(lm_texte, profil, universite_cible) {
     return this.appeler(promptCorrectionLM(lm_texte, profil, universite_cible), 4000);
   }

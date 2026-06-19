@@ -209,6 +209,45 @@ export const verifyPhoneOTP = async (phone, code, prenom, nom) => {
   return response.json();
 };
 
+// ── Lettre de motivation ─────────────────────────────────────────────
+const authHeaders = () => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` });
+
+export const getLMVersions = async () => {
+  const res = await fetch(`${API_URL}/lm`, { headers: authHeaders() });
+  return res.json();
+};
+
+export const genererLM = async (data) => {
+  const res = await fetch(`${API_URL}/lm/generate`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(data) });
+  return res.json();
+};
+
+export const corrigerLM = async (data) => {
+  const res = await fetch(`${API_URL}/lm/correct`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(data) });
+  return res.json();
+};
+
+export const sauvegarderLM = async (data) => {
+  const res = await fetch(`${API_URL}/lm/save`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(data) });
+  return res.json();
+};
+
+// ── CV ───────────────────────────────────────────────────────────────
+export const getCVVersions = async () => {
+  const res = await fetch(`${API_URL}/cv`, { headers: authHeaders() });
+  return res.json();
+};
+
+export const corrigerCV = async (data) => {
+  const res = await fetch(`${API_URL}/cv/correct`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(data) });
+  return res.json();
+};
+
+export const sauvegarderCV = async (data) => {
+  const res = await fetch(`${API_URL}/cv/save`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(data) });
+  return res.json();
+};
+
 // ── Logement ─────────────────────────────────────────────────────────
 export const getLogement = async () => {
   const token = localStorage.getItem('token');

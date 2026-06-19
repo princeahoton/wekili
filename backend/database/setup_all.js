@@ -553,6 +553,41 @@ async function runAll() {
     }
     console.log('✅ Détails des bourses mis à jour');
 
+    // ── TABLE LM_VERSIONS ──────────────────────────────────────────────
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS lm_versions (
+        id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id          UUID REFERENCES users(id) ON DELETE CASCADE,
+        version          INTEGER NOT NULL DEFAULT 1,
+        contenu          TEXT NOT NULL,
+        universite       VARCHAR(300),
+        score            INTEGER,
+        points_forts     JSONB,
+        points_ameliorer JSONB,
+        evaluation       JSONB,
+        version_corrigee TEXT,
+        created_at       TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+
+    // ── TABLE CV_VERSIONS ───────────────────────────────────────────────
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS cv_versions (
+        id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id             UUID REFERENCES users(id) ON DELETE CASCADE,
+        version             INTEGER NOT NULL DEFAULT 1,
+        contenu             TEXT NOT NULL,
+        pays_cible          VARCHAR(100),
+        score               INTEGER,
+        points_forts        JSONB,
+        corrections         JSONB,
+        sections_manquantes JSONB,
+        norme_pays          JSONB,
+        version_corrigee    TEXT,
+        created_at          TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+
     await client.query('COMMIT');
     console.log('✅ Toutes les tables créées / vérifiées avec succès');
 
