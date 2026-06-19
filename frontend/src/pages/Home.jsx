@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { getBoursesPublic } from '../services/api';
+import { getToken } from '../utils/auth';
 import 'flag-icons/css/flag-icons.min.css';
 
 function toArr(val) {
@@ -33,86 +34,36 @@ const VIDEOS = [
 const PAYS = [
   {
     code: 'fr', pays: 'France',
-    desc: "Plus de 20 bourses disponibles. Langue française obligatoire. Nombreuses universités classées mondialement.",
-    nb: '20+ bourses', delai: 'Jan–Mars',
+    desc: "Langue française obligatoire. Nombreuses universités classées mondialement. Bourses Eiffel, gouvernementales et régionales disponibles.",
+    delai: 'Jan–Mars',
   },
   {
     code: 'ca', pays: 'Canada',
     desc: "Bourses bilingues (français/anglais). Qualité de vie exceptionnelle. Forte communauté africaine.",
-    nb: '12+ bourses', delai: 'Nov–Fév',
+    delai: 'Nov–Fév',
   },
   {
     code: 'be', pays: 'Belgique',
     desc: "Frais d'inscription parmi les plus bas d'Europe. Bourse WBI pour pays francophones. Idéal pour Master.",
-    nb: '8+ bourses', delai: 'Fév–Avr',
+    delai: 'Fév–Avr',
   },
   {
     code: 'de', pays: 'Allemagne',
     desc: "Bourse DAAD très compétitive. Universités d'excellence. Nombreux programmes en anglais.",
-    nb: '10+ bourses', delai: 'Oct–Déc',
+    delai: 'Oct–Déc',
   },
   {
     code: 'gb', pays: 'Royaume-Uni',
     desc: "Bourse Chevening réputée mondialement. Top universités (Oxford, Cambridge). Communauté diverse.",
-    nb: '12+ bourses', delai: 'Août–Nov',
+    delai: 'Août–Nov',
   },
   {
     code: 'us', pays: 'USA',
     desc: "Bientôt disponible. Les États-Unis seront intégrés dans la prochaine version de Wekili.",
-    nb: 'Bientôt', delai: '--',
+    delai: '--',
   },
 ];
 
-const BOURSES = [
-  {
-    nom: 'Bourse Eiffel Excellence',
-    pays: 'France', code: 'fr',
-    montant: 'jusqu\'à 1 181 €/mois',
-    niveau: 'Master • Doctorat',
-    organisme: 'Campus France',
-    couleur: 'bg-blue-50 border-blue-100',
-  },
-  {
-    nom: 'DAAD — Bourse d\'excellence',
-    pays: 'Allemagne', code: 'de',
-    montant: 'jusqu\'à 934 €/mois',
-    niveau: 'Master • Doctorat',
-    organisme: 'DAAD',
-    couleur: 'bg-yellow-50 border-yellow-100',
-  },
-  {
-    nom: 'Bourse WBI',
-    pays: 'Belgique', code: 'be',
-    montant: 'jusqu\'à 1 500 €/mois',
-    niveau: 'Master',
-    organisme: 'Wallonie-Bruxelles',
-    couleur: 'bg-red-50 border-red-100',
-  },
-  {
-    nom: 'Bourse Vanier Canada',
-    pays: 'Canada', code: 'ca',
-    montant: '50 000 $/an',
-    niveau: 'Doctorat',
-    organisme: 'Gouvernement du Canada',
-    couleur: 'bg-red-50 border-red-100',
-  },
-  {
-    nom: 'Bourse Chevening',
-    pays: 'Royaume-Uni', code: 'gb',
-    montant: 'Couverture totale',
-    niveau: 'Master',
-    organisme: 'FCDO',
-    couleur: 'bg-indigo-50 border-indigo-100',
-  },
-  {
-    nom: 'Bourse du Gouvernement Français',
-    pays: 'France', code: 'fr',
-    montant: 'jusqu\'à 700 €/mois',
-    niveau: 'Licence • Master',
-    organisme: 'Institut Français',
-    couleur: 'bg-blue-50 border-blue-100',
-  },
-];
 
 const ETAPES_PREP = [
   {
@@ -149,7 +100,7 @@ const NIVEAUX_ETUDE = [
   {
     titre: 'Licence (Bac+3)',
     desc: 'Les bourses de licence sont rares mais existent. Wekili recense les programmes accessibles aux bacheliers africains.',
-    bourses: '8 bourses disponibles',
+    badge: 'Niveau accessible',
     icon: '🎒',
     bg: 'bg-orange-50',
     color: 'text-orange-600',
@@ -157,7 +108,7 @@ const NIVEAUX_ETUDE = [
   {
     titre: 'Master (Bac+5)',
     desc: 'La majorité des bourses internationales visent le niveau Master. C\'est le niveau le plus compétitif et le plus financé.',
-    bourses: '35 bourses disponibles',
+    badge: 'Niveau le plus ciblé',
     icon: '📚',
     bg: 'bg-blue-50',
     color: 'text-blue-700',
@@ -165,36 +116,13 @@ const NIVEAUX_ETUDE = [
   {
     titre: 'Doctorat (Bac+8)',
     desc: 'Bourses de recherche très dotées. Disponibles dans toutes les grandes universités européennes et nord-américaines.',
-    bourses: '18 bourses disponibles',
+    badge: 'Financement élevé',
     icon: '🔬',
     bg: 'bg-green-50',
     color: 'text-green-700',
   },
 ];
 
-const TEMOIGNAGES = [
-  {
-    nom: 'Aminata Diallo',
-    pays: 'Sénégal', code: 'sn',
-    bourse: 'Bourse Eiffel — France',
-    texte: "Grâce à Wekili, j'ai su exactement quels documents améliorer. Mon dossier a été accepté en moins de 3 semaines après les recommandations de l'IA.",
-    note: 5,
-  },
-  {
-    nom: 'Kofi Mensah',
-    pays: "Côte d'Ivoire", code: 'ci',
-    bourse: 'DAAD — Allemagne',
-    texte: "Je ne savais pas par où commencer. Wekili m'a donné un score, des points à corriger, et une liste de bourses adaptées à mon profil. Incroyable.",
-    note: 5,
-  },
-  {
-    nom: 'Fatou Ndiaye',
-    pays: 'Bénin', code: 'bj',
-    bourse: 'Bourse WBI — Belgique',
-    texte: "L'analyse IA a détecté que ma lettre de motivation était trop courte. Après correction, mon score est passé de 61 à 78. J'ai eu ma bourse !",
-    note: 5,
-  },
-];
 
 const FAQS = [
   {
@@ -223,17 +151,6 @@ const FAQS = [
   },
 ];
 
-function Stars({ n }) {
-  return (
-    <div className="flex gap-0.5">
-      {Array.from({ length: n }).map((_, i) => (
-        <svg key={i} className="w-4 h-4 text-[#F5A623]" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
-      ))}
-    </div>
-  );
-}
 
 function Home() {
   const navigate = useNavigate();
@@ -243,7 +160,7 @@ function Home() {
   const [boursesLoading, setBoursesLoading] = useState(true);
   const [selectedBourse, setSelectedBourse] = useState(null);
 
-  const isLoggedIn = !!localStorage.getItem('token');
+  const isLoggedIn = !!getToken();
 
   const handleVideoEnd = () => setVideoIndex((prev) => (prev + 1) % VIDEOS.length);
 
@@ -594,10 +511,11 @@ function Home() {
                   <h3 className="text-lg font-bold text-[#1a3a6b] group-hover:text-[#F5A623] transition-colors">{p.pays}</h3>
                 </div>
                 <p className="text-gray-600 text-sm leading-relaxed mb-4">{p.desc}</p>
-                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                  <span className="text-xs font-semibold text-[#F5A623]">{p.nb}</span>
-                  <span className="text-xs text-gray-400">Délai : {p.delai}</span>
-                </div>
+                {p.delai !== '--' && (
+                  <div className="pt-3 border-t border-gray-100">
+                    <span className="text-xs text-gray-400">Période de candidature : {p.delai}</span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -733,11 +651,8 @@ function Home() {
                 <div className="text-4xl mb-4">{n.icon}</div>
                 <h3 className={`font-bold text-xl mb-3 ${n.color}`}>{n.titre}</h3>
                 <p className="text-gray-600 text-sm leading-relaxed mb-4">{n.desc}</p>
-                <div className="flex items-center gap-2 pt-3 border-t border-gray-200">
-                  <svg className="w-4 h-4 text-[#F5A623] shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                  <span className={`text-sm font-semibold ${n.color}`}>{n.bourses}</span>
+                <div className="pt-3 border-t border-gray-200">
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full bg-white border ${n.color}`}>{n.badge}</span>
                 </div>
               </div>
             ))}
@@ -769,37 +684,69 @@ function Home() {
       </section>
 
       {/* ═══════════════════════════════
-          8. TÉMOIGNAGES
+          8. POURQUOI WEKILI
       ═══════════════════════════════ */}
-      <section id="temoignages" className="py-16 bg-gray-50">
+      <section id="pourquoi" className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="mb-10 text-center">
             <h2 className="text-[#1a3a6b] text-3xl font-bold uppercase tracking-wide">
-              Ils ont trouvé leur bourse
+              Pourquoi choisir Wekili ?
             </h2>
             <div className="h-0.5 w-16 bg-[#F5A623] mt-3 mx-auto" />
             <p className="text-gray-500 text-base mt-3">
-              Des étudiants africains qui ont réussi grâce à Wekili
+              Une plateforme conçue pour les étudiants africains francophones qui préparent leurs études à l'international
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {TEMOIGNAGES.map((t) => (
-              <div key={t.nom} className="bg-white border border-gray-200 p-6 rounded hover:shadow-md transition-shadow">
-                <Stars n={t.note} />
-                <p className="text-gray-600 text-sm leading-relaxed mt-4 mb-5 italic">
-                  "{t.texte}"
-                </p>
-                <div className="flex items-center gap-3 border-t border-gray-100 pt-4">
-                  <span
-                    className={`fi fi-${t.code} rounded-full shrink-0`}
-                    style={{ display: 'inline-block', width: 36, height: 36, backgroundSize: 'cover' }}
-                  />
-                  <div>
-                    <p className="text-[#1a3a6b] font-bold text-sm">{t.nom}</p>
-                    <p className="text-gray-400 text-xs">{t.pays} — <span className="text-[#F5A623] font-semibold">{t.bourse}</span></p>
-                  </div>
-                </div>
+            {[
+              {
+                icon: '🤖',
+                titre: 'Analyse IA de votre dossier',
+                desc: 'Notre intelligence artificielle évalue votre profil académique, vos documents et vos objectifs pour identifier les bourses auxquelles vous êtes éligible.',
+                color: 'border-blue-100 bg-blue-50',
+                tc: 'text-blue-700',
+              },
+              {
+                icon: '🎯',
+                titre: 'Recommandations personnalisées',
+                desc: 'Chaque recommandation est adaptée à votre pays d\'origine, votre niveau d\'études, votre domaine et vos pays cibles. Pas de résultats génériques.',
+                color: 'border-orange-100 bg-orange-50',
+                tc: 'text-orange-700',
+              },
+              {
+                icon: '🔒',
+                titre: 'Sécurité et confidentialité',
+                desc: 'Vos documents sont chiffrés, vos accès protégés par authentification JWT, et un code OTP est requis pour ouvrir votre espace documents.',
+                color: 'border-green-100 bg-green-50',
+                tc: 'text-green-700',
+              },
+              {
+                icon: '📋',
+                titre: 'Suivi des candidatures',
+                desc: 'Centralisez toutes vos candidatures en un seul endroit. Suivez les deadlines, les statuts et les documents requis pour chaque bourse.',
+                color: 'border-purple-100 bg-purple-50',
+                tc: 'text-purple-700',
+              },
+              {
+                icon: '✍️',
+                titre: 'Aide à la rédaction',
+                desc: 'Wekili vous aide à rédiger et améliorer votre lettre de motivation et votre CV grâce à l\'IA, en tenant compte des exigences de chaque programme.',
+                color: 'border-indigo-100 bg-indigo-50',
+                tc: 'text-indigo-700',
+              },
+              {
+                icon: '🌍',
+                titre: '5 pays de destination',
+                desc: 'France, Canada, Belgique, Allemagne et Royaume-Uni — avec des informations détaillées sur les bourses, les universités et les démarches pour chaque destination.',
+                color: 'border-teal-100 bg-teal-50',
+                tc: 'text-teal-700',
+              },
+            ].map((item) => (
+              <div key={item.titre} className={`${item.color} border rounded-lg p-6 hover:shadow-md transition-all`}>
+                <div className="text-3xl mb-4">{item.icon}</div>
+                <h3 className={`font-bold text-base mb-2 ${item.tc}`}>{item.titre}</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -855,7 +802,7 @@ function Home() {
           <p className="text-white/70 text-base mb-8 leading-relaxed">
             {isLoggedIn
               ? 'Votre dossier, vos bourses matchées et vos recommandations IA vous attendent.'
-              : "Rejoignez des centaines d'étudiants africains francophones qui ont trouvé leur financement grâce à l'analyse IA de Wekili."}
+              : "Analysez votre dossier gratuitement, découvrez les bourses adaptées à votre profil et préparez votre candidature avec l'aide de l'IA."}
           </p>
           <button
             onClick={() => navigate(ctaPath)}
@@ -876,26 +823,19 @@ function Home() {
             <p className="text-white/60 text-sm leading-relaxed">
               Votre conseiller intelligent pour les études et bourses internationales.
             </p>
-            <div className="flex gap-3 mt-4">
-              {[
-                { l: 'f', label: 'Facebook' },
-                { l: 'x', label: 'Twitter'  },
-                { l: 'in', label: 'LinkedIn' },
-                { l: '▶', label: 'YouTube'  },
-              ].map((s) => (
-                <a key={s.l} href="#" aria-label={s.label} className="w-8 h-8 bg-white/10 hover:bg-[#F5A623] flex items-center justify-center transition-colors text-sm font-bold">
-                  {s.l}
-                </a>
-              ))}
+            <div className="mt-4">
+              <a href="mailto:contact@wekili.africa" className="text-white/60 hover:text-[#F5A623] transition-colors text-sm">
+                contact@wekili.africa
+              </a>
             </div>
           </div>
           <div>
             <h4 className="font-bold text-base mb-4 border-b border-white/20 pb-2">Étudier</h4>
             <ul className="space-y-2.5 text-sm text-white/60">
-              <li><a href="#bourses"      className="hover:text-[#F5A623] transition-colors">Bourses disponibles</a></li>
-              <li><a href="#pays"         className="hover:text-[#F5A623] transition-colors">Pays de destination</a></li>
-              <li><a href="#comment"      className="hover:text-[#F5A623] transition-colors">Analyse IA</a></li>
-              <li><a href="#temoignages"  className="hover:text-[#F5A623] transition-colors">Témoignages</a></li>
+              <li><a href="#bourses"   className="hover:text-[#F5A623] transition-colors">Bourses disponibles</a></li>
+              <li><a href="#pays"      className="hover:text-[#F5A623] transition-colors">Pays de destination</a></li>
+              <li><a href="#comment"   className="hover:text-[#F5A623] transition-colors">Analyse IA</a></li>
+              <li><a href="#pourquoi"  className="hover:text-[#F5A623] transition-colors">Pourquoi Wekili</a></li>
             </ul>
           </div>
           <div>
@@ -911,20 +851,19 @@ function Home() {
             <h4 className="font-bold text-base mb-4 border-b border-white/20 pb-2">Aide & Support</h4>
             <ul className="space-y-2.5 text-sm text-white/60">
               <li><a href="mailto:contact@wekili.africa" className="hover:text-[#F5A623] transition-colors">Contact</a></li>
-              <li><a href="#" className="hover:text-[#F5A623] transition-colors">Presse</a></li>
-              <li><a href="#" className="hover:text-[#F5A623] transition-colors">Mentions légales</a></li>
-              <li><a href="#" className="hover:text-[#F5A623] transition-colors">Confidentialité</a></li>
+              <li><a href="/mentions-legales" className="hover:text-[#F5A623] transition-colors">Mentions légales</a></li>
+              <li><a href="/confidentialite" className="hover:text-[#F5A623] transition-colors">Confidentialité</a></li>
+              <li><a href="/cgu" className="hover:text-[#F5A623] transition-colors">CGU</a></li>
             </ul>
-            <p className="text-white/60 text-sm mt-4">📧 contact@wekili.africa</p>
           </div>
         </div>
         <div className="border-t border-white/10">
           <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-white/40">
             <span>© 2026 Wekili — Tous droits réservés</span>
             <div className="flex gap-4">
-              <a href="#" className="hover:text-white transition-colors">Accessibilité</a>
-              <a href="#" className="hover:text-white transition-colors">Plan du site</a>
-              <a href="#" className="hover:text-white transition-colors">CGU</a>
+              <a href="/mentions-legales" className="hover:text-white transition-colors">Mentions légales</a>
+              <a href="/confidentialite" className="hover:text-white transition-colors">Confidentialité</a>
+              <a href="/cgu" className="hover:text-white transition-colors">CGU</a>
             </div>
           </div>
         </div>

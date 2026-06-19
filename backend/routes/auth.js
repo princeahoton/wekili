@@ -22,4 +22,11 @@ router.post('/facebook', authLimit, authController.facebookLogin);
 router.post('/phone/send-otp', authLimit, authController.sendPhoneOTP);
 router.post('/phone/verify',   authLimit, authController.verifyPhoneOTP);
 
+// Vérification 2FA après connexion
+router.post('/2fa-verify', authLimit, authController.verify2FA);
+
+// Vérification email à l'inscription
+router.post('/verify-email',  authLimit, authController.verifyEmail);
+router.post('/resend-verify', authLimit, authController.resendVerificationEmail);
+
 module.exports = router;

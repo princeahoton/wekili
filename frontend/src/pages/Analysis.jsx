@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { launchAnalysis, getAnalysis, getBourses, getLMVersions, genererLM, corrigerLM, sauvegarderLM, getCVVersions, corrigerCV, sauvegarderCV, uploadCVPDF } from '../services/api';
+import { getUser } from '../utils/auth';
 import 'flag-icons/css/flag-icons.min.css';
 
 function toArr(val) {
@@ -937,8 +938,7 @@ export default function Analysis() {
   };
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) { navigate('/login'); return; }
+    if (!getUser()) { navigate('/login'); return; }
     // Charger une analyse existante
     getAnalysis().then((res) => {
       if (res?.analyse) { setAnalyse(res.analyse); setEtat('done'); }

@@ -3,7 +3,7 @@ const router = express.Router();
 const path = require('path');
 const multer = require('multer');
 const auth = require('../middleware/auth');
-const { getDocuments, uploadDocument, deleteDocument } = require('../controllers/documentsController');
+const { getDocuments, uploadDocument, deleteDocument, requestDocAccess, verifyDocAccess } = require('../controllers/documentsController');
 
 const ALLOWED_MIMES = [
   'application/pdf',
@@ -53,5 +53,9 @@ function validateDocType(req, res, next) {
 router.get('/', auth, getDocuments);
 router.post('/upload', auth, upload.single('file'), validateDocType, uploadDocument);
 router.delete('/:id', auth, deleteDocument);
+
+// Portail de vérification d'accès aux documents
+router.post('/request-access', auth, requestDocAccess);
+router.post('/verify-access',  auth, verifyDocAccess);
 
 module.exports = router;

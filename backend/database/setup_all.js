@@ -82,6 +82,23 @@ async function runAll() {
     await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS niveau_vise VARCHAR(100)`);
     await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS domaine_vise VARCHAR(200)`);
     await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS budget INTEGER`);
+    await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN DEFAULT FALSE`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS two_fa_enabled   BOOLEAN DEFAULT FALSE`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified  BOOLEAN DEFAULT FALSE`);
+
+    // ── TABLE LOGIN_SESSIONS ───────────────────────────────────────────
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS login_sessions (
+        id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        ip          TEXT,
+        user_agent  TEXT,
+        device_hash TEXT,
+        created_at  TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_login_sessions_user ON login_sessions(user_id, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_login_sessions_device ON login_sessions(user_id, device_hash, created_at DESC)`);
 
     // ── TABLE DOCUMENTS ────────────────────────────────────────────────
     await client.query(`

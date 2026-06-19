@@ -21,7 +21,7 @@ app.use(cors({
     'http://localhost:3000'
   ],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
@@ -38,6 +38,7 @@ app.use(express.json({ limit: '2mb' }));
 
 // ── Routes ───────────────────────────────────────────────────────────
 app.use('/api/auth',         require('./routes/auth'));
+app.use('/api/user',         require('./routes/user'));
 app.use('/api/profile',      require('./routes/profile'));
 app.use('/api/documents',    require('./routes/documents'));
 app.use('/api/analysis',     require('./routes/analysis'));

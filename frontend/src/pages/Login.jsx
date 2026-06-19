@@ -1,16 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { login, googleLogin } from '../services/api';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { login, googleLogin, verify2FA } from '../services/api';
+import { saveAuth } from '../utils/auth';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [form, setForm]       = useState({ email: '', password: '' });
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState('');
+  const [form, setForm]           = useState({ email: '', password: '' });
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState('');
+  const [showPwd, setShowPwd]     = useState(false);
+  const [rememberMe, setRememberMe]       = useState(true);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [twoFaStep, setTwoFaStep]         = useState(false);
+  const [twoFaCode, setTwoFaCode]         = useState('');
+  const [tempToken, setTempToken]         = useState('');
   const googleBtnRef = useRef(null);
+  const registered = location.state?.registered;
 
   // ── Initialiser Google Identity Services ─────────────────────────────
   useEffect(() => {
@@ -51,9 +60,8 @@ function Login() {
 
   // ── Helpers communs ──────────────────────────────────────────────────
   function saveAndRedirect(result) {
-    localStorage.setItem('token', result.token);
-    localStorage.setItem('user', JSON.stringify(result.user));
-    navigate('/dashboard');
+    saveAuth(result.token, result.user, rememberMe);
+    navigate(location.state?.from || '/dashboard', { replace: true });
   }
 
   // ── Connexion email ──────────────────────────────────────────────────
@@ -64,8 +72,17 @@ function Login() {
     setLoading(true); setError('');
     try {
       const result = await login(form);
-      if (result.success) saveAndRedirect(result);
-      else setError(result.message || 'Email ou mot de passe incorrect');
+      if (result.success && result.requires2FA) {
+        setTempToken(result.tempToken);
+        setTwoFaStep(true);
+      } else if (!result.success && result.requiresVerification) {
+        navigate('/verify-email', { state: { email: result.email || form.email } });
+      } else if (result.success) {
+        setFailedAttempts(0); saveAndRedirect(result);
+      } else {
+        setError(result.message || 'Email ou mot de passe incorrect');
+        setFailedAttempts(n => n + 1);
+      }
     } catch { setError('Erreur de connexion au serveur. Vérifiez que le backend tourne.'); }
     finally { setLoading(false); }
   };
@@ -81,7 +98,65 @@ function Login() {
     finally { setLoading(false); }
   };
 
-  // ── Rendu ────────────────────────────────────────────────────────────
+  // ── Vérification 2FA ─────────────────────────────────────────────────
+  const handleVerify2FA = async (e) => {
+    e.preventDefault();
+    setLoading(true); setError('');
+    try {
+      const result = await verify2FA(tempToken, twoFaCode);
+      if (result.success) { setFailedAttempts(0); saveAndRedirect(result); }
+      else setError(result.message || 'Code incorrect');
+    } catch { setError('Erreur de connexion au serveur.'); }
+    finally { setLoading(false); }
+  };
+
+  // ── Rendu 2FA ─────────────────────────────────────────────────────────
+  if (twoFaStep) return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-sm">
+        <div className="w-12 h-12 bg-[#1a3a6b]/10 rounded-2xl flex items-center justify-center mb-5">
+          <svg className="w-6 h-6 text-[#1a3a6b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+        <h2 className="text-xl font-bold text-gray-800 mb-1">Vérification en 2 étapes</h2>
+        <p className="text-sm text-gray-500 mb-6">Un code à 6 chiffres a été envoyé à votre adresse email. Saisissez-le ci-dessous.</p>
+
+        <form onSubmit={handleVerify2FA} className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Code de vérification</label>
+            <input
+              type="text" inputMode="numeric" pattern="\d{6}" maxLength={6}
+              value={twoFaCode} onChange={e => setTwoFaCode(e.target.value.replace(/\D/g, ''))}
+              placeholder="123456" required autoFocus
+              className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-center text-xl font-bold tracking-widest outline-none focus:border-[#1a3a6b] focus:ring-2 focus:ring-[#1a3a6b]/10 transition-all"
+            />
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm flex items-center gap-2">
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              {error}
+            </div>
+          )}
+
+          <button type="submit" disabled={loading || twoFaCode.length !== 6}
+            className="w-full bg-[#1a3a6b] hover:bg-[#0f2550] text-white py-4 rounded-xl font-bold text-base transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+            {loading ? (
+              <><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> Vérification…</>
+            ) : 'Valider →'}
+          </button>
+        </form>
+
+        <button onClick={() => { setTwoFaStep(false); setTwoFaCode(''); setTempToken(''); setError(''); }}
+          className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600 transition-colors">
+          ← Retour à la connexion
+        </button>
+      </div>
+    </div>
+  );
+
+  // ── Rendu principal ───────────────────────────────────────────────────
   return (
     <div className="min-h-screen flex">
 
@@ -135,13 +210,22 @@ function Login() {
             <p className="text-gray-500 text-base">Votre dossier, vos bourses et vos recommandations IA vous attendent.</p>
           </div>
 
+          {registered && (
+            <div className="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm flex items-center gap-2 mb-4">
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Compte créé avec succès ! Connectez-vous pour accéder à votre espace.
+            </div>
+          )}
+
           {/* ── Formulaire email ──────────────────────────────────── */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Adresse e-mail</label>
               <div className="flex items-center border border-gray-200 rounded-xl px-4 py-3.5 gap-3 focus-within:border-[#1a3a6b] focus-within:ring-2 focus-within:ring-[#1a3a6b]/10 transition-all">
                 <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="exemple@email.com" required className="flex-1 outline-none text-base text-gray-700 placeholder-gray-400" />
+                <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="exemple@email.com" required autoFocus className="flex-1 outline-none text-base text-gray-700 placeholder-gray-400" />
               </div>
             </div>
             <div>
@@ -151,19 +235,52 @@ function Login() {
               </div>
               <div className="flex items-center border border-gray-200 rounded-xl px-4 py-3.5 gap-3 focus-within:border-[#1a3a6b] focus-within:ring-2 focus-within:ring-[#1a3a6b]/10 transition-all">
                 <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                <input type="password" name="password" value={form.password} onChange={handleChange} placeholder="••••••••" required className="flex-1 outline-none text-base text-gray-700 placeholder-gray-400" />
+                <input type={showPwd ? 'text' : 'password'} name="password" value={form.password} onChange={handleChange} placeholder="••••••••" required className="flex-1 outline-none text-base text-gray-700 placeholder-gray-400" />
+                <button type="button" onClick={() => setShowPwd(v => !v)} className="text-gray-400 hover:text-gray-600 transition-colors shrink-0">
+                  {showPwd ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
               </div>
             </div>
 
+            <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+              <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} className="w-4 h-4 rounded border-gray-300 accent-[#1a3a6b]" />
+              Se souvenir de moi
+            </label>
+
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm flex items-center gap-2">
-                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                {error}
+              <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  {error}
+                </div>
+                {failedAttempts >= 3 && (
+                  <p className="mt-1.5 text-xs">
+                    Plusieurs tentatives échouées.{' '}
+                    <a href="/forgot-password" className="underline font-semibold hover:text-red-800">Réinitialisez votre mot de passe</a>
+                  </p>
+                )}
               </div>
             )}
 
-            <button type="submit" disabled={loading} className="w-full bg-[#1a3a6b] hover:bg-[#0f2550] text-white py-4 rounded-xl font-bold text-base transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
-              {loading ? 'Connexion en cours...' : 'Se connecter →'}
+            <button type="submit" disabled={loading} className="w-full bg-[#1a3a6b] hover:bg-[#0f2550] text-white py-4 rounded-xl font-bold text-base transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+              {loading ? (
+                <>
+                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                  </svg>
+                  Connexion en cours…
+                </>
+              ) : 'Se connecter →'}
             </button>
           </form>
 
@@ -184,8 +301,13 @@ function Login() {
             )}
           </div>
 
+          {/* ── Retrouver son compte ──────────────────────────────── */}
+          <p className="text-center text-xs text-gray-400 mt-4">
+            <a href="/forgot-password" className="hover:text-[#1a3a6b] transition-colors">Retrouver mon compte</a>
+          </p>
+
           {/* ── Lien inscription ──────────────────────────────────── */}
-          <p className="text-center text-sm text-gray-500 mt-7">
+          <p className="text-center text-sm text-gray-500 mt-4">
             Pas encore de compte ?{' '}
             <button onClick={() => navigate('/register')} className="text-[#1a3a6b] font-bold hover:text-[#F5A623] transition-colors">
               Créer un compte gratuit

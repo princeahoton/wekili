@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { uploadDocument, getDocuments, deleteDocument } from '../services/api';
+import { uploadDocument, getDocuments, deleteDocument, requestDocAccess, verifyDocAccess } from '../services/api';
+import { getUser } from '../utils/auth';
 
 const DOCS_REQUIS = [
   {
@@ -210,16 +211,53 @@ function ZoneUpload({ doc, fichier, onUpload, onDelete, uploading }) {
 
 export default function Documents() {
   const navigate = useNavigate();
-  const [docs, setDocs] = useState({});
+  const [docs, setDocs]           = useState({});
   const [uploading, setUploading] = useState({});
-  const [erreurs, setErreurs] = useState({});
+  const [erreurs, setErreurs]     = useState({});
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // ── Portail d'accès sécurisé ──────────────────────────────────────────
+  const [accessGranted, setAccessGranted] = useState(() => {
+    try {
+      const s = JSON.parse(sessionStorage.getItem('doc_access') || 'null');
+      return s && Date.now() < s.expiresAt;
+    } catch { return false; }
+  });
+  const [gateStep, setGateStep]   = useState('idle'); // idle|sending|sent|verifying
+  const [gateCode, setGateCode]   = useState('');
+  const [gateError, setGateError] = useState('');
+
+  const grantAccess = () => {
+    sessionStorage.setItem('doc_access', JSON.stringify({ expiresAt: Date.now() + 30 * 60 * 1000 }));
+    setAccessGranted(true);
+  };
+
+  const handleRequestCode = async () => {
+    setGateStep('sending'); setGateError('');
+    try {
+      const res = await requestDocAccess();
+      if (res.success) setGateStep('sent');
+      else { setGateError(res.message || 'Erreur lors de l\'envoi.'); setGateStep('idle'); }
+    } catch { setGateError('Erreur de connexion.'); setGateStep('idle'); }
+  };
+
+  const handleVerifyCode = async (e) => {
+    e.preventDefault();
+    setGateStep('verifying'); setGateError('');
+    try {
+      const res = await verifyDocAccess(gateCode);
+      if (res.success) grantAccess();
+      else { setGateError(res.message || 'Code incorrect ou expiré.'); setGateStep('sent'); }
+    } catch { setGateError('Erreur de connexion.'); setGateStep('sent'); }
+  };
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) { navigate('/login'); return; }
-    chargerDocs();
-  }, [navigate]);
+    const u = getUser();
+    if (!u) { navigate('/login'); return; }
+    setCurrentUser(u);
+    if (accessGranted) chargerDocs();
+  }, [navigate, accessGranted]);
 
   const chargerDocs = async () => {
     try {
@@ -264,6 +302,85 @@ export default function Documents() {
   const nbUploades = Object.keys(docs).length;
   const nbTotal = DOCS_REQUIS.length;
   const pct = Math.round((nbUploades / nbTotal) * 100);
+
+  // ── Portail de vérification ───────────────────────────────────────────
+  if (currentUser && !accessGranted) return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-md">
+
+        {/* Shield icon */}
+        <div className="w-14 h-14 bg-[#1a3a6b]/10 rounded-2xl flex items-center justify-center mb-5">
+          <svg className="w-7 h-7 text-[#1a3a6b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        </div>
+
+        <h2 className="text-xl font-bold text-gray-800 mb-1">Espace Documents sécurisé</h2>
+        <p className="text-sm text-gray-500 mb-6">Pour accéder à vos documents sensibles (diplômes, passeport, CV…), une vérification supplémentaire est requise.</p>
+
+        {/* Engagements sécurité */}
+        <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6 space-y-2">
+          {[
+            'Vos documents sont chiffrés et stockés sur des serveurs sécurisés',
+            'Accès limité à votre seul compte et aux services Wekili',
+            'Aucune donnée ne sera partagée sans votre consentement',
+          ].map(t => (
+            <div key={t} className="flex items-start gap-2">
+              <svg className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+              <p className="text-xs text-blue-700">{t}</p>
+            </div>
+          ))}
+        </div>
+
+        {gateStep === 'idle' && (
+          <button onClick={handleRequestCode}
+            className="w-full bg-[#1a3a6b] hover:bg-[#0f2550] text-white py-3.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+            Envoyer un code par email
+          </button>
+        )}
+
+        {gateStep === 'sending' && (
+          <div className="w-full bg-[#1a3a6b]/60 text-white py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+            Envoi en cours…
+          </div>
+        )}
+
+        {(gateStep === 'sent' || gateStep === 'verifying') && (
+          <form onSubmit={handleVerifyCode} className="space-y-3">
+            <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-2">
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+              Code envoyé à <strong>{currentUser.email}</strong>
+            </p>
+            <input
+              type="text" inputMode="numeric" pattern="\d{6}" maxLength={6}
+              value={gateCode} onChange={e => setGateCode(e.target.value.replace(/\D/g, ''))}
+              placeholder="Code à 6 chiffres" required autoFocus
+              className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-center text-xl font-bold tracking-widest outline-none focus:border-[#1a3a6b] focus:ring-2 focus:ring-[#1a3a6b]/10 transition-all"
+            />
+            <button type="submit" disabled={gateCode.length !== 6 || gateStep === 'verifying'}
+              className="w-full bg-[#1a3a6b] hover:bg-[#0f2550] text-white py-3.5 rounded-xl font-bold text-sm transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
+              {gateStep === 'verifying' ? (
+                <><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> Vérification…</>
+              ) : 'Accéder à mes documents →'}
+            </button>
+            <button type="button" onClick={() => { setGateStep('idle'); setGateCode(''); setGateError(''); }}
+              className="w-full text-xs text-gray-400 hover:text-gray-600 transition-colors pt-1">
+              Renvoyer un code
+            </button>
+          </form>
+        )}
+
+        {gateError && (
+          <p className="mt-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center gap-2">
+            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            {gateError}
+          </p>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex min-h-screen bg-gray-50">

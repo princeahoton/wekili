@@ -2,6 +2,8 @@ const pool = require('../config/database');
 const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { randomUUID: uuidv4 } = require('crypto');
 const path = require('path');
+const { sendEmail, otpHtml } = require('../utils/email');
+const otpNs = require('../utils/otp');
 
 const s3 = new S3Client({
   region: process.env.AWS_REGION || 'eu-west-1',
@@ -98,4 +100,44 @@ exports.deleteDocument = async (req, res) => {
     console.error(err);
     res.status(500).json({ message: 'Erreur serveur' });
   }
+};
+
+// POST /api/documents/request-access — envoie OTP par email
+exports.requestDocAccess = async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT email, prenom FROM users WHERE id = $1',
+      [req.userId]
+    );
+    if (!rows.length) return res.status(404).json({ success: false, message: 'Utilisateur introuvable.' });
+    const { email, prenom } = rows[0];
+
+    if (!email)
+      return res.status(400).json({ success: false, message: 'Aucune adresse email associée à ce compte.' });
+
+    const code = otpNs.makeCode();
+    otpNs.storeOtp('doc-access', req.userId, code);
+
+    await sendEmail({
+      to:      email,
+      subject: "Code d'accès à vos documents Wekili",
+      html:    otpHtml(code, `Bonjour ${prenom || ''}, vous avez demandé l'accès à votre espace Documents sécurisé. Entrez ce code pour accéder à vos fichiers.`),
+    });
+
+    res.json({ success: true, message: 'Code envoyé à votre adresse email.' });
+  } catch (err) {
+    console.error('Erreur requestDocAccess:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur.' });
+  }
+};
+
+// POST /api/documents/verify-access — vérifie OTP
+exports.verifyDocAccess = async (req, res) => {
+  const { code } = req.body;
+  if (!code) return res.status(400).json({ success: false, message: 'Code requis.' });
+
+  if (!otpNs.checkOtp('doc-access', req.userId, code))
+    return res.status(401).json({ success: false, message: 'Code incorrect ou expiré.' });
+
+  res.json({ success: true, message: 'Accès accordé.' });
 };

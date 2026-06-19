@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getProfile, getDocuments, getAnalysis, getAllAnalyses, getBourses } from '../services/api';
+import { getUser, clearAuth } from '../utils/auth';
 import 'flag-icons/css/flag-icons.min.css';
 
 const DOC_TYPES = ['cv', 'releves', 'diplome', 'langue', 'motivation', 'recommandation'];
@@ -234,9 +235,9 @@ export default function Dashboard() {
   const [selectedBourse, setSelectedBourse] = useState(null);
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) { navigate('/login'); return; }
-    setUser(JSON.parse(userData));
+    const u = getUser();
+    if (!u) { navigate('/login'); return; }
+    setUser(u);
   }, [navigate]);
 
   const fetchAll = useCallback(async () => {
@@ -265,8 +266,7 @@ export default function Dashboard() {
   useEffect(() => { if (user) fetchAll(); }, [user, fetchAll]);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    clearAuth();
     navigate('/login');
   };
 

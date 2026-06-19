@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { register, googleLogin } from '../services/api';
+import { saveAuth } from '../utils/auth';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -13,9 +14,12 @@ const PAYS_AFRIQUE = [
 
 function Register() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ prenom: '', nom: '', email: '', pays: '', password: '' });
+  const [form, setForm] = useState({ prenom: '', nom: '', email: '', pays: '', password: '', confirm: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPwd, setShowPwd] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [cguAccepted, setCguAccepted] = useState(false);
   const googleBtnRef = useRef(null);
 
   useEffect(() => {
@@ -55,8 +59,7 @@ function Register() {
   }, []);
 
   function saveAndRedirect(result) {
-    localStorage.setItem('token', result.token);
-    localStorage.setItem('user', JSON.stringify(result.user));
+    saveAuth(result.token, result.user, true);
     navigate('/dashboard');
   }
 
@@ -78,14 +81,22 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (form.password !== form.confirm) {
+      setError('Les mots de passe ne correspondent pas.');
+      return;
+    }
+    if (!cguAccepted) {
+      setError("Veuillez accepter les Conditions d'utilisation pour continuer.");
+      return;
+    }
     setLoading(true);
     setError('');
     try {
       const result = await register(form);
-      if (result.success) {
-        localStorage.setItem('token', result.token);
-        localStorage.setItem('user', JSON.stringify(result.user));
-        navigate('/dashboard');
+      if (result.success && result.requiresVerification) {
+        navigate('/verify-email', { state: { email: result.email || form.email } });
+      } else if (result.success) {
+        navigate('/verify-email', { state: { email: form.email } });
       } else {
         setError(result.message || "Erreur lors de l'inscription");
       }
@@ -124,42 +135,39 @@ function Register() {
             </a>
           </div>
 
-          {/* Stats milieu */}
-          <div className="flex flex-col gap-6">
+          {/* Proposition de valeur */}
+          <div className="space-y-5">
             <div>
-              <p className="text-white text-4xl font-extrabold">500+</p>
-              <p className="text-white/70 text-sm">dossiers analysés avec succès</p>
+              <h2 className="text-white text-2xl font-bold mb-2 leading-snug">
+                Votre conseiller IA pour les bourses internationales
+              </h2>
+              <p className="text-white/70 text-sm leading-relaxed">
+                Wekili analyse votre dossier, identifie les bourses qui correspondent à votre profil et vous guide à chaque étape de votre candidature.
+              </p>
             </div>
-            <div>
-              <p className="text-white text-4xl font-extrabold">60+</p>
-              <p className="text-white/70 text-sm">bourses disponibles dans la base</p>
-            </div>
-            <div>
-              <p className="text-white text-4xl font-extrabold">6</p>
-              <p className="text-white/70 text-sm">pays de destination couverts</p>
-            </div>
-          </div>
 
-          {/* Témoignage en bas */}
-          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
-            <div className="flex gap-1 mb-3">
-              {[1,2,3,4,5].map((i) => (
-                <svg key={i} className="w-4 h-4 text-[#F5A623]" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
+            <ul className="space-y-3">
+              {[
+                { icon: '🔍', txt: 'Recherche de bourses adaptées à votre profil' },
+                { icon: '🤖', txt: 'Analyse automatique de votre dossier par IA' },
+                { icon: '🎯', txt: 'Recommandations personnalisées et score d\'éligibilité' },
+                { icon: '📋', txt: 'Suivi de vos candidatures en un seul endroit' },
+                { icon: '🔔', txt: 'Alertes sur les nouvelles opportunités' },
+              ].map((item) => (
+                <li key={item.txt} className="flex items-start gap-3">
+                  <span className="text-lg mt-0.5 shrink-0">{item.icon}</span>
+                  <span className="text-white/80 text-sm leading-relaxed">{item.txt}</span>
+                </li>
               ))}
-            </div>
-            <p className="text-white text-sm leading-relaxed italic mb-4">
-              "En 48h, Wekili a analysé mon profil et identifié 5 bourses auxquelles je n'avais même pas pensé. Je suis maintenant à Lyon !"
-            </p>
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-[#F5A623] flex items-center justify-center text-white font-bold text-sm shrink-0">
-                K
-              </div>
-              <div>
-                <p className="text-white font-semibold text-sm">Kofi Mensah</p>
-                <p className="text-white/60 text-xs">Côte d'Ivoire — Master à Lyon</p>
-              </div>
+            </ul>
+
+            <div className="flex items-start gap-2 bg-white/10 border border-white/20 rounded-xl p-4">
+              <svg className="w-4 h-4 text-green-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <p className="text-white/60 text-xs leading-relaxed">
+                Vos données personnelles et documents sont chiffrés et stockés de façon sécurisée. Inscription 100 % gratuite, sans carte bancaire.
+              </p>
             </div>
           </div>
         </div>
@@ -258,10 +266,60 @@ function Register() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
                 <input
-                  type="password" name="password" value={form.password} onChange={handleChange}
+                  type={showPwd ? 'text' : 'password'} name="password" value={form.password} onChange={handleChange}
                   placeholder="Minimum 8 caractères" required minLength={8}
                   className="flex-1 outline-none text-base text-gray-700 placeholder-gray-400"
                 />
+                <button type="button" onClick={() => setShowPwd(v => !v)} className="text-gray-400 hover:text-gray-600 transition-colors shrink-0">
+                  {showPwd ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Confirmer le mot de passe */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Confirmer le mot de passe</label>
+              <div className={`flex items-center border rounded-xl px-4 py-3.5 gap-3 transition-all focus-within:ring-2 ${
+                form.confirm && form.confirm !== form.password
+                  ? 'border-red-300 focus-within:border-red-400 focus-within:ring-red-100'
+                  : form.confirm && form.confirm === form.password
+                  ? 'border-green-400 focus-within:border-green-500 focus-within:ring-green-100'
+                  : 'border-gray-200 focus-within:border-[#1a3a6b] focus-within:ring-[#1a3a6b]/10'
+              }`}>
+                <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <input
+                  type={showConfirm ? 'text' : 'password'} name="confirm" value={form.confirm} onChange={handleChange}
+                  placeholder="Répétez votre mot de passe" required
+                  className="flex-1 outline-none text-base text-gray-700 placeholder-gray-400"
+                />
+                {form.confirm && form.confirm === form.password && (
+                  <svg className="w-5 h-5 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+                <button type="button" onClick={() => setShowConfirm(v => !v)} className="text-gray-400 hover:text-gray-600 transition-colors shrink-0">
+                  {showConfirm ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
               </div>
             </div>
 
@@ -276,12 +334,21 @@ function Register() {
             )}
 
             {/* CGU */}
-            <p className="text-xs text-gray-400 leading-relaxed">
-              En créant un compte, vous acceptez nos{' '}
-              <a href="#" className="text-[#1a3a6b] hover:underline">Conditions d'utilisation</a>
-              {' '}et notre{' '}
-              <a href="#" className="text-[#1a3a6b] hover:underline">Politique de confidentialité</a>.
-            </p>
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={cguAccepted}
+                onChange={e => { setCguAccepted(e.target.checked); setError(''); }}
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#1a3a6b] accent-[#1a3a6b] shrink-0 cursor-pointer"
+              />
+              <span className="text-xs text-gray-500 leading-relaxed">
+                J'accepte les{' '}
+                <a href="/cgu" target="_blank" rel="noopener noreferrer" className="text-[#1a3a6b] hover:underline font-medium" onClick={e => e.stopPropagation()}>Conditions d'utilisation</a>
+                {' '}et la{' '}
+                <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="text-[#1a3a6b] hover:underline font-medium" onClick={e => e.stopPropagation()}>Politique de confidentialité</a>
+                {' '}de Wekili.
+              </span>
+            </label>
 
             {/* Bouton inscription */}
             <button

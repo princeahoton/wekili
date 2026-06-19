@@ -1,6 +1,7 @@
 import React from 'react';
 import './App.css';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { getToken } from './utils/auth';
 import Home from './pages/Home';
 import Register from './pages/Register';
 import Login from './pages/Login';
@@ -12,17 +13,22 @@ import Bourses from './pages/Bourses';
 import Universities from './pages/Universities';
 import Logement from './pages/Logement';
 import Settings from './pages/Settings';
+import VerifyEmail from './pages/VerifyEmail';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import LegalNotice from './pages/LegalNotice';
 
-// Redirige vers /login si pas de token
+// Redirige vers /login si pas de token (en passant la destination pour y revenir après connexion)
 function ProtectedRoute({ children }) {
-  const token = localStorage.getItem('token');
-  if (!token) return <Navigate to="/login" replace />;
+  const token = getToken();
+  const location = useLocation();
+  if (!token) return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   return children;
 }
 
 // Redirige vers /dashboard si déjà connecté
 function PublicOnlyRoute({ children }) {
-  const token = localStorage.getItem('token');
+  const token = getToken();
   if (token) return <Navigate to="/dashboard" replace />;
   return children;
 }
@@ -41,7 +47,13 @@ function App() {
         <Route path="/bourses"      element={<ProtectedRoute><Bourses /></ProtectedRoute>} />
         <Route path="/universities" element={<ProtectedRoute><Universities /></ProtectedRoute>} />
         <Route path="/logement"     element={<ProtectedRoute><Logement /></ProtectedRoute>} />
-        <Route path="/settings"     element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+        <Route path="/settings"       element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+        {/* Vérification email (public) */}
+        <Route path="/verify-email"   element={<VerifyEmail />} />
+        {/* Pages légales (publiques) */}
+        <Route path="/confidentialite"  element={<PrivacyPolicy />} />
+        <Route path="/cgu"              element={<TermsOfService />} />
+        <Route path="/mentions-legales" element={<LegalNotice />} />
         {/* Catch-all → accueil */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

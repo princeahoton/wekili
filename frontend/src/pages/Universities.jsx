@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getUniversities, upsertCandidature, deleteCandidature } from '../services/api';
+import { getToken } from '../utils/auth';
 import 'flag-icons/css/flag-icons.min.css';
 
 function toArr(val) {
@@ -433,8 +434,7 @@ export default function Universities() {
   }, [filterPays, filterNiveau, filterSort, search]);
 
   useEffect(() => {
-    const t = localStorage.getItem('token');
-    if (!t) { navigate('/login'); return; }
+    if (!getToken()) { navigate('/login'); return; }
   }, [navigate]);
 
   useEffect(() => {

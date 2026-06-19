@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getBourses } from '../services/api';
+import { getUser } from '../utils/auth';
 import 'flag-icons/css/flag-icons.min.css';
 
 function toArr(val) {
@@ -385,8 +386,7 @@ export default function Bourses() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) { navigate('/login'); return; }
+    if (!getUser()) { navigate('/login'); return; }
     chargerBourses();
   }, [navigate]);
 

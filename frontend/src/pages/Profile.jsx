@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { saveProfile, getProfile } from '../services/api';
+import { saveProfile, getProfile, sendProfilePhoneOTP, verifyProfilePhoneOTP } from '../services/api';
+import { getUser } from '../utils/auth';
 
 const ETAPES = [
   { num: 1, label: 'Informations personnelles' },
@@ -18,6 +19,41 @@ const PAYS_DESTINATION = ['France', 'Canada', 'Belgique', 'Allemagne', 'Royaume-
 const NIVEAUX_VISES = ['Licence (Bac+3)', 'Master (Bac+5)', 'Doctorat (Bac+8)', 'Diplôme professionnel', 'Classe préparatoire'];
 const BUDGETS = ['Moins de 5 000 €/an', '5 000 – 10 000 €/an', '10 000 – 20 000 €/an', 'Plus de 20 000 €/an', 'Bourse uniquement (pas de budget personnel)'];
 const PAYS_AFRIQUE = ['Bénin', 'Burkina Faso', "Côte d'Ivoire", 'Cameroun', 'Congo', 'Gabon', 'Guinée', 'Madagascar', 'Mali', 'Mauritanie', 'Niger', 'RDC', 'Rwanda', 'Sénégal', 'Tchad', 'Togo', 'Autre'];
+
+const AGE_MIN = 16;
+const AGE_MAX = 120;
+
+// ── Helpers téléphone ──────────────────────────────────────────────────────────
+
+function normalisePhone(phone) {
+  return (phone || '').replace(/[\s\-().]/g, '');
+}
+
+function validatePhone(phone) {
+  if (!phone) return null;
+  const n = normalisePhone(phone);
+  if (!n.startsWith('+')) return "Ajoutez le préfixe international (ex. : +229 97 00 00 00)";
+  if (!/^\+[1-9][0-9]+$/.test(n)) return "Numéro invalide — chiffres uniquement après le +";
+  if (n.length < 9)  return "Numéro trop court (minimum 8 chiffres après le +)";
+  if (n.length > 16) return "Numéro trop long (maximum 15 chiffres)";
+  return null;
+}
+
+function fmtDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function validateDateNaissance(valeur) {
+  if (!valeur) return null;
+  const dob = new Date(valeur + 'T00:00:00');
+  if (isNaN(dob.getTime())) return 'Date invalide.';
+  const auj = new Date(); auj.setHours(0, 0, 0, 0);
+  if (dob >= auj) return "La date de naissance doit être antérieure à aujourd'hui.";
+  const age = Math.floor((auj - dob) / (365.25 * 24 * 60 * 60 * 1000));
+  if (age < AGE_MIN) return `Vous devez avoir au moins ${AGE_MIN} ans pour utiliser cette plateforme.`;
+  if (age > AGE_MAX) return `Date invalide — âge supérieur à ${AGE_MAX} ans.`;
+  return null;
+}
 
 const INIT = {
   // Étape 1
@@ -60,7 +96,7 @@ function ChampSelect({ label, name, value, onChange, options, required }) {
   );
 }
 
-function ChampInput({ label, name, value, onChange, type = 'text', placeholder, required }) {
+function ChampInput({ label, name, value, onChange, type = 'text', placeholder, required, erreur, ...rest }) {
   return (
     <div>
       <label className="block text-sm font-semibold text-gray-700 mb-1.5">
@@ -69,8 +105,19 @@ function ChampInput({ label, name, value, onChange, type = 'text', placeholder, 
       <input
         type={type} name={name} value={value} onChange={onChange}
         placeholder={placeholder}
-        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 outline-none focus:border-[#1a3a6b] focus:ring-2 focus:ring-[#1a3a6b]/10 transition-all placeholder-gray-400"
+        className={`w-full border rounded-xl px-4 py-3 text-sm text-gray-700 outline-none focus:ring-2 transition-all placeholder-gray-400 ${
+          erreur ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-gray-200 focus:border-[#1a3a6b] focus:ring-[#1a3a6b]/10'
+        }`}
+        {...rest}
       />
+      {erreur && (
+        <p className="mt-1.5 text-xs text-red-500 flex items-center gap-1">
+          <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {erreur}
+        </p>
+      )}
     </div>
   );
 }
@@ -83,18 +130,71 @@ export default function Profile() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [dateErreur, setDateErreur]     = useState('');
+  const [phoneOtpStep, setPhoneOtpStep] = useState('idle'); // idle | sending | sent | verifying | verified
+  const [phoneOtpCode, setPhoneOtpCode] = useState('');
+  const [phoneErreur, setPhoneErreur]   = useState('');
+  const [verifiedPhone, setVerifiedPhone] = useState('');
+
+  const today = new Date();
+  const dateMax = fmtDate(new Date(today.getFullYear() - AGE_MIN, today.getMonth(), today.getDate()));
+  const dateMin = fmtDate(new Date(today.getFullYear() - AGE_MAX, today.getMonth(), today.getDate()));
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) { navigate('/login'); return; }
+    if (!getUser()) { navigate('/login'); return; }
     getProfile().then((res) => {
-      if (res?.profile) setForm((prev) => ({ ...prev, ...res.profile }));
+      if (res?.profile) {
+        setForm((prev) => ({ ...prev, ...res.profile }));
+        if (res.profile.phone_verified && res.profile.telephone) {
+          setPhoneOtpStep('verified');
+          setVerifiedPhone(res.profile.telephone);
+        }
+      }
     }).catch(() => {});
   }, [navigate]);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm(f => ({ ...f, [name]: value }));
     setSaved(false);
+    if (name === 'date_naissance') setDateErreur(validateDateNaissance(value) || '');
+    if (name === 'telephone') {
+      setPhoneErreur(validatePhone(value) || '');
+      // Réinitialiser la vérification si le numéro change
+      if (phoneOtpStep === 'verified' && normalisePhone(value) !== verifiedPhone) {
+        setPhoneOtpStep('idle');
+        setPhoneOtpCode('');
+      }
+    }
+  };
+
+  const handleSendOTP = async () => {
+    const err = validatePhone(form.telephone);
+    if (err) { setPhoneErreur(err); return; }
+    setPhoneOtpStep('sending');
+    setPhoneErreur('');
+    const result = await sendProfilePhoneOTP(form.telephone);
+    if (result.success) {
+      setPhoneOtpStep('sent');
+    } else {
+      setPhoneOtpStep('idle');
+      setPhoneErreur(result.message || "Échec de l'envoi du SMS.");
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    if (phoneOtpCode.length !== 6) { setPhoneErreur('Entrez le code à 6 chiffres reçu par SMS.'); return; }
+    setPhoneOtpStep('verifying');
+    setPhoneErreur('');
+    const result = await verifyProfilePhoneOTP(form.telephone, phoneOtpCode);
+    if (result.success) {
+      setPhoneOtpStep('verified');
+      setVerifiedPhone(normalisePhone(form.telephone));
+      setPhoneOtpCode('');
+    } else {
+      setPhoneOtpStep('sent');
+      setPhoneErreur(result.message || 'Code incorrect ou expiré.');
+    }
   };
 
   const togglePays = (pays) => {
@@ -106,11 +206,18 @@ export default function Profile() {
   };
 
   const handleSave = async () => {
+    const errDate = validateDateNaissance(form.date_naissance);
+    if (errDate) { setDateErreur(errDate); setError(errDate); return; }
+    if (form.telephone) {
+      const errPhone = validatePhone(form.telephone);
+      if (errPhone) { setPhoneErreur(errPhone); setError(errPhone); return; }
+    }
     setSaving(true);
     setError('');
     try {
-      await saveProfile(form);
-      setSaved(true);
+      const result = await saveProfile(form);
+      if (!result.profile) setError(result.message || 'Erreur de sauvegarde.');
+      else setSaved(true);
     } catch {
       setError('Erreur de sauvegarde. Réessayez.');
     } finally {
@@ -263,8 +370,115 @@ export default function Profile() {
                   <ChampSelect label="Nationalité" name="nationalite" value={form.nationalite} onChange={handleChange} options={PAYS_AFRIQUE} required />
                   <ChampSelect label="Pays de résidence" name="pays_residence" value={form.pays_residence} onChange={handleChange} options={PAYS_AFRIQUE} required />
                 </div>
-                <ChampInput label="Téléphone (WhatsApp de préférence)" name="telephone" value={form.telephone} onChange={handleChange} type="tel" placeholder="+229 97 00 00 00" />
-                <ChampInput label="Date de naissance" name="date_naissance" value={form.date_naissance} onChange={handleChange} type="date" />
+                {/* ── Téléphone avec vérification OTP ── */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Téléphone <span className="text-gray-400 font-normal text-xs">(WhatsApp de préférence)</span>
+                  </label>
+                  <div className={`flex items-center border rounded-xl px-4 py-3 gap-3 transition-all focus-within:ring-2 ${
+                    phoneErreur            ? 'border-red-300 focus-within:ring-red-100' :
+                    phoneOtpStep === 'verified' ? 'border-green-400 focus-within:ring-green-100' :
+                    'border-gray-200 focus-within:ring-[#1a3a6b]/10 focus-within:border-[#1a3a6b]'
+                  }`}>
+                    <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    <input
+                      type="tel" name="telephone" value={form.telephone} onChange={handleChange}
+                      placeholder="+229 97 00 00 00"
+                      disabled={phoneOtpStep === 'sent' || phoneOtpStep === 'sending' || phoneOtpStep === 'verifying'}
+                      className="flex-1 outline-none text-sm text-gray-700 placeholder-gray-400 disabled:opacity-60"
+                    />
+                    {phoneOtpStep === 'verified' && (
+                      <span className="flex items-center gap-1 text-xs text-green-600 font-semibold shrink-0">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Vérifié
+                      </span>
+                    )}
+                    {phoneOtpStep === 'idle' && !phoneErreur && validatePhone(form.telephone) === null && form.telephone && (
+                      <button type="button" onClick={handleSendOTP}
+                        className="text-xs text-[#1a3a6b] font-semibold hover:text-[#F5A623] transition-colors shrink-0 whitespace-nowrap">
+                        Envoyer le code →
+                      </button>
+                    )}
+                    {phoneOtpStep === 'sending' && (
+                      <span className="text-xs text-gray-400 shrink-0">Envoi…</span>
+                    )}
+                  </div>
+
+                  {/* Erreur format */}
+                  {phoneErreur && (
+                    <p className="mt-1.5 text-xs text-red-500 flex items-center gap-1">
+                      <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {phoneErreur}
+                    </p>
+                  )}
+
+                  {/* Zone saisie OTP */}
+                  {(phoneOtpStep === 'sent' || phoneOtpStep === 'verifying') && (
+                    <div className="mt-3 space-y-2">
+                      <p className="text-xs text-gray-500">
+                        Code envoyé au <span className="font-semibold">{normalisePhone(form.telephone)}</span>. Valable 10 minutes.
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={phoneOtpCode}
+                          onChange={e => { setPhoneOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setPhoneErreur(''); }}
+                          placeholder="000000"
+                          maxLength={6}
+                          className="w-32 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-center font-mono tracking-widest outline-none focus:border-[#1a3a6b] focus:ring-2 focus:ring-[#1a3a6b]/10"
+                        />
+                        <button
+                          type="button" onClick={handleVerifyOTP}
+                          disabled={phoneOtpCode.length !== 6 || phoneOtpStep === 'verifying'}
+                          className="bg-[#1a3a6b] text-white text-sm px-4 py-2.5 rounded-xl font-semibold hover:bg-[#0f2550] disabled:opacity-50 transition-colors"
+                        >
+                          {phoneOtpStep === 'verifying' ? 'Vérification…' : 'Vérifier'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setPhoneOtpStep('idle'); setPhoneOtpCode(''); setPhoneErreur(''); }}
+                          className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                      <button type="button" onClick={handleSendOTP}
+                        className="text-xs text-[#1a3a6b] hover:underline">
+                        Renvoyer le code
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Badge vérifié */}
+                  {phoneOtpStep === 'verified' && (
+                    <p className="mt-1.5 text-xs text-green-600 flex items-center gap-1">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Numéro vérifié et enregistré.
+                      <button type="button" onClick={() => { setPhoneOtpStep('idle'); setVerifiedPhone(''); }}
+                        className="ml-1 text-gray-400 hover:text-red-500 transition-colors text-xs underline">
+                        Changer
+                      </button>
+                    </p>
+                  )}
+                </div>
+                <ChampInput
+                  label="Date de naissance"
+                  name="date_naissance"
+                  value={form.date_naissance}
+                  onChange={handleChange}
+                  type="date"
+                  min={dateMin}
+                  max={dateMax}
+                  erreur={dateErreur}
+                />
               </div>
             )}
 
