@@ -257,6 +257,51 @@ async function runAll() {
       )
     `);
 
+    // ── SEED BOURSES (si table vide) ──────────────────────────────────
+    const { rows: countRows } = await client.query('SELECT COUNT(*) FROM scholarships');
+    if (parseInt(countRows[0].count) === 0) {
+      await client.query(`
+        INSERT INTO scholarships (nom, organisme, pays, code_pays, niveau, domaine, montant, description, lien, deadline, langue_requise, niveau_langue_requis, type_financement)
+        VALUES
+          ('Bourse Eiffel Excellence', 'Campus France', 'France', 'fr', 'Master', 'Tous domaines', 'jusqu''à 1 181 €/mois',
+           'La bourse Eiffel est attribuée par le ministère de l''Europe et des Affaires étrangères aux meilleurs étudiants étrangers souhaitant poursuivre des études en France.',
+           'https://www.campusfrance.org/fr/bourse-eiffel', '2027-01-09', 'Français', 'B2', 'Bourse complète'),
+
+          ('Bourse Eiffel Doctorat', 'Campus France', 'France', 'fr', 'Doctorat', 'Tous domaines', 'jusqu''à 1 400 €/mois',
+           'Volet doctoral de la bourse Eiffel pour soutenir les meilleurs doctorants étrangers dans des établissements d''enseignement supérieur français.',
+           'https://www.campusfrance.org/fr/bourse-eiffel', '2027-01-09', 'Français', 'B2', 'Bourse complète'),
+
+          ('Bourse du Gouvernement Français', 'Institut Français', 'France', 'fr', 'Licence, Master', 'Tous domaines', 'jusqu''à 700 €/mois',
+           'Bourses octroyées par l''Institut Français aux étudiants étrangers souhaitant effectuer une mobilité en France.',
+           'https://www.institutfrancais.com', '2026-03-31', 'Français', 'B1', 'Bourse partielle'),
+
+          ('DAAD — Bourse d''excellence', 'DAAD', 'Allemagne', 'de', 'Master, Doctorat', 'Tous domaines', 'jusqu''à 934 €/mois',
+           'Le DAAD finance chaque année des milliers d''étudiants et chercheurs étrangers pour des séjours d''études et de recherche en Allemagne.',
+           'https://www.daad.de', '2026-10-15', 'Allemand ou Anglais', 'B2', 'Bourse complète'),
+
+          ('Bourse WBI', 'Wallonie-Bruxelles International', 'Belgique', 'be', 'Master', 'Tous domaines', 'jusqu''à 1 500 €/mois',
+           'WBI accorde des bourses aux ressortissants de pays en développement désireux d''effectuer un séjour d''études ou de recherche en Fédération Wallonie-Bruxelles.',
+           'https://www.wbi.be', '2026-02-01', 'Français', 'B2', 'Bourse complète'),
+
+          ('Bourse Vanier Canada', 'Gouvernement du Canada', 'Canada', 'ca', 'Doctorat', 'Tous domaines', '50 000 $/an',
+           'Le Programme de bourses d''études supérieures du Canada Vanier vise à attirer et à retenir dans les universités canadiennes des étudiants au doctorat de grande qualité.',
+           'https://vanier.gc.ca', '2026-11-05', 'Français ou Anglais', 'B2', 'Bourse complète'),
+
+          ('Bourse CRFRS Canada', 'Gouvernement du Canada', 'Canada', 'ca', 'Master', 'Sciences, Ingénierie', '17 500 $/an',
+           'Programme de bourses pour étudiants étrangers souhaitant poursuivre un Master dans une université canadienne.',
+           'https://www.canada.ca/fr/secretariat-conseil-tresor.html', '2026-12-01', 'Français ou Anglais', 'B2', 'Bourse partielle'),
+
+          ('Bourse Chevening', 'FCDO', 'Royaume-Uni', 'gb', 'Master', 'Tous domaines', 'Couverture totale',
+           'Les bourses Chevening sont attribuées par le gouvernement britannique aux futurs leaders mondiaux pour étudier au Royaume-Uni.',
+           'https://www.chevening.org', '2026-11-04', 'Anglais', 'C1', 'Bourse complète'),
+
+          ('Commonwealth Scholarship', 'Commonwealth Scholarship Commission', 'Royaume-Uni', 'gb', 'Master, Doctorat', 'Tous domaines', 'Couverture totale',
+           'Les bourses Commonwealth permettent à des citoyens des pays membres du Commonwealth d''étudier au Royaume-Uni.',
+           'https://cscuk.fcdo.gov.uk', '2026-10-15', 'Anglais', 'B2', 'Bourse complète')
+      `);
+      console.log('🌱 Données initiales bourses insérées (8 bourses)');
+    }
+
     await client.query('COMMIT');
     console.log('✅ Toutes les tables créées / vérifiées avec succès');
 
