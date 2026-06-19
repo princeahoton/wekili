@@ -302,6 +302,93 @@ async function runAll() {
       console.log('🌱 Données initiales bourses insérées (8 bourses)');
     }
 
+    // ── COMPLETER LES DETAILS DES BOURSES (toujours) ──────────────────
+    const detailsBourses = [
+      {
+        nom: 'Bourse Eiffel Excellence',
+        duree: '12 à 36 mois', date_debut: '2026-09-01', age_max: 30, nb_places: 70,
+        avantages: JSON.stringify(['Allocation mensuelle 1 181 €', 'Billet aller-retour', 'Couverture sociale', 'Aide au logement']),
+        nationalites_eligibles: JSON.stringify(['Bénin','Burkina Faso','Cameroun',"Côte d'Ivoire",'Sénégal','Togo','Mali','Niger','Guinée','Congo']),
+        documents_requis: JSON.stringify(['CV en français','Diplôme de Licence ou Master','Relevés de notes (3 ans)','Lettre de motivation','2 lettres de recommandation','Certificat de langue DELF/DALF B2 min.']),
+        criteres: JSON.stringify([{titre:'Excellence académique',desc:'Mention Bien ou Très Bien exigée pour les 3 dernières années.'},{titre:'Projet professionnel',desc:'Projet clair en lien avec les besoins du pays d\'origine.'},{titre:'Leadership',desc:'Potentiel de leadership et engagement associatif valorisé.'}]),
+      },
+      {
+        nom: 'Bourse Eiffel Doctorat',
+        duree: '24 à 36 mois', date_debut: '2026-09-01', age_max: 35, nb_places: 30,
+        avantages: JSON.stringify(['Allocation mensuelle 1 400 €', 'Billet aller-retour', 'Couverture sociale', 'Accès laboratoires de recherche']),
+        nationalites_eligibles: JSON.stringify(['Bénin','Burkina Faso','Cameroun',"Côte d'Ivoire",'Sénégal','Togo','Mali','Niger','Guinée','Congo']),
+        documents_requis: JSON.stringify(['CV détaillé','Master avec mention','Relevés de notes','Projet de recherche','2 lettres de recommandation de chercheurs','Certificat DELF B2']),
+        criteres: JSON.stringify([{titre:'Projet de recherche',desc:'Projet structuré avec problématique, méthodologie et apport scientifique.'},{titre:'Encadrement',desc:'Accord préalable d\'un directeur de thèse en France.'}]),
+      },
+      {
+        nom: 'Bourse du Gouvernement Français',
+        duree: '12 à 24 mois', date_debut: '2026-09-01', age_max: 35, nb_places: 200,
+        avantages: JSON.stringify(['Allocation mensuelle 700 €', 'Exonération des frais d\'inscription', 'Assurance maladie', 'Accès aux services Campus France']),
+        nationalites_eligibles: JSON.stringify(['Bénin','Burkina Faso','Cameroun',"Côte d'Ivoire",'Sénégal','Togo','Mali','Niger','Guinée','Gabon']),
+        documents_requis: JSON.stringify(['CV','Diplôme de Licence','Relevés de notes','Lettre de motivation','1 lettre de recommandation','Certificat de langue B1']),
+        criteres: JSON.stringify([{titre:'Niveau académique',desc:'Bonne mention exigée. Priorité aux filières scientifiques et technologiques.'},{titre:'Projet de retour',desc:'Engagement à rentrer dans le pays d\'origine après les études.'}]),
+      },
+      {
+        nom: "DAAD — Bourse d'excellence",
+        duree: '12 à 36 mois', date_debut: '2026-10-01', age_max: 32, nb_places: 500,
+        avantages: JSON.stringify(['Allocation mensuelle 934 €','Billet aller-retour','Assurance maladie','Cours d\'allemand gratuits','Aide au logement']),
+        nationalites_eligibles: JSON.stringify(['Tous pays en développement','Afrique subsaharienne prioritaire']),
+        documents_requis: JSON.stringify(['CV en anglais ou allemand','Diplôme de Licence ou Master','Relevés de notes','Lettre de motivation','2 lettres de recommandation','Certificat de langue (anglais B2 ou allemand B1)']),
+        criteres: JSON.stringify([{titre:'Excellence académique',desc:'Moyenne supérieure à 14/20 ou équivalent.'},{titre:'Langue',desc:'Maîtrise de l\'anglais (B2) ou de l\'allemand (B1) exigée.'},{titre:'Projet professionnel',desc:'Lien clair entre la formation et le développement du pays d\'origine.'}]),
+      },
+      {
+        nom: 'Bourse WBI',
+        duree: '12 mois renouvelable', date_debut: '2026-09-01', age_max: 35, nb_places: 120,
+        avantages: JSON.stringify(['Allocation mensuelle 1 500 €','Couverture sociale belge','Exonération des frais d\'inscription','Logement en résidence universitaire (selon disponibilité)']),
+        nationalites_eligibles: JSON.stringify(['Bénin','Burkina Faso','Cameroun',"Côte d'Ivoire",'Congo','Gabon','Guinée','Mali','Niger','Sénégal','Togo']),
+        documents_requis: JSON.stringify(['CV','Diplôme de Licence (min. Bac+3)','Relevés de notes','Lettre de motivation','2 lettres de recommandation','Certificat de langue française B2']),
+        criteres: JSON.stringify([{titre:'Dossier académique',desc:'Excellents résultats académiques exigés (mention Bien minimum).'},{titre:'Projet de retour',desc:'Engagement formel à retourner dans le pays d\'origine.'}]),
+      },
+      {
+        nom: 'Bourse Vanier Canada',
+        duree: '3 ans', date_debut: '2026-09-01', age_max: null, nb_places: 166,
+        avantages: JSON.stringify(['50 000 CAD/an pendant 3 ans','Accès aux réseaux de recherche canadiens','Mentorat académique','Opportunités de stage de recherche']),
+        nationalites_eligibles: JSON.stringify(['Tous pays','Ouvert aux candidats internationaux']),
+        documents_requis: JSON.stringify(['CV académique complet','Transcripts officiels','Proposition de recherche détaillée','3 lettres de recommandation de professeurs','Preuve de maîtrise linguistique (anglais ou français)']),
+        criteres: JSON.stringify([{titre:'Leadership',desc:'Démonstration de leadership académique et communautaire exceptionnel.'},{titre:'Recherche',desc:'Excellence en recherche avec publications ou présentations.'},{titre:'Académique',desc:'Moyenne cumulative très élevée (A ou équivalent).'}]),
+      },
+      {
+        nom: 'Bourse CRFRS Canada',
+        duree: '12 mois', date_debut: '2026-09-01', age_max: 40, nb_places: 100,
+        avantages: JSON.stringify(['17 500 CAD/an','Couverture assurance santé','Accès aux infrastructures universitaires']),
+        nationalites_eligibles: JSON.stringify(['Tous pays en développement','Priorité Afrique francophone']),
+        documents_requis: JSON.stringify(['CV','Transcripts officiels','Lettre de motivation','2 lettres de recommandation','Preuve de niveau anglais ou français B2']),
+        criteres: JSON.stringify([{titre:'Domaine',desc:'Priorité aux sciences, ingénierie, technologies et mathématiques (STEM).'},{titre:'Projet',desc:'Projet d\'études en lien avec les défis de développement du pays d\'origine.'}]),
+      },
+      {
+        nom: 'Bourse Chevening',
+        duree: '12 mois', date_debut: '2026-09-01', age_max: null, nb_places: 1500,
+        avantages: JSON.stringify(['Frais de scolarité complets','Allocation mensuelle de subsistance','Billet aller-retour','Visa étudiant UK','Frais de thèse couverts']),
+        nationalites_eligibles: JSON.stringify(['Bénin','Burkina Faso','Cameroun',"Côte d'Ivoire",'Ghana','Kenya','Nigeria','Sénégal','Togo','Rwanda','Ouganda']),
+        documents_requis: JSON.stringify(['CV en anglais','Diplôme de Licence (2:1 minimum)','2 ans d\'expérience professionnelle','3 essais Chevening','2 références professionnelles','Certificat IELTS 6.5 minimum']),
+        criteres: JSON.stringify([{titre:'Leadership',desc:'Potentiel avéré de leadership et d\'influence dans votre domaine.'},{titre:'Réseau',desc:'Capacité à créer et développer des réseaux professionnels.'},{titre:'Retour pays',desc:'Engagement à retourner dans votre pays après la bourse.'}]),
+      },
+      {
+        nom: 'Commonwealth Scholarship',
+        duree: '12 à 48 mois', date_debut: '2026-09-01', age_max: 40, nb_places: 800,
+        avantages: JSON.stringify(['Frais de scolarité complets','Allocation mensuelle','Billet aller-retour','Allocation d\'arrivée','Couverture médicale']),
+        nationalites_eligibles: JSON.stringify(['Tous pays membres du Commonwealth','Afrique subsaharienne prioritaire']),
+        documents_requis: JSON.stringify(['CV','Diplôme de Licence 2:1 minimum','Transcripts officiels','Proposition de recherche (Doctorat)','2 lettres de recommandation','Certificat IELTS 6.0']),
+        criteres: JSON.stringify([{titre:'Développement',desc:'Lien démontré entre le projet et le développement du Commonwealth.'},{titre:'Académique',desc:'Excellence académique et potentiel de recherche.'},{titre:'Impact',desc:'Potentiel d\'impact positif dans votre pays après retour.'}]),
+      },
+    ];
+
+    for (const b of detailsBourses) {
+      await client.query(`
+        UPDATE scholarships SET
+          duree = $2, date_debut = $3, age_max = $4, nb_places = $5,
+          avantages = $6, nationalites_eligibles = $7, documents_requis = $8, criteres = $9
+        WHERE nom = $1
+      `, [b.nom, b.duree, b.date_debut, b.age_max, b.nb_places,
+          b.avantages, b.nationalites_eligibles, b.documents_requis, b.criteres]);
+    }
+    console.log('✅ Détails des bourses mis à jour');
+
     await client.query('COMMIT');
     console.log('✅ Toutes les tables créées / vérifiées avec succès');
 
