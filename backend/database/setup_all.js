@@ -251,6 +251,151 @@ async function runAll() {
     `);
     await client.query(`ALTER TABLE candidatures ADD COLUMN IF NOT EXISTS date_soumission DATE`);
 
+    // ── SEED UNIVERSITIES ──────────────────────────────────────────────
+    const { rows: uniCount } = await client.query('SELECT COUNT(*) FROM universities');
+    if (parseInt(uniCount[0].count) === 0) {
+      await client.query(`
+        INSERT INTO universities
+          (nom, pays, ville, code_pays, type, domaines, niveaux, langue, niveau_langue,
+           taux_admission, frais_scolarite, frais_inscription, moyenne_requise,
+           classement_mondial, classement_national, description, points_forts,
+           documents_requis, plateforme, cout_plateforme,
+           lien_candidature, lien_officiel, date_ouverture, date_cloture)
+        VALUES
+          -- FRANCE
+          ('Université Paris-Saclay', 'France', 'Gif-sur-Yvette', 'fr', 'Université publique',
+           ARRAY['Sciences','Ingénierie','Médecine','Droit','Économie'], ARRAY['Master','Doctorat'],
+           'Français', 'B2', 20, '243 € / an', '92 €', 14.0,
+           13, 1,
+           'Université de recherche de rang mondial, regroupant 15 établissements dont l''ENS Paris-Saclay et CentraleSupélec.',
+           ARRAY['Recherche de pointe','Écosystème innovation','Nombreuses bourses','Campus moderne'],
+           ARRAY['Diplôme de Licence ou équivalent','Relevés de notes officiels','Lettre de motivation','CV','Certificat de langue DELF B2 minimum','Lettre de recommandation'],
+           'Campus France', 'Gratuit', 'https://www.universite-paris-saclay.fr/admission', 'https://www.universite-paris-saclay.fr', '2026-01-15', '2026-04-30'),
+
+          ('Sorbonne Université', 'France', 'Paris', 'fr', 'Université publique',
+           ARRAY['Lettres','Sciences','Médecine','Droit','Langues'], ARRAY['Licence','Master','Doctorat'],
+           'Français', 'B2', 25, '243 € / an', '92 €', 13.0,
+           83, 2,
+           'L''une des plus anciennes et prestigieuses universités au monde, fondée en 1257, au cœur de Paris.',
+           ARRAY['Patrimoine historique','Bibliothèques d''exception','Réseau alumni mondial','Campus central Paris'],
+           ARRAY['Relevés de notes','Lettre de motivation','CV','Certificat DELF/DALF B2','Lettre de recommandation'],
+           'Campus France', 'Gratuit', 'https://www.sorbonne-universite.fr/admission', 'https://www.sorbonne-universite.fr', '2026-01-15', '2026-04-30'),
+
+          ('Sciences Po Paris', 'France', 'Paris', 'fr', 'Grande école',
+           ARRAY['Sciences politiques','Relations internationales','Droit','Économie','Journalisme'], ARRAY['Master','Doctorat'],
+           'Français / Anglais', 'B2', 10, '14 000 € / an (modulable)', '200 €', 14.5,
+           244, 1,
+           'École de référence mondiale en sciences sociales et politiques. Forte présence internationale et aide financière modulable selon revenus.',
+           ARRAY['Réseau politique mondial','Modulation des frais selon revenus','Campus international','Nombreuses spécialisations'],
+           ARRAY['Diplôme Bac+3','Relevés de notes','Lettre de motivation','CV','Certificat de langue B2','2 lettres de recommandation','Projet professionnel'],
+           'Sciences Po Admissions', 'Gratuit', 'https://www.sciencespo.fr/admissions', 'https://www.sciencespo.fr', '2025-11-01', '2026-02-28'),
+
+          ('Université de Montpellier', 'France', 'Montpellier', 'fr', 'Université publique',
+           ARRAY['Médecine','Droit','Sciences','Économie','Pharmacie'], ARRAY['Licence','Master','Doctorat'],
+           'Français', 'B2', 40, '243 € / an', '92 €', 12.0,
+           601, 8,
+           'L''une des plus anciennes universités du monde (1220), réputée pour ses filières médicales et juridiques. Ville ensoleillée à 1h de la mer.',
+           ARRAY['Coût de vie abordable','Ville étudiante','Filières médicales réputées','Bonne intégration internationale'],
+           ARRAY['Diplôme de Licence','Relevés de notes','Lettre de motivation','Certificat DELF B2'],
+           'Campus France', 'Gratuit', 'https://www.umontpellier.fr/admission', 'https://www.umontpellier.fr', '2026-01-15', '2026-05-31'),
+
+          ('Université de Lyon (Lyon 1)', 'France', 'Lyon', 'fr', 'Université publique',
+           ARRAY['Sciences','Médecine','Pharmacie','Odontologie','Ingénierie'], ARRAY['Licence','Master','Doctorat'],
+           'Français', 'B1', 45, '243 € / an', '92 €', 12.0,
+           551, 6,
+           'Grande université scientifique et médicale, au cœur de Lyon, 2e ville économique de France.',
+           ARRAY['Forte recherche scientifique','Bonne intégration','Coût de vie modéré','Vie culturelle riche'],
+           ARRAY['Diplôme de Licence','Relevés de notes','Lettre de motivation','Certificat DELF B1'],
+           'Campus France', 'Gratuit', 'https://www.univ-lyon1.fr/admission', 'https://www.univ-lyon1.fr', '2026-01-15', '2026-05-31'),
+
+          -- CANADA
+          ('Université de Montréal', 'Canada', 'Montréal', 'ca', 'Université publique',
+           ARRAY['Médecine','Droit','Sciences','Informatique','Éducation','Gestion'], ARRAY['Licence','Master','Doctorat'],
+           'Français', 'B2', 55, '8 000 CAD / an', '115 CAD', 13.0,
+           111, 2,
+           'Plus grande université francophone d''Amérique du Nord hors France. Excellente réputation en recherche et forte communauté africaine.',
+           ARRAY['Francophone','Forte communauté africaine','Bourse Vanier disponible','Ville cosmopolite','Coût de vie raisonnable'],
+           ARRAY['Diplôme de Licence (Bac+3 minimum)','Relevés de notes officiels traduits','Lettre de motivation','CV','2 lettres de recommandation','Test de langue (DELF B2 ou TCF)'],
+           'Admission Université de Montréal', 'Gratuit', 'https://admission.umontreal.ca', 'https://www.umontreal.ca', '2025-11-01', '2026-02-01'),
+
+          ('Université Laval', 'Canada', 'Québec', 'ca', 'Université publique',
+           ARRAY['Agriculture','Architecture','Droit','Sciences','Médecine','Musique'], ARRAY['Licence','Master','Doctorat'],
+           'Français', 'B2', 60, '7 500 CAD / an', '115 CAD', 12.5,
+           401, 5,
+           'Plus ancienne université francophone d''Amérique (1663). Campus accueillant avec fort soutien à l''intégration internationale.',
+           ARRAY['Campus complet en français','Fort soutien à l''intégration','Environnement sécurisé','Bonne aide financière'],
+           ARRAY['Diplôme de Licence','Relevés de notes','Lettre de motivation','CV','Lettre de recommandation','TCF ou DELF B2'],
+           'Admission Laval', 'Gratuit', 'https://www.ulaval.ca/admission', 'https://www.ulaval.ca', '2025-11-01', '2026-03-01'),
+
+          ('UQAM — Université du Québec à Montréal', 'Canada', 'Montréal', 'ca', 'Université publique',
+           ARRAY['Arts','Communication','Sciences sociales','Informatique','Éducation'], ARRAY['Licence','Master','Doctorat'],
+           'Français', 'B1', 70, '6 500 CAD / an', '115 CAD', 11.0,
+           801, 10,
+           'Université urbaine accessible et diversifiée, au cœur de Montréal. Idéale pour les arts, sciences sociales et communication.',
+           ARRAY['Frais abordables','Centre-ville Montréal','Bonne diversité','Accès stage en entreprise'],
+           ARRAY['Diplôme de Licence','Relevés de notes','Lettre de motivation','TCF ou DELF B1'],
+           'Admission UQAM', 'Gratuit', 'https://admission.uqam.ca', 'https://www.uqam.ca', '2025-11-01', '2026-03-15'),
+
+          -- BELGIQUE
+          ('Université catholique de Louvain (UCLouvain)', 'Belgique', 'Louvain-la-Neuve', 'be', 'Université privée',
+           ARRAY['Droit','Médecine','Sciences','Ingénierie','Gestion','Théologie'], ARRAY['Licence','Master','Doctorat'],
+           'Français', 'B2', 35, '835 € / an', '50 €', 13.0,
+           201, 2,
+           'Grande université catholique francophone avec campus pensé entièrement pour les étudiants. Forte recherche et réseau international.',
+           ARRAY['Campus ville universitaire intégral','Bonne intégration Afrique francophone','Bourse WBI accessible','Recherche de qualité'],
+           ARRAY['Diplôme de Licence ou Bac+3','Relevés de notes','Lettre de motivation','CV','Certificat DELF B2','Lettre de recommandation'],
+           'Admission UCLouvain', 'Gratuit', 'https://uclouvain.be/fr/etudier/inscriptions.html', 'https://uclouvain.be', '2026-02-01', '2026-05-31'),
+
+          ('Université Libre de Bruxelles (ULB)', 'Belgique', 'Bruxelles', 'be', 'Université publique',
+           ARRAY['Droit','Médecine','Sciences','Philosophie','Ingénierie','Psychologie'], ARRAY['Licence','Master','Doctorat'],
+           'Français', 'B2', 40, '835 € / an', '50 €', 13.0,
+           201, 1,
+           'Université laïque au cœur de Bruxelles, capitale de l''Europe. Forte tradition académique et communauté internationale dynamique.',
+           ARRAY['Bruxelles capitale européenne','Réseau alumni européen','Laïque et progressiste','Nombreux étudiants africains'],
+           ARRAY['Diplôme de Licence','Relevés de notes','Lettre de motivation','Certificat DELF B2'],
+           'Admission ULB', 'Gratuit', 'https://www.ulb.be/fr/admission', 'https://www.ulb.be', '2026-02-01', '2026-06-30'),
+
+          -- ALLEMAGNE
+          ('Université Ludwig-Maximilians de Munich (LMU)', 'Allemagne', 'Munich', 'de', 'Université publique',
+           ARRAY['Médecine','Droit','Sciences','Lettres','Économie','Philosophie'], ARRAY['Master','Doctorat'],
+           'Allemand / Anglais', 'B2', 15, 'Gratuit (+ 143 € / semestre)', '0 €', 14.5,
+           32, 1,
+           'L''une des meilleures universités d''Allemagne et d''Europe. Nombreux programmes en anglais au niveau Master et Doctorat.',
+           ARRAY['Frais de scolarité nuls','Bourse DAAD disponible','Top classement mondial','Ville culturelle et sécurisée'],
+           ARRAY['Diplôme de Licence','Relevés de notes','Lettre de motivation','Certificat de langue B2','Lettre de recommandation','Projet de recherche (Doctorat)'],
+           'uni-assist', '75 €', 'https://www.lmu.de/en/study/admission.html', 'https://www.lmu.de', '2025-12-01', '2026-04-30'),
+
+          ('Université Technique de Berlin (TU Berlin)', 'Allemagne', 'Berlin', 'de', 'Université technique',
+           ARRAY['Ingénierie','Informatique','Sciences','Architecture','Économie'], ARRAY['Master','Doctorat'],
+           'Allemand / Anglais', 'B1', 25, 'Gratuit (+ 143 € / semestre)', '0 €', 14.0,
+           154, 3,
+           'Grande école d''ingénieurs berlinoise avec de nombreux programmes en anglais. Idéale pour les profils scientifiques et techniques.',
+           ARRAY['Nombreux masters en anglais','Berlin ville dynamique','Bourse DAAD disponible','Forte insertion industrielle'],
+           ARRAY['Diplôme Bac+3 scientifique','Relevés de notes','Lettre de motivation','Certificat anglais B2 ou allemand B1','CV'],
+           'uni-assist', '75 €', 'https://www.tu.berlin/en/studying/applying-and-enrolling', 'https://www.tu.berlin', '2025-12-01', '2026-04-30'),
+
+          -- ROYAUME-UNI
+          ('University of Edinburgh', 'Royaume-Uni', 'Édimbourg', 'gb', 'Université publique',
+           ARRAY['Médecine','Droit','Sciences','Lettres','Informatique','Ingénierie'], ARRAY['Master','Doctorat'],
+           'Anglais', 'C1', 12, '22 000 £ / an', '0 £', 15.0,
+           22, 4,
+           'Université de classe mondiale fondée en 1583, membre du groupe Russell Group. Forte culture de recherche et vie étudiante riche.',
+           ARRAY['Top classement mondial','Bourse Chevening accessible','Ville historique sécurisée','Fort réseau alumni'],
+           ARRAY['Diplôme de Licence (2:1 minimum)','Relevés de notes en anglais','Lettre de motivation','CV','2 lettres de recommandation','Certificat IELTS 6.5 minimum'],
+           'UCAS', 'Gratuit', 'https://www.ed.ac.uk/studying/postgraduate/applying', 'https://www.ed.ac.uk', '2025-09-01', '2026-01-31'),
+
+          ('King''s College London', 'Royaume-Uni', 'Londres', 'gb', 'Université publique',
+           ARRAY['Médecine','Droit','Sciences sociales','Humanités','Ingénierie','Psychiatrie'], ARRAY['Master','Doctorat'],
+           'Anglais', 'C1', 18, '24 000 £ / an', '0 £', 15.0,
+           40, 5,
+           'Université fondée en 1829 au cœur de Londres, membre du Russell Group. Parmi les meilleures au monde en médecine et droit.',
+           ARRAY['Cœur de Londres','Top médecine et droit','Bourse Chevening disponible','Réseau professionnel exceptionnel'],
+           ARRAY['Diplôme de Licence (2:1 minimum)','Relevés de notes','Lettre de motivation','CV','2 lettres de recommandation','IELTS 6.5'],
+           'Admission KCL', 'Gratuit', 'https://www.kcl.ac.uk/study/postgraduate/applying', 'https://www.kcl.ac.uk', '2025-09-01', '2026-01-31')
+      `);
+      console.log('🌱 Universités seedées (15 universités)');
+    }
+
     // ── TABLE LOGEMENTS ────────────────────────────────────────────────
     await client.query(`
       CREATE TABLE IF NOT EXISTS logements (
