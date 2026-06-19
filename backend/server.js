@@ -11,7 +11,10 @@ const app = express();
 app.set('trust proxy', 1);
 
 // ── Sécurité : headers HTTP ──────────────────────────────────────────
-app.use(helmet());
+// same-origin-allow-popups permet aux popups OAuth (Google/Facebook) de postMessage
+app.use(helmet({
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+}));
 
 // ── CORS restreint à l'origine frontend ─────────────────────────────
 app.use(cors({
