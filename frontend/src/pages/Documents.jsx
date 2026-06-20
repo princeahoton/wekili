@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { uploadDocument, getDocuments, deleteDocument, requestDocAccess, verifyDocAccess } from '../services/api';
+import {
+  uploadDocument, getDocuments, deleteDocument,
+  checkDocPin, createDocPin, verifyDocPin, requestPinReset, confirmPinReset,
+  getDocumentLogs,
+} from '../services/api';
 import { getUser } from '../utils/auth';
+import Toast from '../components/Toast';
 
 const DOCS_REQUIS = [
   {
@@ -209,6 +214,43 @@ function ZoneUpload({ doc, fichier, onUpload, onDelete, uploading }) {
   );
 }
 
+function PinError({ msg }) {
+  return (
+    <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm flex items-center gap-2">
+      <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      {msg}
+    </div>
+  );
+}
+
+function PinSpinner() {
+  return (
+    <>
+      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      </svg>
+      En cours…
+    </>
+  );
+}
+
+// ── Actions du journal ────────────────────────────────────────────────────────
+const ACTION_LABELS = {
+  upload:      { label: 'Ajouté',         color: 'text-green-600 bg-green-50' },
+  replace:     { label: 'Remplacé',       color: 'text-blue-600 bg-blue-50'   },
+  delete:      { label: 'Supprimé',       color: 'text-red-600 bg-red-50'     },
+  access:      { label: 'Accès',          color: 'text-gray-600 bg-gray-100'  },
+  pin_created: { label: 'PIN créé',       color: 'text-purple-600 bg-purple-50' },
+  pin_reset:   { label: 'PIN réinitialisé', color: 'text-orange-600 bg-orange-50' },
+};
+
+function fmtDate(iso) {
+  return new Date(iso).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
 export default function Documents() {
   const navigate = useNavigate();
   const [docs, setDocs]           = useState({});
@@ -216,48 +258,52 @@ export default function Documents() {
   const [erreurs, setErreurs]     = useState({});
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [toast, setToast]         = useState(null);
+  const [logs, setLogs]           = useState([]);
+  const [showLogs, setShowLogs]   = useState(false);
 
-  // ── Portail d'accès sécurisé ──────────────────────────────────────────
+  // ── Confirmation de suppression ───────────────────────────────────────
+  const [deleteTarget, setDeleteTarget] = useState(null); // { id, nom }
+
+  // ── Portail PIN ───────────────────────────────────────────────────────
   const [accessGranted, setAccessGranted] = useState(() => {
     try {
-      const s = JSON.parse(sessionStorage.getItem('doc_access') || 'null');
+      const s = JSON.parse(sessionStorage.getItem('doc_pin_access') || 'null');
       return s && Date.now() < s.expiresAt;
     } catch { return false; }
   });
-  const [gateStep, setGateStep]   = useState('idle'); // idle|sending|sent|verifying
-  const [gateCode, setGateCode]   = useState('');
-  const [gateError, setGateError] = useState('');
+  // pinStep: 'checking'|'create'|'create-confirm'|'enter'|'reset-request'|'reset-confirm'
+  const [pinStep, setPinStep]     = useState('checking');
+  const [pin, setPin]             = useState('');
+  const [pinConfirm, setPinConfirm] = useState('');
+  const [pinError, setPinError]   = useState('');
+  const [pinLoading, setPinLoading] = useState(false);
+  const [resetCode, setResetCode] = useState('');
+  const [newPin, setNewPin]       = useState('');
 
   const grantAccess = () => {
-    sessionStorage.setItem('doc_access', JSON.stringify({ expiresAt: Date.now() + 30 * 60 * 1000 }));
+    sessionStorage.setItem('doc_pin_access', JSON.stringify({ expiresAt: Date.now() + 30 * 60 * 1000 }));
     setAccessGranted(true);
   };
 
-  const handleRequestCode = async () => {
-    setGateStep('sending'); setGateError('');
-    try {
-      const res = await requestDocAccess();
-      if (res.success) setGateStep('sent');
-      else { setGateError(res.message || 'Erreur lors de l\'envoi.'); setGateStep('idle'); }
-    } catch { setGateError('Erreur de connexion.'); setGateStep('idle'); }
-  };
-
-  const handleVerifyCode = async (e) => {
-    e.preventDefault();
-    setGateStep('verifying'); setGateError('');
-    try {
-      const res = await verifyDocAccess(gateCode);
-      if (res.success) grantAccess();
-      else { setGateError(res.message || 'Code incorrect ou expiré.'); setGateStep('sent'); }
-    } catch { setGateError('Erreur de connexion.'); setGateStep('sent'); }
-  };
-
+  // ── Vérifier si le PIN existe au chargement ───────────────────────────
   useEffect(() => {
     const u = getUser();
     if (!u) { navigate('/login'); return; }
     setCurrentUser(u);
-    if (accessGranted) chargerDocs();
-  }, [navigate, accessGranted]);
+    if (!accessGranted) {
+      checkDocPin().then(res => {
+        setPinStep(res.has_pin ? 'enter' : 'create');
+      }).catch(() => setPinStep('enter'));
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    if (accessGranted) {
+      chargerDocs();
+      chargerLogs();
+    }
+  }, [accessGranted]);
 
   const chargerDocs = async () => {
     try {
@@ -267,6 +313,13 @@ export default function Documents() {
         res.documents.forEach((d) => { map[d.type] = d; });
         setDocs(map);
       }
+    } catch {}
+  };
+
+  const chargerLogs = async () => {
+    try {
+      const res = await getDocumentLogs();
+      if (res?.logs) setLogs(res.logs);
     } catch {}
   };
 
@@ -282,6 +335,8 @@ export default function Documents() {
       const res = await uploadDocument(type, file);
       if (res?.document) {
         setDocs((prev) => ({ ...prev, [type]: res.document }));
+        setToast({ type: 'success', msg: `${file.name} ajouté avec succès.` });
+        chargerLogs();
       } else if (res?.message) {
         await chargerDocs();
       }
@@ -292,98 +347,234 @@ export default function Documents() {
     }
   };
 
-  const handleDelete = async (id) => {
+  // Suppression avec confirmation
+  const handleDelete = (id) => {
+    const doc = Object.values(docs).find(d => d.id === id);
+    setDeleteTarget({ id, nom: doc?.nom_fichier || 'ce document' });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      await deleteDocument(id);
+      await deleteDocument(deleteTarget.id);
       await chargerDocs();
-    } catch {}
+      chargerLogs();
+      setToast({ type: 'info', msg: `${deleteTarget.nom} supprimé.` });
+    } catch {
+      setToast({ type: 'error', msg: 'Erreur lors de la suppression.' });
+    } finally {
+      setDeleteTarget(null);
+    }
+  };
+
+  // ── Handlers PIN ──────────────────────────────────────────────────────
+
+  const handleCreatePin = async (e) => {
+    e.preventDefault();
+    if (!/^\d{4,6}$/.test(pin)) { setPinError('Le PIN doit contenir 4 à 6 chiffres.'); return; }
+    if (pinStep === 'create' && pin !== pinConfirm) { setPinError('Les PIN ne correspondent pas.'); return; }
+    setPinLoading(true); setPinError('');
+    try {
+      const res = await createDocPin(pin);
+      if (res.success) { setToast({ type: 'success', msg: 'PIN créé. Accès autorisé.' }); grantAccess(); }
+      else setPinError(res.message || 'Erreur lors de la création du PIN.');
+    } catch { setPinError('Erreur de connexion.'); }
+    finally { setPinLoading(false); }
+  };
+
+  const handleVerifyPin = async (e) => {
+    e.preventDefault();
+    if (!pin) { setPinError('Entrez votre PIN.'); return; }
+    setPinLoading(true); setPinError('');
+    try {
+      const res = await verifyDocPin(pin);
+      if (res.success) grantAccess();
+      else if (res.noPin) setPinStep('create');
+      else setPinError(res.message || 'PIN incorrect.');
+    } catch { setPinError('Erreur de connexion.'); }
+    finally { setPinLoading(false); setPin(''); }
+  };
+
+  const handleRequestPinReset = async () => {
+    setPinLoading(true); setPinError('');
+    try {
+      const res = await requestPinReset();
+      if (res.success) setPinStep('reset-confirm');
+      else setPinError(res.message || 'Erreur lors de l\'envoi.');
+    } catch { setPinError('Erreur de connexion.'); }
+    finally { setPinLoading(false); }
+  };
+
+  const handleConfirmPinReset = async (e) => {
+    e.preventDefault();
+    if (!/^\d{4,6}$/.test(newPin)) { setPinError('Le nouveau PIN doit contenir 4 à 6 chiffres.'); return; }
+    setPinLoading(true); setPinError('');
+    try {
+      const res = await confirmPinReset(resetCode, newPin);
+      if (res.success) {
+        setToast({ type: 'success', msg: 'PIN réinitialisé. Accès autorisé.' });
+        grantAccess();
+      } else setPinError(res.message || 'Code incorrect ou expiré.');
+    } catch { setPinError('Erreur de connexion.'); }
+    finally { setPinLoading(false); }
   };
 
   const nbUploades = Object.keys(docs).length;
   const nbTotal = DOCS_REQUIS.length;
   const pct = Math.round((nbUploades / nbTotal) * 100);
 
-  // ── Portail de vérification ───────────────────────────────────────────
-  if (currentUser && !accessGranted) return (
+  // ── Portail PIN ───────────────────────────────────────────────────────
+  if (!accessGranted && pinStep !== 'checking') return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-md">
+      {toast && <Toast message={toast.msg} type={toast.type} onDismiss={() => setToast(null)} />}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-sm">
 
-        {/* Shield icon */}
-        <div className="w-14 h-14 bg-[#1a3a6b]/10 rounded-2xl flex items-center justify-center mb-5">
+        <div className="w-14 h-14 bg-[#1a3a6b]/10 rounded-2xl flex items-center justify-center mb-5 mx-auto">
           <svg className="w-7 h-7 text-[#1a3a6b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
         </div>
 
-        <h2 className="text-xl font-bold text-gray-800 mb-1">Espace Documents sécurisé</h2>
-        <p className="text-sm text-gray-500 mb-6">Pour accéder à vos documents sensibles (diplômes, passeport, CV…), une vérification supplémentaire est requise.</p>
+        {/* ── Création du PIN ── */}
+        {(pinStep === 'create' || pinStep === 'create-confirm') && (
+          <>
+            <h2 className="text-xl font-bold text-gray-800 mb-1 text-center">Créer votre PIN</h2>
+            <p className="text-sm text-gray-500 mb-6 text-center">Choisissez un code PIN de 4 à 6 chiffres pour sécuriser votre espace Documents. Vous le saisirez à chaque accès.</p>
+            <form onSubmit={handleCreatePin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Votre PIN</label>
+                <input type="password" inputMode="numeric" maxLength={6} value={pin}
+                  onChange={e => { setPin(e.target.value.replace(/\D/g, '')); setPinError(''); }}
+                  placeholder="4 à 6 chiffres" autoFocus
+                  className="w-full border border-gray-200 rounded-xl px-4 py-4 text-2xl text-center font-mono tracking-[0.4em] outline-none focus:border-[#1a3a6b] focus:ring-2 focus:ring-[#1a3a6b]/10 transition-all" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Confirmer le PIN</label>
+                <input type="password" inputMode="numeric" maxLength={6} value={pinConfirm}
+                  onChange={e => { setPinConfirm(e.target.value.replace(/\D/g, '')); setPinError(''); }}
+                  placeholder="Répétez le PIN"
+                  className={`w-full border rounded-xl px-4 py-4 text-2xl text-center font-mono tracking-[0.4em] outline-none focus:ring-2 transition-all ${pinConfirm && pinConfirm !== pin ? 'border-red-300 focus:ring-red-100' : 'border-gray-200 focus:border-[#1a3a6b] focus:ring-[#1a3a6b]/10'}`} />
+                {pinConfirm && pinConfirm !== pin && <p className="text-xs text-red-500 mt-1 text-center">Les PIN ne correspondent pas</p>}
+              </div>
+              {pinError && <PinError msg={pinError} />}
+              <button type="submit" disabled={pinLoading || pin.length < 4 || pin !== pinConfirm}
+                className="w-full bg-[#1a3a6b] hover:bg-[#0f2550] text-white py-4 rounded-xl font-bold text-base transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                {pinLoading ? <PinSpinner /> : 'Créer mon PIN →'}
+              </button>
+            </form>
+          </>
+        )}
 
-        {/* Engagements sécurité */}
-        <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6 space-y-2">
-          {[
-            'Vos documents sont chiffrés et stockés sur des serveurs sécurisés',
-            'Accès limité à votre seul compte et aux services Wekili',
-            'Aucune donnée ne sera partagée sans votre consentement',
-          ].map(t => (
-            <div key={t} className="flex items-start gap-2">
-              <svg className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-              <p className="text-xs text-blue-700">{t}</p>
-            </div>
-          ))}
+        {/* ── Saisie du PIN ── */}
+        {pinStep === 'enter' && (
+          <>
+            <h2 className="text-xl font-bold text-gray-800 mb-1 text-center">Espace Documents</h2>
+            <p className="text-sm text-gray-500 mb-6 text-center">Entrez votre PIN pour accéder à vos documents sécurisés.</p>
+            <form onSubmit={handleVerifyPin} className="space-y-4">
+              <input type="password" inputMode="numeric" maxLength={6} value={pin}
+                onChange={e => { setPin(e.target.value.replace(/\D/g, '')); setPinError(''); }}
+                placeholder="••••"
+                autoFocus
+                className="w-full border border-gray-200 rounded-xl px-4 py-4 text-3xl text-center font-mono tracking-[0.6em] outline-none focus:border-[#1a3a6b] focus:ring-2 focus:ring-[#1a3a6b]/10 transition-all" />
+              {pinError && <PinError msg={pinError} />}
+              <button type="submit" disabled={pinLoading || pin.length < 4}
+                className="w-full bg-[#1a3a6b] hover:bg-[#0f2550] text-white py-4 rounded-xl font-bold text-base transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                {pinLoading ? <PinSpinner /> : 'Accéder →'}
+              </button>
+              <button type="button" onClick={() => { setPinStep('reset-request'); setPinError(''); setPin(''); }}
+                className="w-full text-xs text-gray-400 hover:text-[#1a3a6b] transition-colors text-center">
+                PIN oublié ?
+              </button>
+            </form>
+          </>
+        )}
+
+        {/* ── Demande de réinitialisation ── */}
+        {pinStep === 'reset-request' && (
+          <>
+            <h2 className="text-xl font-bold text-gray-800 mb-1 text-center">Réinitialiser le PIN</h2>
+            <p className="text-sm text-gray-500 mb-6 text-center">Un code sera envoyé à votre adresse email pour définir un nouveau PIN.</p>
+            {pinError && <PinError msg={pinError} />}
+            <button onClick={handleRequestPinReset} disabled={pinLoading}
+              className="w-full bg-[#1a3a6b] hover:bg-[#0f2550] text-white py-4 rounded-xl font-bold text-base transition-colors disabled:opacity-60 flex items-center justify-center gap-2 mb-3">
+              {pinLoading ? <PinSpinner /> : 'Envoyer le code par email →'}
+            </button>
+            <button type="button" onClick={() => { setPinStep('enter'); setPinError(''); }}
+              className="w-full text-xs text-gray-400 hover:text-gray-600 transition-colors text-center">
+              ← Retour
+            </button>
+          </>
+        )}
+
+        {/* ── Confirmation réinitialisation ── */}
+        {pinStep === 'reset-confirm' && (
+          <>
+            <h2 className="text-xl font-bold text-gray-800 mb-1 text-center">Nouveau PIN</h2>
+            <p className="text-sm text-gray-500 mb-6 text-center">Entrez le code reçu par email et choisissez votre nouveau PIN.</p>
+            <form onSubmit={handleConfirmPinReset} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Code reçu par email</label>
+                <input type="text" inputMode="numeric" maxLength={6} value={resetCode}
+                  onChange={e => { setResetCode(e.target.value.replace(/\D/g, '')); setPinError(''); }}
+                  placeholder="000000" autoFocus
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-2xl text-center font-mono tracking-[0.4em] outline-none focus:border-[#1a3a6b] focus:ring-2 focus:ring-[#1a3a6b]/10 transition-all" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Nouveau PIN (4 à 6 chiffres)</label>
+                <input type="password" inputMode="numeric" maxLength={6} value={newPin}
+                  onChange={e => { setNewPin(e.target.value.replace(/\D/g, '')); setPinError(''); }}
+                  placeholder="••••"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-2xl text-center font-mono tracking-[0.4em] outline-none focus:border-[#1a3a6b] focus:ring-2 focus:ring-[#1a3a6b]/10 transition-all" />
+              </div>
+              {pinError && <PinError msg={pinError} />}
+              <button type="submit" disabled={pinLoading || resetCode.length !== 6 || newPin.length < 4}
+                className="w-full bg-[#1a3a6b] hover:bg-[#0f2550] text-white py-4 rounded-xl font-bold text-base transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                {pinLoading ? <PinSpinner /> : 'Définir le nouveau PIN →'}
+              </button>
+            </form>
+          </>
+        )}
+
+        <div className="mt-4 text-center">
+          <a href="/dashboard" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">← Retour au tableau de bord</a>
         </div>
-
-        {gateStep === 'idle' && (
-          <button onClick={handleRequestCode}
-            className="w-full bg-[#1a3a6b] hover:bg-[#0f2550] text-white py-3.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-            Envoyer un code par email
-          </button>
-        )}
-
-        {gateStep === 'sending' && (
-          <div className="w-full bg-[#1a3a6b]/60 text-white py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
-            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-            Envoi en cours…
-          </div>
-        )}
-
-        {(gateStep === 'sent' || gateStep === 'verifying') && (
-          <form onSubmit={handleVerifyCode} className="space-y-3">
-            <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-2">
-              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-              Code envoyé à <strong>{currentUser.email}</strong>
-            </p>
-            <input
-              type="text" inputMode="numeric" pattern="\d{6}" maxLength={6}
-              value={gateCode} onChange={e => setGateCode(e.target.value.replace(/\D/g, ''))}
-              placeholder="Code à 6 chiffres" required autoFocus
-              className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-center text-xl font-bold tracking-widest outline-none focus:border-[#1a3a6b] focus:ring-2 focus:ring-[#1a3a6b]/10 transition-all"
-            />
-            <button type="submit" disabled={gateCode.length !== 6 || gateStep === 'verifying'}
-              className="w-full bg-[#1a3a6b] hover:bg-[#0f2550] text-white py-3.5 rounded-xl font-bold text-sm transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
-              {gateStep === 'verifying' ? (
-                <><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> Vérification…</>
-              ) : 'Accéder à mes documents →'}
-            </button>
-            <button type="button" onClick={() => { setGateStep('idle'); setGateCode(''); setGateError(''); }}
-              className="w-full text-xs text-gray-400 hover:text-gray-600 transition-colors pt-1">
-              Renvoyer un code
-            </button>
-          </form>
-        )}
-
-        {gateError && (
-          <p className="mt-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center gap-2">
-            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            {gateError}
-          </p>
-        )}
       </div>
     </div>
   );
 
   return (
     <div className="flex min-h-screen bg-gray-50">
+      {toast && <Toast message={toast.msg} type={toast.type} onDismiss={() => setToast(null)} />}
+
+      {/* ── Modal confirmation suppression ── */}
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+              <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-gray-800 text-center mb-2">Supprimer le document ?</h3>
+            <p className="text-sm text-gray-500 text-center mb-1">
+              <span className="font-semibold text-gray-700">{deleteTarget.nom}</span>
+            </p>
+            <p className="text-xs text-red-600 text-center mb-6 bg-red-50 rounded-xl px-4 py-2">
+              Cette action est irréversible. Le document sera définitivement supprimé.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setDeleteTarget(null)}
+                className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 py-3 rounded-xl font-semibold text-sm transition-colors">
+                Annuler
+              </button>
+              <button onClick={confirmDelete}
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold text-sm transition-colors">
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Sidebar ── */}
       {sidebarOpen && <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />}
@@ -498,14 +689,66 @@ export default function Documents() {
                 <p className="text-white font-semibold">Vous pouvez déjà lancer une analyse partielle</p>
                 <p className="text-blue-200 text-sm mt-0.5">{nbUploades} document(s) déposé(s) — l'analyse sera plus précise avec tous les documents</p>
               </div>
-              <button
-                onClick={() => navigate('/analysis')}
-                className="bg-white text-[#1a3a6b] text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-blue-50 transition-colors shrink-0 ml-6"
-              >
+              <button onClick={() => navigate('/analysis')}
+                className="bg-white text-[#1a3a6b] text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-blue-50 transition-colors shrink-0 ml-6">
                 Analyser quand même →
               </button>
             </div>
           )}
+
+          {/* ── Journal d'activité ── */}
+          <div className="mt-10">
+            <button
+              onClick={() => { setShowLogs(v => !v); if (!showLogs) chargerLogs(); }}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-[#1a3a6b] transition-colors mb-4"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              Journal d'activité
+              <svg className={`w-4 h-4 transition-transform ${showLogs ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {showLogs && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                {logs.length === 0 ? (
+                  <p className="text-sm text-gray-400 text-center py-8">Aucune activité enregistrée.</p>
+                ) : (
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-100">
+                        <th className="text-left text-xs font-semibold text-gray-500 px-5 py-3">Document</th>
+                        <th className="text-left text-xs font-semibold text-gray-500 px-3 py-3">Action</th>
+                        <th className="text-right text-xs font-semibold text-gray-500 px-5 py-3">Date & heure</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {logs.map((log, i) => {
+                        const cfg = ACTION_LABELS[log.action] || { label: log.action, color: 'text-gray-600 bg-gray-100' };
+                        return (
+                          <tr key={i} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
+                            <td className="px-5 py-3 text-gray-700 font-medium truncate max-w-[200px]">
+                              {log.document_name || <span className="text-gray-400 italic">—</span>}
+                            </td>
+                            <td className="px-3 py-3">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${cfg.color}`}>
+                                {cfg.label}
+                              </span>
+                            </td>
+                            <td className="px-5 py-3 text-right text-xs text-gray-400 whitespace-nowrap">
+                              {fmtDate(log.created_at)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            )}
+          </div>
 
         </div>
       </main>

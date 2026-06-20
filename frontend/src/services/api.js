@@ -411,7 +411,7 @@ export const getSessions = async () => {
   return res.json();
 };
 
-// ── Accès documents ───────────────────────────────────────────────────────────
+// ── Accès documents (OTP legacy) ─────────────────────────────────────────────
 export const requestDocAccess = async () => {
   const res = await fetch(`${API_URL}/documents/request-access`, {
     method: 'POST', headers: authHeaders(),
@@ -423,5 +423,45 @@ export const verifyDocAccess = async (code) => {
   const res = await fetch(`${API_URL}/documents/verify-access`, {
     method: 'POST', headers: authHeaders(), body: JSON.stringify({ code }),
   });
+  return res.json();
+};
+
+// ── PIN Documents ─────────────────────────────────────────────────────────────
+export const checkDocPin = async () => {
+  const res = await fetch(`${API_URL}/documents/pin/check`, { headers: authHeaders() });
+  return res.json();
+};
+
+export const createDocPin = async (pin) => {
+  const res = await fetch(`${API_URL}/documents/pin/create`, {
+    method: 'POST', headers: authHeaders(), body: JSON.stringify({ pin }),
+  });
+  return res.json();
+};
+
+export const verifyDocPin = async (pin) => {
+  const res = await fetch(`${API_URL}/documents/pin/verify`, {
+    method: 'POST', headers: authHeaders(), body: JSON.stringify({ pin }),
+  });
+  return res.json();
+};
+
+export const requestPinReset = async () => {
+  const res = await fetch(`${API_URL}/documents/pin/reset/request`, {
+    method: 'POST', headers: authHeaders(),
+  });
+  return res.json();
+};
+
+export const confirmPinReset = async (code, newPin) => {
+  const res = await fetch(`${API_URL}/documents/pin/reset/confirm`, {
+    method: 'POST', headers: authHeaders(), body: JSON.stringify({ code, newPin }),
+  });
+  return res.json();
+};
+
+// ── Journal d'activité documents ──────────────────────────────────────────────
+export const getDocumentLogs = async () => {
+  const res = await fetch(`${API_URL}/documents/logs`, { headers: authHeaders() });
   return res.json();
 };

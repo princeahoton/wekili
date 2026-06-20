@@ -85,6 +85,20 @@ async function runAll() {
     // Migration : budget doit stocker une chaîne (ex. "Moins de 5 000 €/an"), pas un entier
     await client.query(`ALTER TABLE profiles ALTER COLUMN budget TYPE TEXT USING NULL`);
     await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN DEFAULT FALSE`);
+    await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS doc_pin_hash VARCHAR(255)`);
+
+    // ── TABLE DOCUMENT_LOGS ────────────────────────────────────────────
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS document_logs (
+        id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id       UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        document_id   UUID,
+        document_name VARCHAR(500),
+        action        VARCHAR(50) NOT NULL,
+        created_at    TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_doc_logs_user ON document_logs(user_id, created_at DESC)`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS two_fa_enabled   BOOLEAN DEFAULT FALSE`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified  BOOLEAN DEFAULT FALSE`);
     // Les comptes créés avant la vérification email sont considérés vérifiés

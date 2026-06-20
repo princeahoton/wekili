@@ -3,7 +3,12 @@ const router = express.Router();
 const path = require('path');
 const multer = require('multer');
 const auth = require('../middleware/auth');
-const { getDocuments, uploadDocument, deleteDocument, requestDocAccess, verifyDocAccess } = require('../controllers/documentsController');
+const {
+  getDocuments, uploadDocument, deleteDocument,
+  getDocumentLogs,
+  checkPin, createPin, verifyPin, requestPinReset, confirmPinReset,
+  requestDocAccess, verifyDocAccess,
+} = require('../controllers/documentsController');
 
 const ALLOWED_MIMES = [
   'application/pdf',
@@ -54,7 +59,17 @@ router.get('/', auth, getDocuments);
 router.post('/upload', auth, upload.single('file'), validateDocType, uploadDocument);
 router.delete('/:id', auth, deleteDocument);
 
-// Portail de vérification d'accès aux documents
+// Journal d'activité
+router.get('/logs', auth, getDocumentLogs);
+
+// Système de PIN
+router.get('/pin/check',           auth, checkPin);
+router.post('/pin/create',         auth, createPin);
+router.post('/pin/verify',         auth, verifyPin);
+router.post('/pin/reset/request',  auth, requestPinReset);
+router.post('/pin/reset/confirm',  auth, confirmPinReset);
+
+// Portail OTP email (legacy)
 router.post('/request-access', auth, requestDocAccess);
 router.post('/verify-access',  auth, verifyDocAccess);
 
