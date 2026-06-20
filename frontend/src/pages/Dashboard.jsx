@@ -127,7 +127,7 @@ function Sidebar({ user, onLogout, open, onClose }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleNav = (path) => { navigate(path, { replace: true }); onClose(); };
+  const handleNav = (path) => { navigate(path, { replace: location.pathname === path }); onClose(); };
 
   return (
     <>
@@ -143,7 +143,7 @@ function Sidebar({ user, onLogout, open, onClose }) {
         lg:translate-x-0
       `}>
         <div className="px-5 py-5 border-b border-gray-100 flex items-center justify-between">
-          <a href="/" onClick={(e) => { e.preventDefault(); navigate('/', { replace: true }); }} className="flex items-center gap-2">
+          <a href="/" onClick={(e) => { e.preventDefault(); navigate('/', { replace: location.pathname === '/' }); }} className="flex items-center gap-2">
             <img src="/logo.svg" alt="Wekili" className="h-9 w-auto" />
           </a>
           <button onClick={onClose} className="lg:hidden text-gray-400 hover:text-gray-600 p-1">
