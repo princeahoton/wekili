@@ -981,7 +981,7 @@ export default function Analysis() {
       {sidebarOpen && <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />}
       <aside className={`fixed left-0 top-0 h-full w-64 md:w-56 bg-white border-r border-gray-100 flex flex-col z-40 transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
         <div className="px-5 py-5 border-b border-gray-100 flex items-center justify-between">
-          <a href="/dashboard" onClick={(e) => { e.preventDefault(); navigate('/dashboard', { replace: true }); }}>
+          <a href="/dashboard" onClick={(e) => { e.preventDefault(); navigate('/dashboard', { replace: window.location.pathname === '/dashboard' }); }}>
             <img src="/logo.svg" alt="Wekili" className="h-9 w-auto" />
           </a>
           <button onClick={() => setSidebarOpen(false)} className="md:hidden text-gray-400 hover:text-gray-600 p-1">
@@ -1158,7 +1158,7 @@ export default function Analysis() {
             { path: '/analysis',  label: 'Analyse',  icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg> },
             { path: '/profile',   label: 'Profil',   icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg> },
           ].map(item => (
-            <button key={item.path} onClick={() => navigate(item.path, { replace: true })} className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors ${window.location.pathname === item.path ? 'text-[#1a3a6b]' : 'text-gray-400 hover:text-gray-600'}`}>
+            <button key={item.path} onClick={() => navigate(item.path, { replace: window.location.pathname === item.path })} className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors ${window.location.pathname === item.path ? 'text-[#1a3a6b]' : 'text-gray-400 hover:text-gray-600'}`}>
               {item.icon}
               <span className="text-xs font-medium">{item.label}</span>
             </button>
