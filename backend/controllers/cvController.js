@@ -1,7 +1,7 @@
 const pool = require('../config/database');
 const claudeService = require('../services/claudeService');
 const multer = require('multer');
-const pdfParse = require('pdf-parse');
+const { PDFParse } = require('pdf-parse');
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -16,10 +16,12 @@ exports.uploadMiddleware = upload.single('cv');
 exports.extractPDF = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'Aucun fichier PDF reçu.' });
-    const data = await pdfParse(req.file.buffer);
-    const texte = data.text.replace(/\n{3,}/g, '\n\n').trim();
+    const parser = new PDFParse({ data: req.file.buffer });
+    const result = await parser.getText();
+    await parser.destroy();
+    const texte = result.text.replace(/\n{3,}/g, '\n\n').trim();
     if (!texte) return res.status(400).json({ message: 'Impossible d\'extraire le texte de ce PDF.' });
-    res.json({ texte, pages: data.numpages });
+    res.json({ texte, pages: result.total });
   } catch (err) {
     console.error('Erreur extraction PDF:', err.message);
     res.status(500).json({ message: 'Erreur lors de la lecture du PDF', detail: err.message });
