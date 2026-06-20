@@ -11,7 +11,7 @@ function Navbar() {
 
   const handleLogout = () => {
     clearAuth();
-    navigate('/');
+    navigate('/', { replace: true });
   };
 
   return (

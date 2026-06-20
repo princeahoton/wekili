@@ -60,7 +60,7 @@ function Register() {
 
   function saveAndRedirect(result) {
     saveAuth(result.token, result.user, true);
-    navigate('/dashboard', { state: { toast: { type: 'success', msg: `Bienvenue sur Wekili, ${result.user?.prenom || ''} ! Votre compte Google est activé.` } } });
+    navigate('/dashboard', { replace: true, state: { toast: { type: 'success', msg: `Bienvenue sur Wekili, ${result.user?.prenom || ''} ! Votre compte Google est activé.` } } });
   }
 
   const handleGoogleCredential = async (response) => {

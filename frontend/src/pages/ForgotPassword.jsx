@@ -54,7 +54,7 @@ export default function ForgotPassword() {
     try {
       const result = await resetPassword(email, code, newPwd);
       if (result.success) {
-        navigate('/login', { state: { toast: { type: 'success', msg: 'Mot de passe réinitialisé ! Connectez-vous avec votre nouveau mot de passe.' } } });
+        navigate('/login', { replace: true, state: { toast: { type: 'success', msg: 'Mot de passe réinitialisé ! Connectez-vous avec votre nouveau mot de passe.' } } });
       } else {
         setError(result.message || 'Code incorrect ou expiré.');
       }

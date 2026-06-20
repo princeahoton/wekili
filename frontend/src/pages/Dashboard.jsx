@@ -127,7 +127,7 @@ function Sidebar({ user, onLogout, open, onClose }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleNav = (path) => { navigate(path); onClose(); };
+  const handleNav = (path) => { navigate(path, { replace: true }); onClose(); };
 
   return (
     <>
@@ -204,7 +204,7 @@ function BottomNav() {
         {bottomNavItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
-            <button key={item.path} onClick={() => navigate(item.path)}
+            <button key={item.path} onClick={() => navigate(item.path, { replace: true })}
               className={`flex-1 flex flex-col items-center py-2.5 gap-0.5 transition-colors ${
                 isActive ? 'text-[#1a3a6b]' : 'text-gray-400'
               }`}>
@@ -239,7 +239,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     const u = getUser();
-    if (!u) { navigate('/login'); return; }
+    if (!u) { navigate('/login', { replace: true }); return; }
     setUser(u);
   }, [navigate]);
 
@@ -270,7 +270,7 @@ export default function Dashboard() {
 
   const handleLogout = () => {
     clearAuth();
-    navigate('/login');
+    navigate('/login', { replace: true });
   };
 
   const profilePct = calcProfileCompletion(profile);
