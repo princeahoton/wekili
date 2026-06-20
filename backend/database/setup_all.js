@@ -101,6 +101,7 @@ async function runAll() {
     await client.query(`CREATE INDEX IF NOT EXISTS idx_doc_logs_user ON document_logs(user_id, created_at DESC)`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS two_fa_enabled   BOOLEAN DEFAULT FALSE`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified  BOOLEAN DEFAULT FALSE`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS role             VARCHAR(20) DEFAULT 'user'`);
     // Les comptes créés avant la vérification email sont considérés vérifiés
     await client.query(`UPDATE users SET email_verified = true WHERE email_verified = false AND created_at < NOW() - INTERVAL '1 hour'`);
 

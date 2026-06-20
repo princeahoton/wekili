@@ -465,3 +465,28 @@ export const getDocumentLogs = async () => {
   const res = await fetch(`${API_URL}/documents/logs`, { headers: authHeaders() });
   return res.json();
 };
+
+// ── Admin ─────────────────────────────────────────────────────────────────────
+const adminFetch = async (path, options = {}) => {
+  const res = await fetch(`${API_URL}/admin${path}`, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', ...authHeaders(), ...options.headers },
+  });
+  return res.json();
+};
+
+export const adminGetStats        = ()           => adminFetch('/stats');
+export const adminGetUsers        = (p = {})     => adminFetch(`/users?${new URLSearchParams(p)}`);
+export const adminGetUserDetail   = (id)         => adminFetch(`/users/${id}`);
+export const adminUpdateUserRole  = (id, role)   => adminFetch(`/users/${id}/role`,    { method: 'PATCH',  body: JSON.stringify({ role }) });
+export const adminDeleteUser      = (id)         => adminFetch(`/users/${id}`,         { method: 'DELETE' });
+
+export const adminGetBourses      = (p = {})     => adminFetch(`/bourses?${new URLSearchParams(p)}`);
+export const adminCreateBourse    = (data)       => adminFetch('/bourses',             { method: 'POST',   body: JSON.stringify(data) });
+export const adminUpdateBourse    = (id, data)   => adminFetch(`/bourses/${id}`,       { method: 'PATCH',  body: JSON.stringify(data) });
+export const adminDeleteBourse    = (id)         => adminFetch(`/bourses/${id}`,       { method: 'DELETE' });
+
+export const adminGetUniversities   = (p = {})   => adminFetch(`/universities?${new URLSearchParams(p)}`);
+export const adminCreateUniversity  = (data)     => adminFetch('/universities',        { method: 'POST',   body: JSON.stringify(data) });
+export const adminUpdateUniversity  = (id, data) => adminFetch(`/universities/${id}`,  { method: 'PATCH',  body: JSON.stringify(data) });
+export const adminDeleteUniversity  = (id)       => adminFetch(`/universities/${id}`,  { method: 'DELETE' });

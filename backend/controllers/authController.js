@@ -42,6 +42,7 @@ function safeUser(user) {
     avatar_url:     user.avatar_url || null,
     auth_method:    user.auth_method || 'email',
     two_fa_enabled: user.two_fa_enabled || false,
+    role:           user.role || 'user',
   };
 }
 
