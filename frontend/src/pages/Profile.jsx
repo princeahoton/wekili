@@ -253,7 +253,7 @@ export default function Profile() {
       {sidebarOpen && <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />}
       <aside className={`fixed left-0 top-0 h-full w-64 md:w-56 bg-white border-r border-gray-100 flex flex-col z-40 transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
         <div className="px-5 py-5 border-b border-gray-100 flex items-center justify-between">
-          <a href="/dashboard" className="flex items-center gap-2">
+          <a href="/dashboard" onClick={(e) => { e.preventDefault(); navigate('/dashboard', { replace: true }); }} className="flex items-center gap-2">
             <img src="/logo.svg" alt="Wekili" className="h-9 w-auto" />
           </a>
           <button onClick={() => setSidebarOpen(false)} className="md:hidden text-gray-400 hover:text-gray-600 p-1">
@@ -302,7 +302,7 @@ export default function Profile() {
         </nav>
 
         <div className="px-4 py-4 border-t border-gray-100">
-          <button onClick={() => navigate('/dashboard', { replace: true })} className="w-full flex items-center gap-2 text-sm text-gray-500 hover:text-[#1a3a6b] transition-colors px-3 py-2">
+          <button onClick={() => navigate(-1)} className="w-full flex items-center gap-2 text-sm text-gray-500 hover:text-[#1a3a6b] transition-colors px-3 py-2">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             Retour au dashboard
           </button>
@@ -602,7 +602,7 @@ export default function Profile() {
             {/* Navigation */}
             <div className="flex items-center justify-between mt-6">
               <button
-                onClick={() => etape > 1 ? setEtape(etape - 1) : navigate('/dashboard', { replace: true })}
+                onClick={() => etape > 1 ? setEtape(etape - 1) : navigate(-1)}
                 className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#1a3a6b] transition-colors px-4 py-2 rounded-xl hover:bg-gray-100"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
