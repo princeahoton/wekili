@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getToken, getUser, clearAuth } from '../utils/auth';
+import { getToken, getUser } from '../utils/auth';
+import { logout } from '../services/api';
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -9,8 +10,8 @@ function Navbar() {
   const user = getUser();
   const isLoggedIn = !!getToken();
 
-  const handleLogout = () => {
-    clearAuth();
+  const handleLogout = async () => {
+    await logout();
     navigate('/', { replace: true });
   };
 

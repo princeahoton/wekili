@@ -119,6 +119,22 @@ async function runAll() {
     await client.query(`CREATE INDEX IF NOT EXISTS idx_login_sessions_user ON login_sessions(user_id, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_login_sessions_device ON login_sessions(user_id, device_hash, created_at DESC)`);
 
+    // ── TABLE REFRESH_TOKENS ───────────────────────────────────────────
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS refresh_tokens (
+        id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        token_hash  VARCHAR(64) NOT NULL,
+        device_hash VARCHAR(24),
+        expires_at  TIMESTAMPTZ NOT NULL,
+        created_at  TIMESTAMPTZ DEFAULT NOW(),
+        revoked_at  TIMESTAMPTZ,
+        CONSTRAINT uq_refresh_token_hash UNIQUE (token_hash)
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_hash ON refresh_tokens(token_hash)`);
+
     // ── TABLE DOCUMENTS ────────────────────────────────────────────────
     await client.query(`
       CREATE TABLE IF NOT EXISTS documents (

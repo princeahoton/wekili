@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
-const authController = require('../controllers/authController');
+const authController  = require('../controllers/authController');
+const tokenController = require('../controllers/tokenController');
 
 // 10 tentatives par fenêtre de 15 min sur les endpoints auth
 const authLimit = rateLimit({
@@ -32,5 +33,9 @@ router.post('/resend-verify', authLimit, authController.resendVerificationEmail)
 // Mot de passe oublié
 router.post('/forgot-password', authLimit, authController.forgotPassword);
 router.post('/reset-password',  authLimit, authController.resetPassword);
+
+// Gestion des sessions
+router.post('/refresh', tokenController.refresh);
+router.post('/logout',  tokenController.logout);
 
 module.exports = router;

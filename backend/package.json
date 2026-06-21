@@ -17,7 +17,9 @@
     "setup:universities": "node database/migrate_universities.js && node database/seed_universities.js",
     "migrate:logement": "node database/migrate_logement.js",
     "setup:logement": "node database/migrate_logement.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "keywords": [],
   "author": "",
@@ -45,6 +47,8 @@
     "uuid": "^14.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "jest": "^30.4.2",
+    "nodemon": "^3.1.14",
+    "supertest": "^7.2.2"
   }
 }
