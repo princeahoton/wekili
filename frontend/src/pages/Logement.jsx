@@ -13,7 +13,7 @@ const STATUT_CONFIG = {
   dossier_soumis:    { label: 'Dossier soumis',        color: 'bg-blue-100 text-blue-800' },
   en_attente:        { label: 'En attente',            color: 'bg-purple-100 text-purple-800' },
   visite_planifiee:  { label: 'Visite planifiée',      color: 'bg-orange-100 text-orange-800' },
-  logement_confirme: { label: 'Logement confirmé ✓',   color: 'bg-green-100 text-green-800' },
+  logement_confirme: { label: 'Logement confirmé',      color: 'bg-green-100 text-green-800' },
 };
 
 const PLATEFORMES = {
@@ -33,7 +33,7 @@ const PLATEFORMES = {
     { nom: 'Rentals.ca', sous_titre: 'rentals.ca', type: 'Professionnel', cout: 'Variable', priorite: 'normale', lien: 'https://rentals.ca', conseil: 'Annonces professionnelles vérifiées' },
   ],
   Allemagne: [
-    { nom: 'Studentenwerk', sous_titre: 'studentenwerke.de', type: 'Résidence universitaire', cout: '200–400 €/mois', priorite: 'haute', lien: 'https://www.studentenwerke.de/de/wohnen', conseil: '⚠ URGENT : liste d\'attente 6–12 mois. S\'inscrire avant même d\'avoir l\'admission.' },
+    { nom: 'Studentenwerk', sous_titre: 'studentenwerke.de', type: 'Résidence universitaire', cout: '200–400 €/mois', priorite: 'haute', lien: 'https://www.studentenwerke.de/de/wohnen', conseil: 'URGENT : liste d\'attente 6–12 mois. S\'inscrire avant même d\'avoir l\'admission.' },
     { nom: 'WG-Gesucht', sous_titre: 'wg-gesucht.de', type: 'Colocation (WG)', cout: '300–600 €/mois', priorite: 'haute', lien: 'https://www.wg-gesucht.de', conseil: 'LA plateforme de référence pour la colocation en Allemagne — très utilisée' },
     { nom: 'ImmobilienScout24', sous_titre: 'immobilienscout24.de', type: 'Appartements', cout: 'Variable', priorite: 'normale', lien: 'https://www.immobilienscout24.de', conseil: 'Grand portail allemand — appartements entiers' },
     { nom: 'Housinganywhere', sous_titre: 'housinganywhere.com', type: 'International', cout: '400–700 €/mois', priorite: 'normale', lien: 'https://housinganywhere.com', conseil: 'Interface en anglais — idéal pour réserver depuis l\'étranger avant d\'arriver' },
@@ -145,7 +145,9 @@ function CartePlateforme({ p, onOpen }) {
 function CarteAide({ a }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-start gap-3">
-      <div className="w-8 h-8 rounded-xl bg-green-100 flex items-center justify-center text-green-600 flex-shrink-0 text-base">💰</div>
+      <div className="w-8 h-8 rounded-xl bg-green-100 flex items-center justify-center text-green-600 flex-shrink-0">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <p className="font-bold text-sm text-gray-800">{a.nom}</p>
@@ -171,7 +173,7 @@ function GuideModal({ guide, onClose }) {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-t-2xl p-5 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🤖</span>
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
             <div>
               <h2 className="font-bold">Guide Logement IA</h2>
               <p className="text-violet-200 text-xs mt-0.5">Recommandations personnalisées</p>
@@ -194,8 +196,8 @@ function GuideModal({ guide, onClose }) {
                 <p className="font-semibold text-sm text-gray-900">{opt.type}</p>
                 <p className="text-sm font-bold text-[#1a3a6b]">{opt.cout_mensuel}</p>
               </div>
-              {opt.avantages?.map((a, j) => <p key={j} className="text-xs text-gray-600">✓ {a}</p>)}
-              {opt.timing && <p className="text-xs text-orange-600 font-semibold mt-2">⏰ {opt.timing}</p>}
+              {opt.avantages?.map((a, j) => <p key={j} className="text-xs text-gray-600 flex items-start gap-1"><svg className="w-3 h-3 text-green-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>{a}</p>)}
+              {opt.timing && <p className="text-xs text-orange-600 font-semibold mt-2 flex items-center gap-1"><svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>{opt.timing}</p>}
             </div>
           ))}
           {guide.checklist_logement?.map((item, i) => (
@@ -340,7 +342,8 @@ export default function Logement() {
               </button>
               <div>
                 <h1 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                  🏠 Logement
+                  <svg className="w-5 h-5 text-[#1a3a6b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 22V12h6v10" /></svg>
+                  Logement
                   {FLAG_CODES[pays] && <span className={`fi fi-${FLAG_CODES[pays]} rounded-sm`} style={{ display: 'inline-block', width: 20, height: 15 }} />}
                 </h1>
                 <p className="text-xs text-gray-400 mt-0.5">
@@ -397,7 +400,7 @@ export default function Logement() {
               >
                 {loadingIA
                   ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Génération…</>
-                  : '✨ Guide IA'
+                  : 'Guide IA'
                 }
               </button>
             </div>
@@ -440,7 +443,8 @@ export default function Logement() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                  🔗 Plateformes recommandées
+                  <svg className="w-4 h-4 text-[#1a3a6b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                  Plateformes recommandées
                   {FLAG_CODES[pays] && <span className={`fi fi-${FLAG_CODES[pays]} rounded-sm`} style={{ display: 'inline-block', width: 18, height: 13 }} />}
                 </h2>
                 <p className="text-xs text-gray-400 mt-0.5">Les meilleures plateformes pour trouver un logement en {pays}</p>
@@ -468,7 +472,8 @@ export default function Logement() {
           {aides.length > 0 && (
             <section>
               <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                💡 Aides financières disponibles en {pays}
+                <svg className="w-4 h-4 text-[#1a3a6b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                Aides financières disponibles en {pays}
               </h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {aides.map((a, i) => <CarteAide key={i} a={a} />)}
@@ -479,7 +484,8 @@ export default function Logement() {
           {/* ── Section budget ─────────────────────────────────── */}
           <section>
             <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-              📊 Estimation du budget mensuel
+              <svg className="w-4 h-4 text-[#1a3a6b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+              Estimation du budget mensuel
               {villeInput && <span className="text-sm font-normal text-gray-500">— {villeInput}</span>}
             </h2>
 
@@ -551,7 +557,7 @@ export default function Logement() {
           {/* ── Section checklist ─────────────────────────────── */}
           <section>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-gray-900">✅ Ma checklist logement</h2>
+              <h2 className="text-base font-bold text-gray-900 flex items-center gap-2"><svg className="w-4 h-4 text-[#1a3a6b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Ma checklist logement</h2>
               <span className="text-sm font-bold text-[#1a3a6b]">{checkDone} / {CHECKLIST.length} étapes</span>
             </div>
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">

@@ -27,7 +27,7 @@ const STATUT_CONFIG = {
   en_preparation: { label: 'En préparation', color: 'bg-gray-100 text-gray-600',   dot: 'bg-gray-400'   },
   soumise:        { label: 'Soumise',        color: 'bg-blue-100 text-blue-700',   dot: 'bg-blue-500'   },
   en_attente:     { label: 'En attente',     color: 'bg-yellow-100 text-yellow-700', dot: 'bg-yellow-500' },
-  admis:          { label: 'Admis ✓',        color: 'bg-green-100 text-green-700', dot: 'bg-green-500'  },
+  admis:          { label: 'Admis',           color: 'bg-green-100 text-green-700', dot: 'bg-green-500'  },
   refuse:         { label: 'Refusé',         color: 'bg-red-100 text-red-700',     dot: 'bg-red-500'    },
   liste_attente:  { label: 'Liste d\'attente', color: 'bg-orange-100 text-orange-700', dot: 'bg-orange-500' },
 };
@@ -127,8 +127,9 @@ function CarteUniversite({ u, onClick, onToggleCandidature }) {
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
+            {urgente && <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
             {urgente
-              ? `⚠ Clôture dans ${jours} jour(s) !`
+              ? `Clôture dans ${jours} jour(s) !`
               : `Clôture : ${deadline.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`}
           </div>
         )}

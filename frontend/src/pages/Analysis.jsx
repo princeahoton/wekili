@@ -474,7 +474,7 @@ function SectionLM() {
                   onClick={handleGenerer} disabled={generating}
                   className="flex items-center gap-2 bg-[#1a3a6b] text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-[#0f2550] disabled:opacity-50 transition-colors"
                 >
-                  {generating ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Génération...</> : <>✨ Générer une première version avec l'IA</>}
+                  {generating ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Génération...</> : <>Générer une première version avec l'IA</>}
                 </button>
                 <span className="text-gray-300 text-xs">ou</span>
                 <button onClick={() => setTexte(' ')} className="text-sm text-[#1a3a6b] underline underline-offset-2">
@@ -499,13 +499,13 @@ function SectionLM() {
                   onClick={handleCorriger} disabled={loading || !texte.trim()}
                   className="flex-1 flex items-center justify-center gap-2 bg-[#1a3a6b] text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-[#0f2550] disabled:opacity-50 transition-colors"
                 >
-                  {loading ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Correction en cours...</> : <>🤖 Faire corriger par l'IA</>}
+                  {loading ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Correction en cours...</> : <>Faire corriger par l'IA</>}
                 </button>
                 <button
                   onClick={handleGenerer} disabled={generating}
                   className="flex items-center gap-2 border border-[#1a3a6b] text-[#1a3a6b] px-5 py-3 rounded-xl text-sm font-bold hover:bg-[#1a3a6b] hover:text-white disabled:opacity-50 transition-colors"
                 >
-                  {generating ? '...' : '✨ Régénérer'}
+                  {generating ? '...' : 'Régénérer'}
                 </button>
               </div>
             </>
@@ -556,13 +556,13 @@ function SectionLM() {
             {pointsForts.length > 0 && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <span className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-xs">✓</span>
+                  <span className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center text-green-600"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg></span>
                   Points forts
                 </h3>
                 <ul className="space-y-2">
                   {pointsForts.map((p, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
-                      <span className="text-green-500 mt-0.5 shrink-0">✓</span>
+                      <svg className="w-4 h-4 text-green-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
                       {typeof p === 'string' ? p : p.titre || JSON.stringify(p)}
                     </li>
                   ))}
@@ -573,7 +573,7 @@ function SectionLM() {
             {pointsAmeliorer.length > 0 && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <span className="w-5 h-5 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 text-xs">!</span>
+                  <span className="w-5 h-5 bg-orange-100 rounded-full flex items-center justify-center text-orange-600"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01" /></svg></span>
                   À améliorer
                 </h3>
                 <div className="space-y-3">
@@ -800,7 +800,7 @@ function SectionCV() {
             onClick={handleCorriger} disabled={loading || !texte.trim()}
             className="w-full flex items-center justify-center gap-2 bg-[#1a3a6b] text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-[#0f2550] disabled:opacity-50 transition-colors"
           >
-            {loading ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Analyse en cours...</> : <>🤖 Analyser et corriger mon CV pour {paysCible}</>}
+            {loading ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Analyse en cours...</> : <>Analyser et corriger mon CV pour {paysCible}</>}
           </button>
           {errMsg && <p className="text-red-500 text-sm text-center">{errMsg}</p>}
         </div>
@@ -847,13 +847,13 @@ function SectionCV() {
             {pointsForts.length > 0 && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <span className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-xs">✓</span>
+                  <span className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center text-green-600"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg></span>
                   Points forts
                 </h3>
                 <ul className="space-y-2">
                   {pointsForts.map((p, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
-                      <span className="text-green-500 mt-0.5 shrink-0">✓</span>
+                      <svg className="w-4 h-4 text-green-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
                       {typeof p === 'string' ? p : JSON.stringify(p)}
                     </li>
                   ))}
@@ -864,7 +864,7 @@ function SectionCV() {
             {corrections.length > 0 && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <span className="w-5 h-5 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 text-xs">!</span>
+                  <span className="w-5 h-5 bg-orange-100 rounded-full flex items-center justify-center text-orange-600"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01" /></svg></span>
                   Corrections section par section
                 </h3>
                 <div className="space-y-3">
@@ -992,16 +992,16 @@ export default function Analysis() {
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {/* Sections principales */}
           {[
-            { id: 'rapport', icon: '🤖', label: 'Analyse IA' },
-            { id: 'lm',      icon: '📄', label: 'Lettre de motivation' },
-            { id: 'cv',      icon: '📋', label: 'CV' },
+            { id: 'rapport', icon: <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>, label: 'Analyse IA' },
+            { id: 'lm',      icon: <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>, label: 'Lettre de motivation' },
+            { id: 'cv',      icon: <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>, label: 'CV' },
           ].map(s => (
             <button
               key={s.id}
               onClick={() => { setSection(s.id); setSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors ${section === s.id ? 'bg-[#1a3a6b] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
             >
-              <span className="text-base">{s.icon}</span>
+              {s.icon}
               <span className="text-xs font-semibold">{s.label}</span>
             </button>
           ))}
@@ -1093,12 +1093,12 @@ export default function Analysis() {
               </p>
               <div className="grid grid-cols-3 gap-3 mb-8 text-left">
                 {[
-                  { icon: '⏱', label: 'Moins de 3 min', sub: "Durée de l'analyse" },
-                  { icon: '🎯', label: 'Score 0–100',    sub: 'Avec interprétation' },
-                  { icon: '📋', label: 'Rapport PDF',    sub: 'Exportable' },
+                  { icon: <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>, label: 'Moins de 3 min', sub: "Durée de l'analyse" },
+                  { icon: <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>, label: 'Score 0–100',    sub: 'Avec interprétation' },
+                  { icon: <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>, label: 'Rapport PDF',    sub: 'Exportable' },
                 ].map((item) => (
                   <div key={item.label} className="bg-white border border-gray-100 rounded-xl p-4 text-center">
-                    <p className="text-xl mb-1">{item.icon}</p>
+                    <div className="text-[#1a3a6b] mb-2">{item.icon}</div>
                     <p className="text-xs font-bold text-gray-800">{item.label}</p>
                     <p className="text-xs text-gray-400">{item.sub}</p>
                   </div>

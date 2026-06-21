@@ -99,7 +99,7 @@ function UserDetailPanel({ userId, onClose }) {
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div><p className="text-gray-400 text-xs">Pays</p><p className="font-medium">{data.user.pays || '—'}</p></div>
                 <div><p className="text-gray-400 text-xs">Méthode</p><Badge text={data.user.auth_method} cls={METHOD_BADGE[data.user.auth_method] || 'bg-gray-100 text-gray-600'} /></div>
-                <div><p className="text-gray-400 text-xs">Email vérifié</p><p className="font-medium">{data.user.email_verified ? '✓ Oui' : '✗ Non'}</p></div>
+                <div><p className="text-gray-400 text-xs">Email vérifié</p><p className="font-medium flex items-center gap-1">{data.user.email_verified ? <><svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>Oui</> : <><svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>Non</>}</p></div>
                 <div><p className="text-gray-400 text-xs">2FA</p><p className="font-medium">{data.user.two_fa_enabled ? 'Activé' : 'Désactivé'}</p></div>
                 <div><p className="text-gray-400 text-xs">Inscrit le</p><p className="font-medium">{fmtDate(data.user.created_at)}</p></div>
                 <div><p className="text-gray-400 text-xs">Dernière connexion</p><p className="font-medium">{fmtDate(data.user.last_login)}</p></div>
@@ -304,7 +304,7 @@ export default function AdminUsers() {
                   </td>
                   <td className="px-4 py-3">
                     {u.has_profile
-                      ? <span className="text-emerald-600 font-medium text-xs">✓ Oui</span>
+                      ? <span className="text-emerald-600 font-medium text-xs flex items-center gap-1"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>Oui</span>
                       : <span className="text-gray-300 text-xs">Non</span>}
                   </td>
                   <td className="px-4 py-3 text-right">

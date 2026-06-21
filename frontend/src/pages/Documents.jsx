@@ -596,7 +596,7 @@ export default function Documents() {
             </div>
             <span className="text-sm font-bold text-[#F5A623]">{nbUploades}/{nbTotal}</span>
           </div>
-          <p className="text-xs text-gray-400">{nbUploades === nbTotal ? 'Tous les documents sont prêts ✓' : `${nbTotal - nbUploades} document(s) manquant(s)`}</p>
+          <p className="text-xs text-gray-400">{nbUploades === nbTotal ? 'Tous les documents sont prêts' : `${nbTotal - nbUploades} document(s) manquant(s)`}</p>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-0.5">
