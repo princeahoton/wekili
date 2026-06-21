@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getToken, getUser } from '../utils/auth';
 import { logout } from '../services/api';
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const user = getUser();
   const isLoggedIn = !!getToken();
@@ -91,7 +92,17 @@ function Navbar() {
           {/* Boutons droite */}
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate(isLoggedIn ? '/bourses' : '/login')}
+              onClick={() => {
+                if (location.pathname === '/') {
+                  const input = document.getElementById('home-search');
+                  if (input) {
+                    document.getElementById('bourses')?.scrollIntoView({ behavior: 'smooth' });
+                    setTimeout(() => input.focus(), 400);
+                  }
+                } else {
+                  navigate(isLoggedIn ? '/bourses' : '/login');
+                }
+              }}
               className="p-2 text-[#1a3a6b] hover:text-[#F5A623] transition-colors"
               aria-label="Rechercher"
             >
