@@ -60,7 +60,7 @@ exports.getProfile = async (req, res) => {
     res.json({ profile: rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Impossible de charger votre profil. Réessayez.' });
   }
 };
 
@@ -141,7 +141,7 @@ exports.saveProfile = async (req, res) => {
     res.json({ message: 'Profil sauvegardé', profile: rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'La sauvegarde du profil a échoué. Réessayez.' });
   }
 };
 
@@ -211,6 +211,6 @@ exports.verifyProfilePhoneOTP = async (req, res) => {
     res.json({ success: true, message: 'Numéro vérifié avec succès !' });
   } catch (err) {
     console.error('Erreur vérification OTP profil:', err.message);
-    res.status(500).json({ success: false, message: 'Erreur serveur.' });
+    res.status(500).json({ success: false, message: 'La vérification du numéro a échoué. Réessayez.' });
   }
 };

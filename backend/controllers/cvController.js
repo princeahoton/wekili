@@ -24,7 +24,7 @@ exports.extractPDF = async (req, res) => {
     res.json({ texte, pages: result.total });
   } catch (err) {
     console.error('Erreur extraction PDF:', err.message);
-    res.status(500).json({ message: 'Erreur lors de la lecture du PDF', detail: err.message });
+    res.status(500).json({ message: 'Impossible de lire ce fichier PDF. Vérifiez que le fichier n\'est pas corrompu.' });
   }
 };
 
@@ -39,7 +39,7 @@ exports.getCVVersions = async (req, res) => {
     res.json({ versions: rows });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Impossible de charger vos versions de CV. Réessayez.' });
   }
 };
 
@@ -74,7 +74,7 @@ exports.corrigerCV = async (req, res) => {
     res.json({ version: rows[0], analyse: result });
   } catch (err) {
     console.error('Erreur correction CV:', err.message);
-    res.status(500).json({ message: 'Erreur lors de la correction', detail: err.message });
+    res.status(500).json({ message: 'La correction du CV a échoué. Réessayez dans quelques instants.' });
   }
 };
 
@@ -95,6 +95,6 @@ exports.sauvegarderCV = async (req, res) => {
     res.json({ version: rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'La sauvegarde du CV a échoué. Réessayez.' });
   }
 };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getBourses } from '../services/api';
 import { getUser } from '../utils/auth';
@@ -376,6 +376,10 @@ function CarteDetailModal({ bourse, onClose }) {
 export default function Bourses() {
   const navigate = useNavigate();
   const [bourses, setBourses] = useState([]);
+  const [page, setPage] = useState(1);
+  const [filteredTotal, setFilteredTotal] = useState(0);
+  const [totalBourses, setTotalBourses] = useState(0);
+  const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [recherche, setRecherche] = useState('');
   const [filtrePays, setFiltrePays] = useState('Tous');
@@ -387,42 +391,49 @@ export default function Bourses() {
 
   useEffect(() => {
     if (!getUser()) { navigate('/login', { replace: true }); return; }
-    chargerBourses();
   }, [navigate]);
 
-  const chargerBourses = async () => {
+  const chargerBourses = useCallback(async (p) => {
     setLoading(true);
     try {
-      const res = await getBourses();
-      setBourses(res?.bourses?.length ? res.bourses : BOURSES_DEMO);
+      const params = { sort: triPar, page: p, limit: 20 };
+      if (filtrePays !== 'Tous') params.pays = filtrePays;
+      if (filtreNiveau !== 'Tous') params.niveau = filtreNiveau;
+      if (filtreScore > 0) params.score_min = filtreScore;
+      if (recherche.trim()) params.search = recherche.trim();
+      const res = await getBourses(params);
+      if (res?.bourses) {
+        setBourses(res.bourses);
+        setTotalBourses(res.total || 0);
+        setFilteredTotal(res.filteredTotal ?? res.bourses.length);
+        setPages(res.pages || 1);
+        setPage(p);
+      } else {
+        setBourses(BOURSES_DEMO);
+        setTotalBourses(BOURSES_DEMO.length);
+        setFilteredTotal(BOURSES_DEMO.length);
+        setPages(1);
+        setPage(1);
+      }
     } catch {
       setBourses(BOURSES_DEMO);
+      setTotalBourses(BOURSES_DEMO.length);
+      setFilteredTotal(BOURSES_DEMO.length);
+      setPages(1);
+      setPage(1);
     } finally {
       setLoading(false);
     }
-  };
+  }, [triPar, filtrePays, filtreNiveau, filtreScore, recherche]);
 
-  const boursesFiltrees = bourses
-    .filter((b) => {
-      if (recherche && !(b.nom?.toLowerCase().includes(recherche.toLowerCase())) && !(b.organisme?.toLowerCase().includes(recherche.toLowerCase()))) return false;
-      if (filtrePays !== 'Tous' && b.pays !== filtrePays) return false;
-      if (filtreNiveau !== 'Tous' && !(b.niveau?.includes(filtreNiveau))) return false;
-      if (b.score_eligibilite < filtreScore) return false;
-      return true;
-    })
-    .sort((a, b) => {
-      if (triPar === 'score') return b.score_eligibilite - a.score_eligibilite;
-      if (triPar === 'deadline') return new Date(a.deadline) - new Date(b.deadline);
-      if (triPar === 'montant') return b.score_eligibilite - a.score_eligibilite;
-      return 0;
-    });
+  useEffect(() => {
+    const timer = setTimeout(() => chargerBourses(1), recherche ? 350 : 0);
+    return () => clearTimeout(timer);
+  }, [chargerBourses, recherche]);
 
-  const stats = {
-    total: bourses.length,
-    top: bourses.filter((b) => b.score_eligibilite >= 75).length,
-    france: bourses.filter((b) => b.pays === 'France').length,
-    prochaine: bourses.sort((a, b) => new Date(a.deadline) - new Date(b.deadline))[0]?.deadline,
-  };
+  const prochaine = bourses.length > 0
+    ? [...bourses].sort((a, b) => new Date(a.deadline) - new Date(b.deadline))[0]?.deadline
+    : null;
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -454,9 +465,11 @@ export default function Bourses() {
                 <span className={`fi fi-${FLAG_CODES[pays]} rounded-sm shrink-0`} style={{ display: 'inline-block', width: 18, height: 13 }} />
               )}
               <span>{pays}</span>
-              <span className={`ml-auto text-xs ${filtrePays === pays ? 'text-white/70' : 'text-gray-400'}`}>
-                {pays === 'Tous' ? bourses.length : bourses.filter((b) => b.pays === pays).length}
-              </span>
+              {pays === 'Tous' && (
+                <span className={`ml-auto text-xs ${filtrePays === pays ? 'text-white/70' : 'text-gray-400'}`}>
+                  {totalBourses}
+                </span>
+              )}
             </button>
           ))}
 
@@ -490,7 +503,7 @@ export default function Bourses() {
             </button>
             <div>
               <h1 className="text-lg font-bold text-gray-800">Bourses disponibles</h1>
-              <p className="text-xs text-gray-400">{boursesFiltrees.length} bourse(s) correspondant à votre profil</p>
+              <p className="text-xs text-gray-400">{filteredTotal} bourse(s) correspondant à votre profil</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -543,11 +556,11 @@ export default function Bourses() {
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             {[
-              { label: 'Bourses disponibles', val: stats.total,  color: 'text-[#1a3a6b]',  bg: 'bg-blue-50' },
-              { label: '≥ 75% éligibilité',   val: stats.top,   color: 'text-green-600',   bg: 'bg-green-50' },
-              { label: 'Pour la France',       val: stats.france,color: 'text-[#F5A623]',   bg: 'bg-orange-50' },
+              { label: 'Bourses disponibles', val: totalBourses,  color: 'text-[#1a3a6b]',  bg: 'bg-blue-50' },
+              { label: 'Résultats filtrés',   val: filteredTotal, color: 'text-green-600',   bg: 'bg-green-50' },
+              { label: 'Page actuelle',        val: `${page} / ${pages}`, color: 'text-[#F5A623]', bg: 'bg-orange-50' },
               { label: 'Prochaine deadline',
-                val: stats.prochaine ? new Date(stats.prochaine).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : '--',
+                val: prochaine ? new Date(prochaine).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : '--',
                 color: 'text-red-600', bg: 'bg-red-50' },
             ].map((s) => (
               <div key={s.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
@@ -576,7 +589,7 @@ export default function Bourses() {
               <div className="w-10 h-10 border-2 border-[#1a3a6b] border-t-transparent rounded-full animate-spin mx-auto" />
               <p className="text-sm text-gray-400 mt-4">Chargement des bourses...</p>
             </div>
-          ) : boursesFiltrees.length === 0 ? (
+          ) : bourses.length === 0 ? (
             <div className="text-center py-20 text-gray-400">
               <svg className="w-12 h-12 mx-auto mb-4 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -585,8 +598,9 @@ export default function Bourses() {
               <p className="text-sm mt-1">Essayez d'élargir vos filtres</p>
             </div>
           ) : (
+            <>
             <div className="space-y-4">
-              {boursesFiltrees.map((bourse, idx) => {
+              {bourses.map((bourse, idx) => {
                 const jours = Math.ceil((new Date(bourse.deadline) - new Date()) / (1000 * 60 * 60 * 24));
                 const urgente = jours > 0 && jours <= 30;
                 return (
@@ -647,6 +661,45 @@ export default function Bourses() {
                 );
               })}
             </div>
+
+            {/* Pagination */}
+            {pages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-8">
+                <button
+                  onClick={() => chargerBourses(page - 1)}
+                  disabled={page <= 1}
+                  className="p-2 rounded-xl border border-gray-200 text-gray-500 hover:border-[#1a3a6b] hover:text-[#1a3a6b] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                {Array.from({ length: Math.min(pages, 5) }, (_, i) => {
+                  let p;
+                  if (pages <= 5) p = i + 1;
+                  else if (page <= 3) p = i + 1;
+                  else if (page >= pages - 2) p = pages - 4 + i;
+                  else p = page - 2 + i;
+                  return (
+                    <button key={p} onClick={() => chargerBourses(p)}
+                      className={`w-9 h-9 rounded-xl text-sm font-semibold transition-all ${
+                        p === page ? 'bg-[#1a3a6b] text-white' : 'border border-gray-200 text-gray-600 hover:border-[#1a3a6b] hover:text-[#1a3a6b]'
+                      }`}>
+                      {p}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => chargerBourses(page + 1)}
+                  disabled={page >= pages}
+                  className="p-2 rounded-xl border border-gray-200 text-gray-500 hover:border-[#1a3a6b] hover:text-[#1a3a6b] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                </button>
+              </div>
+            )}
+            <p className="text-center text-xs text-gray-400 mt-3">
+              {filteredTotal} bourse(s) · Page {page} sur {pages}
+            </p>
+            </>
           )}
         </div>
       </main>

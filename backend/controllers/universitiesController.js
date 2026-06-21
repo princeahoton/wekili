@@ -26,16 +26,42 @@ exports.getUniversitiesPublic = async (req, res) => {
     res.json({ universities: rows });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Impossible de charger les universités. Réessayez.' });
   }
 };
 
 // GET /api/universities — avec auth + matches utilisateur
 exports.getUniversities = async (req, res) => {
   try {
-    const { pays, niveau, search, sort, limit } = req.query;
+    const { pays, niveau, search, sort, page = 1, limit = 20 } = req.query;
+    const pageNum  = Math.max(1, parseInt(page)  || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 20));
+    const offset   = (pageNum - 1) * limitNum;
 
-    let baseQuery = `
+    const filterParams = [req.userId];
+    const conds = [];
+    let idx = 2;
+
+    if (pays)   { conds.push(`u.pays = $${idx++}`);         filterParams.push(pays); }
+    if (niveau) { conds.push(`$${idx++} = ANY(u.niveaux)`); filterParams.push(niveau); }
+    if (search) {
+      conds.push(`(u.nom ILIKE $${idx} OR u.ville ILIKE $${idx} OR u.pays ILIKE $${idx})`);
+      filterParams.push(`%${search}%`); idx++;
+    }
+
+    const joinClause = `
+      FROM universities u
+      LEFT JOIN university_matches um ON um.university_id = u.id AND um.user_id = $1
+      LEFT JOIN candidatures c ON c.university_id = u.id AND c.user_id = $1
+    `;
+    const whereClause = conds.length ? ' WHERE ' + conds.join(' AND ') : '';
+    const orderClause = sort === 'classement'
+      ? ' ORDER BY COALESCE(u.classement_mondial, u.classement_monde) ASC NULLS LAST'
+      : sort === 'taux'
+      ? ' ORDER BY u.taux_admission DESC NULLS LAST'
+      : ' ORDER BY COALESCE(um.score_admission, 0) DESC, COALESCE(u.classement_mondial, u.classement_monde) ASC NULLS LAST';
+
+    const mainQuery = `
       SELECT u.id, u.nom, u.pays, u.ville, u.code_pays, u.type,
              u.domaines, u.niveaux, u.langue, u.niveau_langue,
              u.taux_admission, u.frais_scolarite, u.frais_inscription,
@@ -46,38 +72,30 @@ exports.getUniversities = async (req, res) => {
              u.date_ouverture, u.date_cloture,
              um.score_admission, um.type_candidature,
              c.statut as candidature_statut, c.voeu_numero
-      FROM universities u
-      LEFT JOIN university_matches um ON um.university_id = u.id AND um.user_id = $1
-      LEFT JOIN candidatures c ON c.university_id = u.id AND c.user_id = $1
+      ${joinClause}${whereClause}${orderClause}
+      LIMIT $${idx} OFFSET $${idx + 1}
     `;
-    const params = [req.userId];
-    const conds = [];
-    let idx = 2;
 
-    if (pays) { conds.push(`u.pays = $${idx++}`); params.push(pays); }
-    if (niveau) { conds.push(`$${idx++} = ANY(u.niveaux)`); params.push(niveau); }
-    if (search) {
-      conds.push(`(u.nom ILIKE $${idx} OR u.ville ILIKE $${idx} OR u.pays ILIKE $${idx})`);
-      params.push(`%${search}%`); idx++;
-    }
-    if (conds.length) baseQuery += ' WHERE ' + conds.join(' AND ');
+    const [{ rows }, countRes, totalRes] = await Promise.all([
+      pool.query(mainQuery, [...filterParams, limitNum, offset]),
+      pool.query(`SELECT COUNT(*) ${joinClause}${whereClause}`, filterParams),
+      pool.query('SELECT COUNT(*) FROM universities'),
+    ]);
 
-    if (sort === 'classement') {
-      baseQuery += ' ORDER BY COALESCE(u.classement_mondial, u.classement_monde) ASC NULLS LAST';
-    } else if (sort === 'taux') {
-      baseQuery += ' ORDER BY u.taux_admission DESC NULLS LAST';
-    } else {
-      baseQuery += ' ORDER BY COALESCE(um.score_admission, 0) DESC, COALESCE(u.classement_mondial, u.classement_monde) ASC NULLS LAST';
-    }
+    const filteredTotal = parseInt(countRes.rows[0].count);
+    const total         = parseInt(totalRes.rows[0].count);
 
-    if (limit) { baseQuery += ` LIMIT $${idx}`; params.push(parseInt(limit)); }
-
-    const { rows } = await pool.query(baseQuery, params);
-    const countRes = await pool.query('SELECT COUNT(*) FROM universities');
-    res.json({ universities: rows, total: parseInt(countRes.rows[0].count) });
+    res.json({
+      universities: rows,
+      total,
+      filteredTotal,
+      page:  pageNum,
+      limit: limitNum,
+      pages: Math.ceil(filteredTotal / limitNum),
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Impossible de charger les universités. Réessayez.' });
   }
 };
 
@@ -98,7 +116,7 @@ exports.getUniversityDetail = async (req, res) => {
     res.json({ university: rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Impossible de charger les universités. Réessayez.' });
   }
 };
 
@@ -118,7 +136,7 @@ exports.getCandidatures = async (req, res) => {
     res.json({ candidatures: rows });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Impossible de charger les universités. Réessayez.' });
   }
 };
 
@@ -144,7 +162,7 @@ exports.upsertCandidature = async (req, res) => {
     res.json({ candidature: rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Impossible de charger les universités. Réessayez.' });
   }
 };
 
@@ -158,6 +176,6 @@ exports.deleteCandidature = async (req, res) => {
     res.json({ message: 'Candidature supprimée' });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Impossible de charger les universités. Réessayez.' });
   }
 };

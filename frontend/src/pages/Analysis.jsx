@@ -965,9 +965,9 @@ export default function Analysis() {
     try {
       const res = await launchAnalysis();
       if (res?.analyse) { setAnalyse(res.analyse); setEtat('done'); }
-      else setErrMsg(res?.message || "Erreur lors de l'analyse.");
+      else setErrMsg(res?.message || "L'analyse a échoué. Réessayez dans quelques instants.");
     } catch {
-      setErrMsg('Impossible de contacter le serveur. Vérifiez que le backend tourne.');
+      setErrMsg('Connexion au serveur impossible. Vérifiez votre connexion internet et réessayez.');
       if (!isRegen) setEtat('error');
     } finally {
       setRegenerating(false);

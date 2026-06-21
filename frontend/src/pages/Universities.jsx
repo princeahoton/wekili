@@ -407,6 +407,9 @@ export default function Universities() {
   const navigate = useNavigate();
   const [universities, setUniversities] = useState([]);
   const [total, setTotal] = useState(0);
+  const [filteredTotal, setFilteredTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [selectedU, setSelectedU] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -416,10 +419,10 @@ export default function Universities() {
   const [filterSort, setFilterSort]   = useState('score');
   const [search, setSearch]           = useState('');
 
-  const fetchUniversities = useCallback(async () => {
+  const fetchUniversities = useCallback(async (p = 1) => {
     setLoading(true);
     try {
-      const params = { sort: filterSort };
+      const params = { sort: filterSort, page: p, limit: 20 };
       if (filterPays !== 'Tous')   params.pays   = filterPays;
       if (filterNiveau !== 'Tous') params.niveau = filterNiveau;
       if (search.trim())           params.search = search.trim();
@@ -427,6 +430,9 @@ export default function Universities() {
       const res = await getUniversities(params);
       setUniversities(res.universities || []);
       setTotal(res.total || 0);
+      setFilteredTotal(res.filteredTotal ?? (res.universities?.length || 0));
+      setPages(res.pages || 1);
+      setPage(p);
     } catch (err) {
       console.error(err);
     } finally {
@@ -439,7 +445,7 @@ export default function Universities() {
   }, [navigate]);
 
   useEffect(() => {
-    const timer = setTimeout(fetchUniversities, search ? 350 : 0);
+    const timer = setTimeout(() => fetchUniversities(1), search ? 350 : 0);
     return () => clearTimeout(timer);
   }, [fetchUniversities, search]);
 
@@ -451,7 +457,7 @@ export default function Universities() {
       } else {
         await upsertCandidature(u.id, data || { statut: 'en_preparation' });
       }
-      await fetchUniversities();
+      await fetchUniversities(page);
       if (selectedU && selectedU.id === u.id) {
         const fresh = universities.find(x => x.id === u.id);
         if (fresh) setSelectedU(fresh);
@@ -643,6 +649,38 @@ export default function Universities() {
                   <CarteUniversite key={u.id} u={u} onClick={setSelectedU} onToggleCandidature={handleToggleCandidature} />
                 ))}
               </div>
+
+              {/* Pagination */}
+              {pages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-8">
+                  <button onClick={() => fetchUniversities(page - 1)} disabled={page <= 1}
+                    className="p-2 rounded-xl border border-gray-200 text-gray-500 hover:border-[#1a3a6b] hover:text-[#1a3a6b] disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                  </button>
+                  {Array.from({ length: Math.min(pages, 5) }, (_, i) => {
+                    let p;
+                    if (pages <= 5) p = i + 1;
+                    else if (page <= 3) p = i + 1;
+                    else if (page >= pages - 2) p = pages - 4 + i;
+                    else p = page - 2 + i;
+                    return (
+                      <button key={p} onClick={() => fetchUniversities(p)}
+                        className={`w-9 h-9 rounded-xl text-sm font-semibold transition-all ${
+                          p === page ? 'bg-[#1a3a6b] text-white' : 'border border-gray-200 text-gray-600 hover:border-[#1a3a6b] hover:text-[#1a3a6b]'
+                        }`}>
+                        {p}
+                      </button>
+                    );
+                  })}
+                  <button onClick={() => fetchUniversities(page + 1)} disabled={page >= pages}
+                    className="p-2 rounded-xl border border-gray-200 text-gray-500 hover:border-[#1a3a6b] hover:text-[#1a3a6b] disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                  </button>
+                </div>
+              )}
+              <p className="text-center text-xs text-gray-400 mt-3">
+                {filteredTotal} université(s) · Page {page} sur {pages}
+              </p>
             </>
           )}
         </div>

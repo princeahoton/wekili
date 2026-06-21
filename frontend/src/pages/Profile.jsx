@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { saveProfile, getProfile, sendProfilePhoneOTP, verifyProfilePhoneOTP } from '../services/api';
 import { getUser } from '../utils/auth';
+import { normalisePhone, validatePhone } from '../utils/phone';
 
 const ETAPES = [
   { num: 1, label: 'Informations personnelles' },
@@ -20,24 +21,16 @@ const NIVEAUX_VISES = ['Licence (Bac+3)', 'Master (Bac+5)', 'Doctorat (Bac+8)', 
 const BUDGETS = ['Moins de 5 000 €/an', '5 000 – 10 000 €/an', '10 000 – 20 000 €/an', 'Plus de 20 000 €/an', 'Bourse uniquement (pas de budget personnel)'];
 const PAYS_AFRIQUE = ['Bénin', 'Burkina Faso', "Côte d'Ivoire", 'Cameroun', 'Congo', 'Gabon', 'Guinée', 'Madagascar', 'Mali', 'Mauritanie', 'Niger', 'RDC', 'Rwanda', 'Sénégal', 'Tchad', 'Togo', 'Autre'];
 
+const DIAL_CODES = {
+  'Bénin': '+229', 'Burkina Faso': '+226', "Côte d'Ivoire": '+225',
+  'Cameroun': '+237', 'Congo': '+242', 'Gabon': '+241',
+  'Guinée': '+224', 'Madagascar': '+261', 'Mali': '+223',
+  'Mauritanie': '+222', 'Niger': '+227', 'RDC': '+243',
+  'Rwanda': '+250', 'Sénégal': '+221', 'Tchad': '+235', 'Togo': '+228',
+};
+
 const AGE_MIN = 16;
 const AGE_MAX = 120;
-
-// ── Helpers téléphone ──────────────────────────────────────────────────────────
-
-function normalisePhone(phone) {
-  return (phone || '').replace(/[\s\-().]/g, '');
-}
-
-function validatePhone(phone) {
-  if (!phone) return null;
-  const n = normalisePhone(phone);
-  if (!n.startsWith('+')) return "Ajoutez le préfixe international (ex. : +229 97 00 00 00)";
-  if (!/^\+[1-9][0-9]+$/.test(n)) return "Numéro invalide — chiffres uniquement après le +";
-  if (n.length < 9)  return "Numéro trop court (minimum 8 chiffres après le +)";
-  if (n.length > 16) return "Numéro trop long (maximum 15 chiffres)";
-  return null;
-}
 
 function fmtDate(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -165,12 +158,23 @@ export default function Profile() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(f => ({ ...f, [name]: value }));
+    setForm(f => {
+      const next = { ...f, [name]: value };
+      // Auto-remplir l'indicatif téléphonique au choix du pays
+      if ((name === 'nationalite' || name === 'pays_residence') && DIAL_CODES[value]) {
+        const code = DIAL_CODES[value];
+        const currentPhone = f.telephone || '';
+        // Remplace seulement si le champ est vide ou contient uniquement un indicatif (+XXX)
+        if (!currentPhone || /^\+[0-9]{1,4}\s*$/.test(currentPhone.trim())) {
+          next.telephone = code + ' ';
+        }
+      }
+      return next;
+    });
     setSaved(false);
     if (name === 'date_naissance') setDateErreur(validateDateNaissance(value) || '');
     if (name === 'telephone') {
       setPhoneErreur(validatePhone(value) || '');
-      // Réinitialiser la vérification si le numéro change
       if (phoneOtpStep === 'verified' && normalisePhone(value) !== verifiedPhone) {
         setPhoneOtpStep('idle');
         setPhoneOtpCode('');

@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getProfile, getDocuments, getAnalysis, getAllAnalyses, getBourses } from '../services/api';
-import { getUser, clearAuth } from '../utils/auth';
+import { getUser } from '../utils/auth';
+import { logout } from '../services/api';
 import Toast from '../components/Toast';
 import 'flag-icons/css/flag-icons.min.css';
 
@@ -268,8 +269,8 @@ export default function Dashboard() {
 
   useEffect(() => { if (user) fetchAll(); }, [user, fetchAll]);
 
-  const handleLogout = () => {
-    clearAuth();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login', { replace: true });
   };
 

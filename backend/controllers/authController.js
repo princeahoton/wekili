@@ -8,6 +8,7 @@ const { OAuth2Client } = require('google-auth-library');
 const { sendSMS } = require('../utils/sms');
 const { sendEmail, otpHtml, newDeviceHtml } = require('../utils/email');
 const otpNs  = require('../utils/otp');
+const { makeAccessToken, makeRefreshToken, storeRefreshToken } = require('../utils/tokens');
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -24,12 +25,13 @@ function isValidPhone(phone) {
   return /^\+?[0-9]{8,15}$/.test(normalizePhone(phone));
 }
 
-function makeJwt(user) {
-  return jwt.sign(
-    { id: user.id, email: user.email },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRE || '24h' }
-  );
+// Émet access token + refresh token et les stocke en base
+async function issueTokens(user, req) {
+  const token        = makeAccessToken(user);
+  const refreshToken = makeRefreshToken();
+  const dHash        = deviceHash(req);
+  await storeRefreshToken(user.id, refreshToken, dHash);
+  return { token, refreshToken };
 }
 
 function safeUser(user) {
@@ -156,7 +158,7 @@ exports.register = async (req, res) => {
     });
   } catch (err) {
     console.error('Erreur register:', err.message);
-    res.status(500).json({ success: false, message: 'Erreur serveur' });
+    res.status(500).json({ success: false, message: 'La création de compte a échoué. Réessayez dans quelques instants.' });
   }
 };
 
@@ -179,8 +181,10 @@ exports.login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Email ou mot de passe incorrect' });
 
     const user = result.rows[0];
-    if (!user.password)
-      return res.status(401).json({ success: false, message: `Ce compte utilise la connexion ${user.auth_method}. Pas de mot de passe.` });
+    if (!user.password) {
+      const label = user.auth_method === 'google' ? 'Google' : user.auth_method === 'facebook' ? 'Facebook' : user.auth_method;
+      return res.status(401).json({ success: false, message: `Ce compte est lié à ${label}. Utilisez le bouton "${label}" pour vous connecter — aucun mot de passe n'est associé.` });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
@@ -222,10 +226,11 @@ exports.login = async (req, res) => {
     }
 
     await handleNewSession(user.id, user, req).catch(err => console.error('[session]', err.message));
-    res.json({ success: true, message: 'Connexion réussie !', token: makeJwt(user), user: safeUser(user) });
+    const { token, refreshToken } = await issueTokens(user, req);
+    res.json({ success: true, message: 'Connexion réussie !', token, refreshToken, user: safeUser(user) });
   } catch (err) {
     console.error('Erreur login:', err.message);
-    res.status(500).json({ success: false, message: 'Erreur serveur' });
+    res.status(500).json({ success: false, message: 'La connexion a échoué. Réessayez dans quelques instants.' });
   }
 };
 
@@ -256,10 +261,11 @@ exports.verify2FA = async (req, res) => {
 
     const user = rows[0];
     await handleNewSession(user.id, user, req).catch(err => console.error('[session]', err.message));
-    res.json({ success: true, message: 'Connexion 2FA réussie !', token: makeJwt(user), user: safeUser(user) });
+    const { token, refreshToken } = await issueTokens(user, req);
+    res.json({ success: true, message: 'Connexion 2FA réussie !', token, refreshToken, user: safeUser(user) });
   } catch (err) {
     console.error('Erreur verify2FA:', err.message);
-    res.status(500).json({ success: false, message: 'Erreur serveur' });
+    res.status(500).json({ success: false, message: 'La vérification du code a échoué. Réessayez.' });
   }
 };
 
@@ -286,10 +292,11 @@ exports.verifyEmail = async (req, res) => {
 
     const user = rows[0];
     await handleNewSession(user.id, user, req).catch(err => console.error('[session:verify-email]', err.message));
-    res.json({ success: true, message: 'Email vérifié ! Bienvenue sur Wekili.', token: makeJwt(user), user: safeUser(user) });
+    const { token, refreshToken } = await issueTokens(user, req);
+    res.json({ success: true, message: 'Email vérifié ! Bienvenue sur Wekili.', token, refreshToken, user: safeUser(user) });
   } catch (err) {
     console.error('Erreur verifyEmail:', err.message);
-    res.status(500).json({ success: false, message: 'Erreur serveur' });
+    res.status(500).json({ success: false, message: 'La vérification de l\'adresse email a échoué. Réessayez.' });
   }
 };
 
@@ -315,7 +322,7 @@ exports.resendVerificationEmail = async (req, res) => {
     res.json({ success: true, message: 'Nouveau code envoyé par email.' });
   } catch (err) {
     console.error('Erreur resendVerification:', err.message);
-    res.status(500).json({ success: false, message: 'Erreur serveur' });
+    res.status(500).json({ success: false, message: 'L\'envoi du code de vérification a échoué. Réessayez dans quelques instants.' });
   }
 };
 
@@ -376,12 +383,13 @@ exports.googleLogin = async (req, res) => {
     }
 
     await handleNewSession(user.id, user, req).catch(err => console.error('[session:google]', err.message));
-    res.json({ success: true, message: 'Connexion Google réussie !', token: makeJwt(user), user: safeUser(user) });
+    const { token: gToken, refreshToken: gRefreshToken } = await issueTokens(user, req);
+    res.json({ success: true, message: 'Connexion Google réussie !', token: gToken, refreshToken: gRefreshToken, user: safeUser(user) });
   } catch (err) {
     console.error('Erreur Google login:', err.message);
     if (err.message?.includes('Token used too late') || err.message?.includes('Invalid token'))
-      return res.status(401).json({ success: false, message: 'Token Google invalide ou expiré' });
-    res.status(500).json({ success: false, message: 'Erreur serveur lors de la vérification Google' });
+      return res.status(401).json({ success: false, message: 'Session Google expirée. Réessayez de vous connecter via Google.' });
+    res.status(500).json({ success: false, message: 'La vérification du compte Google a échoué. Réessayez dans quelques instants.' });
   }
 };
 
@@ -449,10 +457,11 @@ exports.facebookLogin = async (req, res) => {
     }
 
     await handleNewSession(user.id, user, req).catch(err => console.error('[session:facebook]', err.message));
-    res.json({ success: true, message: 'Connexion Facebook réussie !', token: makeJwt(user), user: safeUser(user) });
+    const { token: fbToken, refreshToken: fbRefreshToken } = await issueTokens(user, req);
+    res.json({ success: true, message: 'Connexion Facebook réussie !', token: fbToken, refreshToken: fbRefreshToken, user: safeUser(user) });
   } catch (err) {
     console.error('Erreur Facebook login:', err.message);
-    res.status(500).json({ success: false, message: 'Erreur serveur lors de la vérification Facebook' });
+    res.status(500).json({ success: false, message: 'La vérification du compte Facebook a échoué. Réessayez dans quelques instants.' });
   }
 };
 
@@ -473,10 +482,7 @@ exports.forgotPassword = async (req, res) => {
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Aucun compte n\'est associé à cette adresse email.',
-      });
+      return res.json({ success: true, message: 'Un code de réinitialisation a été envoyé à votre adresse email.' });
     }
 
     const user = rows[0];
@@ -529,10 +535,14 @@ exports.resetPassword = async (req, res) => {
     if (!rows.length)
       return res.status(404).json({ success: false, message: 'Compte introuvable.' });
 
+    // Révocation de toutes les sessions existantes après réinitialisation du mot de passe
+    const { revokeAllUserRefreshTokens } = require('../utils/tokens');
+    await revokeAllUserRefreshTokens(rows[0].id).catch(() => {});
+
     res.json({ success: true, message: 'Mot de passe réinitialisé avec succès.' });
   } catch (err) {
     console.error('Erreur resetPassword:', err.message);
-    res.status(500).json({ success: false, message: 'Erreur serveur.' });
+    res.status(500).json({ success: false, message: 'La réinitialisation du mot de passe a échoué. Réessayez.' });
   }
 };
 
@@ -593,9 +603,10 @@ exports.verifyPhoneOTP = async (req, res) => {
     }
 
     await handleNewSession(user.id, user, req).catch(err => console.error('[session:phone]', err.message));
-    res.json({ success: true, message: 'Connexion par téléphone réussie !', token: makeJwt(user), user: safeUser(user) });
+    const { token: phToken, refreshToken: phRefreshToken } = await issueTokens(user, req);
+    res.json({ success: true, message: 'Connexion par téléphone réussie !', token: phToken, refreshToken: phRefreshToken, user: safeUser(user) });
   } catch (err) {
     console.error('Erreur verify OTP:', err.message);
-    res.status(500).json({ success: false, message: 'Erreur serveur' });
+    res.status(500).json({ success: false, message: 'La connexion par téléphone a échoué. Réessayez.' });
   }
 };

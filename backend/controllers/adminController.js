@@ -1,7 +1,7 @@
-'use strict';
+﻿'use strict';
 const pool = require('../config/database');
 
-// ── Stats globales ────────────────────────────────────────────────────────────
+// â”€â”€ Stats globales â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 exports.getStats = async (req, res) => {
   try {
     const [
@@ -51,11 +51,11 @@ exports.getStats = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Une erreur est survenue. Réessayez.' });
   }
 };
 
-// ── Utilisateurs ──────────────────────────────────────────────────────────────
+// â”€â”€ Utilisateurs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 exports.getUsers = async (req, res) => {
   try {
     const page   = Math.max(1, parseInt(req.query.page)  || 1);
@@ -102,7 +102,7 @@ exports.getUsers = async (req, res) => {
     res.json({ users: usersRes.rows, total: parseInt(countRes.rows[0].count), page, limit });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Une erreur est survenue. Réessayez.' });
   }
 };
 
@@ -142,7 +142,7 @@ exports.getUserDetail = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Une erreur est survenue. Réessayez.' });
   }
 };
 
@@ -151,10 +151,10 @@ exports.updateUserRole = async (req, res) => {
     const { id } = req.params;
     const { role } = req.body;
     if (!['user', 'admin', 'superadmin'].includes(role)) {
-      return res.status(400).json({ message: 'Rôle invalide' });
+      return res.status(400).json({ message: 'RÃ´le invalide' });
     }
     if (id === req.userId) {
-      return res.status(400).json({ message: 'Impossible de modifier votre propre rôle' });
+      return res.status(400).json({ message: 'Impossible de modifier votre propre rÃ´le' });
     }
     const { rows } = await pool.query(
       'UPDATE users SET role = $1 WHERE id = $2 RETURNING id, email, prenom, nom, role',
@@ -164,7 +164,7 @@ exports.updateUserRole = async (req, res) => {
     res.json({ user: rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Une erreur est survenue. Réessayez.' });
   }
 };
 
@@ -174,14 +174,14 @@ exports.deleteUser = async (req, res) => {
     if (id === req.userId) return res.status(400).json({ message: 'Impossible de supprimer votre propre compte' });
     const { rows } = await pool.query('DELETE FROM users WHERE id = $1 RETURNING id', [id]);
     if (!rows.length) return res.status(404).json({ message: 'Utilisateur introuvable' });
-    res.json({ message: 'Utilisateur supprimé' });
+    res.json({ message: 'Utilisateur supprimÃ©' });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Une erreur est survenue. Réessayez.' });
   }
 };
 
-// ── Bourses ───────────────────────────────────────────────────────────────────
+// â”€â”€ Bourses â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 exports.getBourses = async (req, res) => {
   try {
     const { search = '', pays = '', actif = '' } = req.query;
@@ -202,7 +202,7 @@ exports.getBourses = async (req, res) => {
     res.json({ bourses: rows });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Une erreur est survenue. Réessayez.' });
   }
 };
 
@@ -242,7 +242,7 @@ exports.createBourse = async (req, res) => {
     res.status(201).json({ bourse: rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur', detail: err.message });
+    res.status(500).json({ message: 'Une erreur est survenue. Réessayez.' });
   }
 };
 
@@ -270,7 +270,7 @@ exports.updateBourse = async (req, res) => {
       }
     }
 
-    if (!updates.length) return res.status(400).json({ message: 'Aucun champ à modifier' });
+    if (!updates.length) return res.status(400).json({ message: 'Aucun champ Ã  modifier' });
     params.push(id);
 
     const { rows } = await pool.query(
@@ -281,7 +281,7 @@ exports.updateBourse = async (req, res) => {
     res.json({ bourse: rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Une erreur est survenue. Réessayez.' });
   }
 };
 
@@ -289,14 +289,14 @@ exports.deleteBourse = async (req, res) => {
   try {
     const { rows } = await pool.query('DELETE FROM scholarships WHERE id = $1 RETURNING id', [req.params.id]);
     if (!rows.length) return res.status(404).json({ message: 'Bourse introuvable' });
-    res.json({ message: 'Bourse supprimée' });
+    res.json({ message: 'Bourse supprimÃ©e' });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Une erreur est survenue. Réessayez.' });
   }
 };
 
-// ── Universités ───────────────────────────────────────────────────────────────
+// â”€â”€ UniversitÃ©s â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 exports.getUniversities = async (req, res) => {
   try {
     const { search = '', pays = '' } = req.query;
@@ -316,7 +316,7 @@ exports.getUniversities = async (req, res) => {
     res.json({ universities: rows });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Une erreur est survenue. Réessayez.' });
   }
 };
 
@@ -365,7 +365,7 @@ exports.createUniversity = async (req, res) => {
     res.status(201).json({ university: rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur', detail: err.message });
+    res.status(500).json({ message: 'Une erreur est survenue. Réessayez.' });
   }
 };
 
@@ -390,28 +390,28 @@ exports.updateUniversity = async (req, res) => {
       }
     }
 
-    if (!updates.length) return res.status(400).json({ message: 'Aucun champ à modifier' });
+    if (!updates.length) return res.status(400).json({ message: 'Aucun champ Ã  modifier' });
     params.push(id);
 
     const { rows } = await pool.query(
       `UPDATE universities SET ${updates.join(', ')} WHERE id = $${idx} RETURNING *`,
       params
     );
-    if (!rows.length) return res.status(404).json({ message: 'Université introuvable' });
+    if (!rows.length) return res.status(404).json({ message: 'UniversitÃ© introuvable' });
     res.json({ university: rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Une erreur est survenue. Réessayez.' });
   }
 };
 
 exports.deleteUniversity = async (req, res) => {
   try {
     const { rows } = await pool.query('DELETE FROM universities WHERE id = $1 RETURNING id', [req.params.id]);
-    if (!rows.length) return res.status(404).json({ message: 'Université introuvable' });
-    res.json({ message: 'Université supprimée' });
+    if (!rows.length) return res.status(404).json({ message: 'UniversitÃ© introuvable' });
+    res.json({ message: 'UniversitÃ© supprimÃ©e' });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Une erreur est survenue. Réessayez.' });
   }
 };

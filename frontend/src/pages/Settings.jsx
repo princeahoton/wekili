@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getProfile, updateUser, changePassword, deleteAccount, getSessions, enable2FA, confirm2FA, disable2FA } from '../services/api';
+import { getProfile, updateUser, changePassword, deleteAccount, getSessions, enable2FA, confirm2FA, disable2FA, logout } from '../services/api';
 import { getUser, clearAuth, updateStoredUser } from '../utils/auth';
 
 // ── Utilitaires ───────────────────────────────────────────────────────────────
@@ -234,9 +234,9 @@ export default function Settings() {
         setUser(updated);
         showToast('success', 'Informations personnelles mises à jour.');
       } else {
-        showToast('error', res.message || 'Erreur lors de la sauvegarde.');
+        showToast('error', res.message || 'La mise à jour de vos informations a échoué. Réessayez.');
       }
-    } catch { showToast('error', 'Erreur de connexion au serveur.'); }
+    } catch { showToast('error', 'Connexion au serveur impossible. Réessayez dans quelques instants.'); }
     finally { setSavingInfos(false); }
   };
 
@@ -252,9 +252,9 @@ export default function Settings() {
         setMdp({ actuel: '', nouveau: '', confirmer: '' });
         showToast('success', 'Mot de passe modifié avec succès. Reconnectez-vous si nécessaire.');
       } else {
-        showToast('error', res.message || 'Erreur.');
+        showToast('error', res.message || 'Le changement de mot de passe a échoué. Réessayez.');
       }
-    } catch { showToast('error', 'Erreur de connexion au serveur.'); }
+    } catch { showToast('error', 'Connexion au serveur impossible. Réessayez dans quelques instants.'); }
     finally { setSavingMdp(false); }
   };
 
@@ -274,8 +274,8 @@ export default function Settings() {
     try {
       const res = await enable2FA(setupPwd);
       if (res.success) { setEnabling2FA('confirming'); setSetupPwd(''); }
-      else setSetupError(res.message || 'Erreur.');
-    } catch { setSetupError('Erreur de connexion.'); }
+      else setSetupError(res.message || 'L\'activation de la double authentification a échoué. Réessayez.');
+    } catch { setSetupError('Connexion au serveur impossible. Réessayez.'); }
     finally { setSetupLoading(false); }
   };
 
@@ -288,8 +288,8 @@ export default function Settings() {
         setTwoFaEnabled(true); setEnabling2FA(false); setSetupCode('');
         updateStoredUser({ ...user, two_fa_enabled: true });
         showToast('success', 'Double authentification activée avec succès.');
-      } else setSetupError(res.message || 'Erreur.');
-    } catch { setSetupError('Erreur de connexion.'); }
+      } else setSetupError(res.message || 'La confirmation du code a échoué. Réessayez.');
+    } catch { setSetupError('Connexion au serveur impossible. Réessayez.'); }
     finally { setSetupLoading(false); }
   };
 
@@ -302,8 +302,8 @@ export default function Settings() {
         setTwoFaEnabled(false); setDisabling2FA(false); setDisablePwd('');
         updateStoredUser({ ...user, two_fa_enabled: false });
         showToast('success', 'Double authentification désactivée.');
-      } else setDisableError(res.message || 'Erreur.');
-    } catch { setDisableError('Erreur de connexion.'); }
+      } else setDisableError(res.message || 'La désactivation de la double authentification a échoué. Réessayez.');
+    } catch { setDisableError('Connexion au serveur impossible. Réessayez.'); }
     finally { setDisableLoading(false); }
   };
 
@@ -317,18 +317,18 @@ export default function Settings() {
     try {
       const res = await deleteAccount({ password: deleteMdp });
       if (res.success) {
-        clearAuth();
+        await logout();
         navigate('/login', { replace: true, state: { deleted: true } });
       } else {
-        showToast('error', res.message || 'Erreur.');
+        showToast('error', res.message || 'La suppression du compte a échoué. Réessayez.');
         setDeleteStep(2);
       }
-    } catch { showToast('error', 'Erreur de connexion au serveur.'); }
+    } catch { showToast('error', 'Connexion au serveur impossible. Réessayez dans quelques instants.'); }
     finally { setDeletingAccount(false); }
   };
 
-  const handleLogout = () => {
-    clearAuth();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login', { replace: true });
   };
 

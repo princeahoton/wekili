@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { clearAuth, getUser } from '../../utils/auth';
+import { getUser } from '../../utils/auth';
+import { logout } from '../../services/api';
 
 const NAV = [
   { path: '/admin',              label: 'Vue d\'ensemble', icon: (
@@ -23,8 +24,8 @@ export default function AdminLayout({ children }) {
   const user      = getUser();
   const [open, setOpen] = useState(false);
 
-  const handleLogout = () => {
-    clearAuth();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login', { replace: true });
   };
 

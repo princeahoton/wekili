@@ -12,7 +12,7 @@ exports.getLMVersions = async (req, res) => {
     res.json({ versions: rows });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Impossible de charger vos lettres de motivation. Réessayez.' });
   }
 };
 
@@ -37,7 +37,7 @@ exports.genererLM = async (req, res) => {
     res.json({ version: rows[0], lettre: result.lettre_complete, structure: result.structure, conseil: result.conseil });
   } catch (err) {
     console.error('Erreur génération LM:', err.message);
-    res.status(500).json({ message: 'Erreur lors de la génération', detail: err.message });
+    res.status(500).json({ message: 'La génération de la lettre de motivation a échoué. Réessayez dans quelques instants.' });
   }
 };
 
@@ -71,7 +71,7 @@ exports.corrigerLM = async (req, res) => {
     res.json({ version: rows[0], analyse: result });
   } catch (err) {
     console.error('Erreur correction LM:', err.message);
-    res.status(500).json({ message: 'Erreur lors de la correction', detail: err.message });
+    res.status(500).json({ message: 'La correction de la lettre de motivation a échoué. Réessayez dans quelques instants.' });
   }
 };
 
@@ -92,6 +92,6 @@ exports.sauvegarderLM = async (req, res) => {
     res.json({ version: rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'La sauvegarde de la lettre a échoué. Réessayez.' });
   }
 };

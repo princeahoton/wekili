@@ -244,7 +244,7 @@ exports.getLatestAnalysis = async (req, res) => {
     res.json({ analyse: rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Impossible de charger votre analyse. Réessayez.' });
   }
 };
 
@@ -257,6 +257,6 @@ exports.getAllAnalyses = async (req, res) => {
     res.json({ analyses: rows });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Impossible de charger votre analyse. Réessayez.' });
   }
 };

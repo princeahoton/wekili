@@ -59,7 +59,7 @@ function Register() {
   }, []);
 
   function saveAndRedirect(result) {
-    saveAuth(result.token, result.user, true);
+    saveAuth(result.token, result.refreshToken, result.user, true);
     navigate('/dashboard', { replace: true, state: { toast: { type: 'success', msg: `Bienvenue sur Wekili, ${result.user?.prenom || ''} ! Votre compte Google est activé.` } } });
   }
 
@@ -68,8 +68,8 @@ function Register() {
     try {
       const result = await googleLogin(response.credential, true);
       if (result.success) saveAndRedirect(result);
-      else setError(result.message || 'Erreur Google');
-    } catch { setError('Erreur lors de la connexion Google.'); }
+      else setError(result.message || 'La connexion via Google a échoué. Réessayez.');
+    } catch { setError('La connexion via Google est temporairement indisponible. Réessayez dans quelques instants.'); }
     finally { setLoading(false); }
   };
 
@@ -98,10 +98,10 @@ function Register() {
       } else if (result.success) {
         navigate('/verify-email', { state: { email: form.email } });
       } else {
-        setError(result.message || "Erreur lors de l'inscription");
+        setError(result.message || 'Impossible de créer le compte. Réessayez dans quelques instants.');
       }
     } catch {
-      setError('Erreur de connexion au serveur. Vérifiez que le backend tourne.');
+      setError('Connexion au serveur impossible. Vérifiez votre connexion internet et réessayez.');
     } finally {
       setLoading(false);
     }

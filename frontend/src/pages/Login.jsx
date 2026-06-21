@@ -62,7 +62,7 @@ function Login() {
 
   // ── Helpers communs ──────────────────────────────────────────────────
   function saveAndRedirect(result) {
-    saveAuth(result.token, result.user, rememberMe);
+    saveAuth(result.token, result.refreshToken, result.user, rememberMe);
     navigate(location.state?.from || '/dashboard', { replace: true });
   }
 
@@ -85,7 +85,7 @@ function Login() {
         setError(result.message || 'Email ou mot de passe incorrect');
         setFailedAttempts(n => n + 1);
       }
-    } catch { setError('Erreur de connexion au serveur. Vérifiez que le backend tourne.'); }
+    } catch { setError('Connexion au serveur impossible. Vérifiez votre connexion internet et réessayez.'); }
     finally { setLoading(false); }
   };
 
@@ -95,8 +95,8 @@ function Login() {
     try {
       const result = await googleLogin(response.credential);
       if (result.success) saveAndRedirect(result);
-      else setError(result.message || 'Erreur Google');
-    } catch { setError('Erreur lors de la connexion Google.'); }
+      else setError(result.message || 'La connexion via Google a échoué. Réessayez.');
+    } catch { setError('La connexion via Google est temporairement indisponible. Réessayez dans quelques instants.'); }
     finally { setLoading(false); }
   };
 
@@ -107,8 +107,8 @@ function Login() {
     try {
       const result = await verify2FA(tempToken, twoFaCode);
       if (result.success) { setFailedAttempts(0); saveAndRedirect(result); }
-      else setError(result.message || 'Code incorrect');
-    } catch { setError('Erreur de connexion au serveur.'); }
+      else setError(result.message || 'Code incorrect ou expiré. Vérifiez le code reçu par email.');
+    } catch { setError('Vérification échouée. Vérifiez votre connexion et réessayez.'); }
     finally { setLoading(false); }
   };
 

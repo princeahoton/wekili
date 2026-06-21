@@ -2,26 +2,12 @@
 
 const pool    = require('../config/database');
 const bcrypt  = require('bcryptjs');
-const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { PutObjectCommand } = require('@aws-sdk/client-s3');
 const { randomUUID: uuidv4 } = require('crypto');
 const path    = require('path');
 const { sendEmail, otpHtml } = require('../utils/email');
 const otpNs   = require('../utils/otp');
-
-const s3 = new S3Client({
-  region: process.env.AWS_REGION || 'eu-west-1',
-  credentials: {
-    accessKeyId:     process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
-
-const BUCKET = process.env.AWS_BUCKET_NAME;
-
-function s3Active() {
-  const key = process.env.AWS_ACCESS_KEY_ID || '';
-  return BUCKET && key.length > 10 && !key.includes('REMPLACE');
-}
+const { s3, BUCKET, s3Active, deleteS3Object } = require('../utils/s3');
 
 // ── Journal d'activité ───────────────────────────────────────────────────────
 
@@ -86,15 +72,15 @@ exports.getDocuments = async (req, res) => {
     res.json({ documents: rows });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Impossible de charger vos documents. Réessayez.' });
   }
 };
 
 exports.uploadDocument = async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ message: 'Aucun fichier fourni' });
+    if (!req.file) return res.status(400).json({ message: 'Aucun fichier sélectionné. Choisissez un fichier à envoyer.' });
     const { type } = req.body;
-    if (!type) return res.status(400).json({ message: 'Type de document requis' });
+    if (!type) return res.status(400).json({ message: 'Veuillez sélectionner le type de document avant d\'envoyer.' });
 
     const ext = path.extname(req.file.originalname);
     const key = `documents/${req.userId}/${type}_${uuidv4()}${ext}`;
@@ -132,7 +118,7 @@ exports.uploadDocument = async (req, res) => {
     res.json({ message: 'Document uploadé', document: rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur upload' });
+    res.status(500).json({ message: 'L\'envoi du document a échoué. Vérifiez le fichier et réessayez.' });
   }
 };
 
@@ -147,12 +133,7 @@ exports.deleteDocument = async (req, res) => {
 
     const doc = rows[0];
 
-    if (doc.url_s3 && s3Active()) {
-      const urlParts = doc.url_s3.split('.amazonaws.com/');
-      if (urlParts[1]) {
-        await s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: urlParts[1] }));
-      }
-    }
+    await deleteS3Object(doc.url_s3);
 
     await pool.query('DELETE FROM documents WHERE id = $1', [id]);
     logDocAction(req.userId, id, doc.nom_fichier, 'delete');
@@ -161,7 +142,7 @@ exports.deleteDocument = async (req, res) => {
     res.json({ message: 'Document supprimé' });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'La suppression du document a échoué. Réessayez.' });
   }
 };
 
@@ -178,7 +159,7 @@ exports.getDocumentLogs = async (req, res) => {
     res.json({ logs: rows });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Impossible de charger l\'historique des documents. Réessayez.' });
   }
 };
 
@@ -193,7 +174,7 @@ exports.checkPin = async (req, res) => {
     res.json({ has_pin: rows[0]?.has_pin || false });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Impossible de vérifier votre PIN. Réessayez.' });
   }
 };
 
@@ -214,7 +195,7 @@ exports.createPin = async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: 'Erreur serveur' });
+    res.status(500).json({ success: false, message: 'La création du PIN a échoué. Réessayez.' });
   }
 };
 
@@ -237,7 +218,7 @@ exports.verifyPin = async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: 'Erreur serveur' });
+    res.status(500).json({ success: false, message: 'La vérification du PIN a échoué. Réessayez.' });
   }
 };
 
@@ -288,7 +269,7 @@ exports.confirmPinReset = async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: 'Erreur serveur.' });
+    res.status(500).json({ success: false, message: 'La réinitialisation du PIN a échoué. Réessayez.' });
   }
 };
 
@@ -311,7 +292,7 @@ exports.requestDocAccess = async (req, res) => {
     res.json({ success: true, message: 'Code envoyé à votre adresse email.' });
   } catch (err) {
     console.error('Erreur requestDocAccess:', err.message);
-    res.status(500).json({ success: false, message: 'Erreur serveur.' });
+    res.status(500).json({ success: false, message: 'L\'envoi du code d\'accès a échoué. Réessayez.' });
   }
 };
 

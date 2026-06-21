@@ -12,7 +12,7 @@ exports.getLogement = async (req, res) => {
     res.json({ logement: rows[0] || null });
   } catch (err) {
     console.error('Erreur getLogement:', err.message);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Impossible de charger vos informations de logement. Réessayez.' });
   }
 };
 
@@ -62,7 +62,7 @@ exports.upsertLogement = async (req, res) => {
     res.json({ logement: rows[0] });
   } catch (err) {
     console.error('Erreur upsertLogement:', err.message);
-    res.status(500).json({ message: 'Erreur serveur', detail: err.message });
+    res.status(500).json({ message: 'La sauvegarde des informations de logement a échoué. Réessayez.' });
   }
 };
 
