@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { getBoursesPublic } from '../services/api';
 import { getToken } from '../utils/auth';
@@ -154,14 +154,15 @@ const FAQS = [
 
 function Home() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [videoIndex, setVideoIndex] = useState(0);
   const [faqOpen, setFaqOpen] = useState(null);
   const [bourses, setBourses] = useState([]);
   const [boursesLoading, setBoursesLoading] = useState(true);
   const [selectedBourse, setSelectedBourse] = useState(null);
-  const [homeSearch, setHomeSearch] = useState('');
 
   const isLoggedIn = !!getToken();
+  const homeSearch = searchParams.get('q') || '';
 
   const handleVideoEnd = () => setVideoIndex((prev) => (prev + 1) % VIDEOS.length);
 
@@ -181,11 +182,6 @@ function Home() {
           || (b.niveau || '').toLowerCase().includes(q);
       })
     : bourses.slice(0, 6);
-
-  const handleHomeSearch = (e) => {
-    e.preventDefault();
-    document.getElementById('bourses')?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   const ctaLabel    = isLoggedIn ? 'Accéder à mon tableau de bord →' : 'Analyser mon dossier gratuitement →';
   const ctaPath     = isLoggedIn ? '/dashboard' : '/register';
@@ -228,34 +224,6 @@ function Home() {
             >
               {ctaLabel}
             </button>
-
-            {/* ── Barre de recherche hero ── */}
-            <form onSubmit={handleHomeSearch} className="mt-6 flex items-center gap-0 max-w-lg">
-              <div className="flex-1 flex items-center bg-white rounded-l-lg px-4 gap-2 h-12">
-                <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
-                  id="home-search"
-                  type="text"
-                  value={homeSearch}
-                  onChange={e => setHomeSearch(e.target.value)}
-                  placeholder="Pays, niveau, organisme..."
-                  className="flex-1 outline-none text-sm text-gray-700 placeholder-gray-400 bg-transparent"
-                />
-                {homeSearch && (
-                  <button type="button" onClick={() => setHomeSearch('')} className="text-gray-400 hover:text-gray-600">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                  </button>
-                )}
-              </div>
-              <button
-                type="submit"
-                className="bg-[#1a3a6b] hover:bg-[#0f2550] text-white font-bold px-5 h-12 rounded-r-lg text-sm transition-colors shrink-0"
-              >
-                Rechercher
-              </button>
-            </form>
           </div>
         </div>
 
@@ -337,7 +305,7 @@ function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="font-semibold text-gray-600">Aucune bourse trouvée pour « {homeSearch} »</p>
-              <button onClick={() => setHomeSearch('')} className="mt-3 text-sm text-[#1a3a6b] underline">Effacer la recherche</button>
+              <button onClick={() => navigate('/', { replace: true })} className="mt-3 text-sm text-[#1a3a6b] underline">Effacer la recherche</button>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { getToken, getUser } from '../utils/auth';
 import { logout } from '../services/api';
 
@@ -7,6 +7,21 @@ function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const [navSearch, setNavSearch] = useState(searchParams.get('q') || '');
+
+  const handleNavSearchChange = (e) => {
+    const val = e.target.value;
+    setNavSearch(val);
+    if (location.pathname === '/') {
+      navigate(val ? `/?q=${encodeURIComponent(val)}` : '/', { replace: true });
+    }
+  };
+
+  const handleNavSearchSubmit = (e) => {
+    e.preventDefault();
+    navigate(navSearch.trim() ? `/?q=${encodeURIComponent(navSearch.trim())}` : '/');
+  };
 
   const user = getUser();
   const isLoggedIn = !!getToken();
@@ -91,25 +106,25 @@ function Navbar() {
 
           {/* Boutons droite */}
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => {
-                if (location.pathname === '/') {
-                  const input = document.getElementById('home-search');
-                  if (input) {
-                    document.getElementById('bourses')?.scrollIntoView({ behavior: 'smooth' });
-                    setTimeout(() => input.focus(), 400);
-                  }
-                } else {
-                  navigate(isLoggedIn ? '/bourses' : '/login');
-                }
-              }}
-              className="p-2 text-[#1a3a6b] hover:text-[#F5A623] transition-colors"
-              aria-label="Rechercher"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+            {/* Barre de recherche */}
+            <form onSubmit={handleNavSearchSubmit} className="hidden md:flex items-center border border-gray-200 rounded-lg px-3 gap-2 h-9 focus-within:border-[#1a3a6b] transition-colors bg-gray-50">
+              <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-            </button>
+              <input
+                type="text"
+                value={navSearch}
+                onChange={handleNavSearchChange}
+                placeholder="Rechercher une bourse..."
+                className="w-36 lg:w-48 outline-none text-sm text-gray-700 placeholder-gray-400 bg-transparent"
+              />
+              {navSearch && (
+                <button type="button" onClick={() => { setNavSearch(''); if (location.pathname === '/') navigate('/', { replace: true }); }} className="text-gray-300 hover:text-gray-500">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              )}
+            </form>
 
             {isLoggedIn ? (
               /* ── Utilisateur connecté ── */
