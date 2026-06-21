@@ -30,7 +30,11 @@ async function issueTokens(user, req) {
   const token        = makeAccessToken(user);
   const refreshToken = makeRefreshToken();
   const dHash        = deviceHash(req);
-  await storeRefreshToken(user.id, refreshToken, dHash);
+  try {
+    await storeRefreshToken(user.id, refreshToken, dHash);
+  } catch (err) {
+    console.error('[issueTokens] storeRefreshToken failed:', err.message);
+  }
   return { token, refreshToken };
 }
 
