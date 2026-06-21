@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Guide Utilisateur — Wekili</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;font-size:10.5pt;line-height:1.7;color:#1e2532;background:#fff}
+  h1{font-size:22pt;font-weight:700;color:#1a3a6b;margin-bottom:12px}
+  h2{font-size:15pt;font-weight:700;color:#1a3a6b;margin:32px 0 10px;padding-bottom:6px;border-bottom:2.5px solid #F5A623}
+  h3{font-size:11.5pt;font-weight:600;color:#1a3a6b;margin:22px 0 8px}
+  h4{font-size:10pt;font-weight:600;color:#2d4a7a;margin:14px 0 5px}
+  p{margin-bottom:9px}
+  ul,ol{margin:6px 0 10px 22px}
+  li{margin-bottom:4px}
+  strong{color:#1a3a6b}
+  code{font-family:'JetBrains Mono',monospace;font-size:8.5pt;background:#f0f4fb;color:#1a3a6b;padding:1px 5px;border-radius:3px}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:9.5pt}
+  th{background:#1a3a6b;color:#fff;padding:8px 10px;text-align:left;font-weight:600}
+  td{padding:7px 10px;border-bottom:1px solid #e8eef8;vertical-align:top}
+  tr:nth-child(even) td{background:#f7f9fd}
+  .cover{page-break-after:always;display:flex;flex-direction:column;justify-content:center;min-height:100vh;padding:80px 60px;background:linear-gradient(135deg,#0f2551 0%,#1a3a6b 55%,#F5A623 200%)}
+  .cover-logo{font-size:44pt;font-weight:800;color:#fff;letter-spacing:-1px;margin-bottom:8px}
+  .cover-logo span{color:#F5A623}
+  .cover-sub{font-size:13pt;color:#a8c4f0;margin-bottom:50px;font-weight:300}
+  .cover-title{font-size:28pt;font-weight:700;color:#fff;line-height:1.2;margin-bottom:14px}
+  .cover-desc{font-size:12pt;color:#d0e4ff;max-width:500px;line-height:1.6;margin-bottom:40px}
+  .cover-meta{font-size:10pt;color:#7aa7e0;line-height:2}
+  .toc{page-break-after:always;padding:40px 0}
+  .toc-item{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px dotted #ccd6ec}
+  .toc-item.l1{font-weight:600;color:#1a3a6b;margin-top:8px;font-size:10pt}
+  .toc-item.l2{padding-left:18px;color:#3a5a8a;font-size:9.5pt}
+  .toc-num{color:#999;font-size:8.5pt}
+  .section{padding:16px 0}
+  .page-break{page-break-before:always}
+  .step{display:flex;gap:14px;margin:12px 0;align-items:flex-start}
+  .step-num{min-width:30px;height:30px;border-radius:50%;background:#1a3a6b;color:#fff;font-weight:700;font-size:11pt;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+  .step-body{flex:1}
+  .step-title{font-weight:600;color:#1a3a6b;margin-bottom:3px}
+  .tip{border-left:4px solid #F5A623;background:#fffbf0;padding:10px 14px;margin:12px 0;border-radius:0 6px 6px 0;font-size:9.5pt}
+  .tip strong{color:#8a4f00}
+  .info{border-left:4px solid #1a3a6b;background:#f0f4fb;padding:10px 14px;margin:12px 0;border-radius:0 6px 6px 0;font-size:9.5pt}
+  .warning{border-left:4px solid #e53e3e;background:#fff5f5;padding:10px 14px;margin:12px 0;border-radius:0 6px 6px 0;font-size:9.5pt}
+  .warning strong{color:#c53030}
+  .card{background:#f7f9fd;border:1px solid #dde4f0;border-radius:8px;padding:14px 16px;margin:10px 0}
+  .card-title{font-weight:700;color:#1a3a6b;font-size:10pt;margin-bottom:6px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:10px 0}
+  .badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:8pt;font-weight:600}
+  .badge-blue{background:#e8eef8;color:#1a3a6b}
+  .badge-green{background:#e6f5ec;color:#1a5c35}
+  .badge-orange{background:#fff3e0;color:#8a4f00}
+  .badge-red{background:#fde8e8;color:#8a1515}
+  .screen{background:#f7f9fd;border:1.5px solid #dde4f0;border-radius:10px;padding:18px;margin:14px 0}
+  .screen-bar{background:#1a3a6b;border-radius:6px 6px 0 0;height:28px;margin:-18px -18px 14px -18px;display:flex;align-items:center;padding:0 12px;gap:6px}
+  .screen-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.3)}
+  .screen-title{color:rgba(255,255,255,0.8);font-size:8pt;margin-left:8px}
+  .faq-q{font-weight:600;color:#1a3a6b;margin-top:14px;margin-bottom:4px}
+  .faq-a{color:#444;font-size:9.5pt;margin-left:12px}
+  footer{text-align:center;color:#999;font-size:8pt;padding:30px 0;border-top:1px solid #e8eef8;margin-top:40px}
+  @media print{
+    .cover{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .step-num{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .screen-bar{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ COUVERTURE ═══════════════════════════ -->
+<div class="cover">
+  <div class="cover-logo">Weki<span>li</span></div>
+  <div class="cover-sub">Votre assistant pour étudier à l'international</div>
+  <div class="cover-title">Guide d'utilisation<br>de la plateforme</div>
+  <div class="cover-desc">Ce guide vous accompagne pas à pas dans l'utilisation de toutes les fonctionnalités de Wekili : de votre inscription jusqu'à la préparation complète de votre dossier d'études à l'étranger.</div>
+  <div class="cover-meta">
+    Version 1.0 &nbsp;·&nbsp; Juin 2026<br>
+    À l'attention des étudiants utilisateurs de la plateforme
+  </div>
+</div>
+
+<!-- ═══════════════════════════ TABLE DES MATIÈRES ═══════════════════ -->
+<div class="toc">
+  <h1 style="margin-bottom:24px">Sommaire</h1>
+  <div class="toc-item l1"><span>1. Premiers pas — Créer votre compte</span><span class="toc-num">3</span></div>
+  <div class="toc-item l2"><span>1.1 Inscription par email</span><span class="toc-num">3</span></div>
+  <div class="toc-item l2"><span>1.2 Connexion avec Google</span><span class="toc-num">3</span></div>
+  <div class="toc-item l2"><span>1.3 Connexion par téléphone (SMS)</span><span class="toc-num">3</span></div>
+  <div class="toc-item l2"><span>1.4 Mot de passe oublié</span><span class="toc-num">3</span></div>
+  <div class="toc-item l1"><span>2. Tableau de bord (Dashboard)</span><span class="toc-num">4</span></div>
+  <div class="toc-item l1"><span>3. Compléter votre profil académique</span><span class="toc-num">5</span></div>
+  <div class="toc-item l1"><span>4. Gérer vos documents officiels</span><span class="toc-num">6</span></div>
+  <div class="toc-item l2"><span>4.1 Uploader un document</span><span class="toc-num">6</span></div>
+  <div class="toc-item l2"><span>4.2 Protéger vos documents avec un PIN</span><span class="toc-num">6</span></div>
+  <div class="toc-item l1"><span>5. Analyse IA de votre dossier</span><span class="toc-num">7</span></div>
+  <div class="toc-item l1"><span>6. Bourses — Trouver et comprendre votre éligibilité</span><span class="toc-num">8</span></div>
+  <div class="toc-item l1"><span>7. Universités — Suivre vos candidatures</span><span class="toc-num">9</span></div>
+  <div class="toc-item l1"><span>8. Lettre de motivation assistée par IA</span><span class="toc-num">10</span></div>
+  <div class="toc-item l1"><span>9. CV — Analyse et correction IA</span><span class="toc-num">11</span></div>
+  <div class="toc-item l1"><span>10. Logement — Préparer votre arrivée</span><span class="toc-num">12</span></div>
+  <div class="toc-item l1"><span>11. Paramètres du compte</span><span class="toc-num">13</span></div>
+  <div class="toc-item l2"><span>11.1 Modifier vos informations</span><span class="toc-num">13</span></div>
+  <div class="toc-item l2"><span>11.2 Activer la double authentification (2FA)</span><span class="toc-num">13</span></div>
+  <div class="toc-item l2"><span>11.3 Consulter l'historique des connexions</span><span class="toc-num">13</span></div>
+  <div class="toc-item l1"><span>12. Questions fréquentes (FAQ)</span><span class="toc-num">14</span></div>
+</div>
+
+<!-- ═══════════════════════════
+     1. CRÉER VOTRE COMPTE
+════════════════════════════ -->
+<div class="section page-break">
+  <h2>1. Premiers pas — Créer votre compte</h2>
+  <p>Wekili est <strong>100 % gratuit</strong>. Aucune carte bancaire n'est requise. Votre inscription prend moins de 2 minutes.</p>
+
+  <h3>1.1 Inscription par email</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-body"><div class="step-title">Accéder à la page d'inscription</div>Rendez-vous sur <strong>wekili.vercel.app</strong> puis cliquez sur le bouton <strong>« S'inscrire »</strong> en haut à droite, ou directement sur <code>/register</code>.</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body"><div class="step-title">Remplir le formulaire</div>Saisissez votre <strong>prénom</strong>, <strong>nom</strong>, <strong>pays d'origine</strong>, <strong>adresse email</strong> et un <strong>mot de passe</strong> (minimum 8 caractères). Acceptez les conditions générales.</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body"><div class="step-title">Vérifier votre email</div>Un email de confirmation est envoyé automatiquement. Cliquez sur le lien qu'il contient pour activer votre compte. <strong>Vérifiez vos spams</strong> si vous ne le recevez pas dans les 5 minutes.</div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-body"><div class="step-title">Se connecter</div>Une fois l'email vérifié, connectez-vous avec votre email et mot de passe sur <code>/login</code>.</div></div>
+
+  <div class="tip"><strong>Conseil :</strong> Utilisez une adresse email active que vous consultez régulièrement. Wekili vous enverra des alertes sur les deadlines des bourses et confirmations importantes.</div>
+
+  <h3>1.2 Connexion avec Google</h3>
+  <p>Sur la page de connexion ou d'inscription, cliquez sur le bouton <strong>« Continuer avec Google »</strong>. Une fenêtre Google s'ouvre pour choisir votre compte. Aucun mot de passe Wekili n'est nécessaire — votre compte est créé automatiquement à la première connexion.</p>
+
+  <div class="info"><strong>Avantage Google :</strong> Votre email est automatiquement vérifié, vous accédez à la plateforme immédiatement sans attendre un email de confirmation.</div>
+
+  <h3>1.3 Connexion par téléphone (SMS)</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-body"><div class="step-title">Entrer votre numéro</div>Sur la page de connexion, choisissez l'onglet <strong>« Téléphone »</strong> et saisissez votre numéro au format international (ex : <code>+22670000000</code>).</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body"><div class="step-title">Recevoir le code SMS</div>Un code à 6 chiffres est envoyé par SMS. Il est valable <strong>10 minutes</strong>.</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body"><div class="step-title">Saisir le code</div>Entrez le code reçu dans le champ prévu. Vous êtes connecté directement.</div></div>
+
+  <h3>1.4 Mot de passe oublié</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-body">Sur la page de connexion, cliquez sur <strong>« Mot de passe oublié »</strong>.</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body">Entrez votre adresse email et cliquez sur <strong>« Envoyer »</strong>. Un lien de réinitialisation valable <strong>1 heure</strong> vous est envoyé.</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body">Cliquez sur le lien dans l'email, entrez votre nouveau mot de passe et confirmez.</div></div>
+  <div class="warning"><strong>Important :</strong> Si vous vous êtes inscrit avec Google ou par téléphone, vous ne pouvez pas réinitialiser un mot de passe — utilisez la même méthode de connexion qu'à l'inscription.</div>
+</div>
+
+<!-- ═══════════════════════════
+     2. TABLEAU DE BORD
+════════════════════════════ -->
+<div class="section page-break">
+  <h2>2. Tableau de bord (Dashboard)</h2>
+  <p>Le tableau de bord est votre <strong>page centrale</strong>. Il vous donne une vue d'ensemble de votre situation en un coup d'œil, dès que vous êtes connecté.</p>
+
+  <div class="screen">
+    <div class="screen-bar"><div class="screen-dot"></div><div class="screen-dot"></div><div class="screen-dot"></div><span class="screen-title">wekili.vercel.app/dashboard</span></div>
+    <svg viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg" style="width:100%">
+      <!-- 4 stat cards -->
+      <rect x="10" y="10" width="120" height="70" rx="6" fill="#fff" stroke="#e8eef8" stroke-width="1"/>
+      <text x="25" y="30" fill="#888" font-size="8" font-family="Inter,sans-serif">Score IA</text>
+      <text x="25" y="55" fill="#1a3a6b" font-size="22" font-weight="700" font-family="Inter,sans-serif">72</text>
+      <text x="25" y="70" fill="#1a3a6b" font-size="7" font-family="Inter,sans-serif">Bon dossier</text>
+      <rect x="140" y="10" width="120" height="70" rx="6" fill="#fff" stroke="#e8eef8" stroke-width="1"/>
+      <text x="155" y="30" fill="#888" font-size="8" font-family="Inter,sans-serif">Bourses</text>
+      <text x="155" y="55" fill="#F5A623" font-size="22" font-weight="700" font-family="Inter,sans-serif">9</text>
+      <text x="155" y="70" fill="#888" font-size="7" font-family="Inter,sans-serif">Avec score</text>
+      <rect x="270" y="10" width="120" height="70" rx="6" fill="#fff" stroke="#e8eef8" stroke-width="1"/>
+      <text x="285" y="30" fill="#888" font-size="8" font-family="Inter,sans-serif">Documents</text>
+      <text x="285" y="55" fill="#1a3a6b" font-size="22" font-weight="700" font-family="Inter,sans-serif">4/6</text>
+      <text x="285" y="70" fill="#888" font-size="7" font-family="Inter,sans-serif">2 manquants</text>
+      <rect x="400" y="10" width="150" height="70" rx="6" fill="#fff" stroke="#e8eef8" stroke-width="1"/>
+      <text x="415" y="30" fill="#888" font-size="8" font-family="Inter,sans-serif">Profil</text>
+      <text x="415" y="55" fill="#1a5c35" font-size="22" font-weight="700" font-family="Inter,sans-serif">85%</text>
+      <text x="415" y="70" fill="#888" font-size="7" font-family="Inter,sans-serif">Presque complet</text>
+      <!-- Bourses urgentes -->
+      <text x="10" y="105" fill="#1a3a6b" font-size="9" font-weight="700" font-family="Inter,sans-serif">Bourses à deadline proche</text>
+      <rect x="10" y="112" width="540" height="36" rx="5" fill="#fff" stroke="#e8eef8" stroke-width="1"/>
+      <text x="20" y="133" fill="#1a3a6b" font-size="9" font-weight="600" font-family="Inter,sans-serif">Bourse Eiffel Excellence</text>
+      <text x="20" y="143" fill="#888" font-size="7.5" font-family="Inter,sans-serif">France · jusqu'à 1 181 €/mois</text>
+      <rect x="440" y="118" width="60" height="22" rx="4" fill="#fde8e8"/>
+      <text x="470" y="132" text-anchor="middle" fill="#8a1515" font-size="8" font-weight="600" font-family="Inter,sans-serif">18j restants</text>
+      <rect x="510" y="118" width="38" height="22" rx="4" fill="#1a3a6b"/>
+      <text x="529" y="132" text-anchor="middle" fill="white" font-size="7.5" font-weight="600" font-family="Inter,sans-serif">Voir</text>
+      <!-- Raccourcis -->
+      <text x="10" y="172" fill="#1a3a6b" font-size="9" font-weight="700" font-family="Inter,sans-serif">Accès rapide</text>
+      <rect x="10" y="180" width="100" height="60" rx="6" fill="#e8eef8"/>
+      <text x="60" y="218" text-anchor="middle" fill="#1a3a6b" font-size="8" font-weight="600" font-family="Inter,sans-serif">Mon profil</text>
+      <rect x="120" y="180" width="100" height="60" rx="6" fill="#fff3e0"/>
+      <text x="170" y="218" text-anchor="middle" fill="#8a4f00" font-size="8" font-weight="600" font-family="Inter,sans-serif">Documents</text>
+      <rect x="230" y="180" width="100" height="60" rx="6" fill="#f0e8f8"/>
+      <text x="280" y="218" text-anchor="middle" fill="#5a1a8a" font-size="8" font-weight="600" font-family="Inter,sans-serif">Analyse IA</text>
+      <rect x="340" y="180" width="100" height="60" rx="6" fill="#e6f5ec"/>
+      <text x="390" y="218" text-anchor="middle" fill="#1a5c35" font-size="8" font-weight="600" font-family="Inter,sans-serif">Bourses</text>
+      <rect x="450" y="180" width="100" height="60" rx="6" fill="#e8eef8"/>
+      <text x="500" y="218" text-anchor="middle" fill="#1a3a6b" font-size="8" font-weight="600" font-family="Inter,sans-serif">Universités</text>
+    </svg>
+  </div>
+
+  <h3>Ce que vous voyez sur le tableau de bord</h3>
+  <table>
+    <tr><th>Indicateur</th><th>Ce que ça signifie</th><th>Comment l'améliorer</th></tr>
+    <tr><td><strong>Score IA</strong></td><td>Note sur 100 calculée par l'IA à partir de votre dossier. Reflète votre profil académique global.</td><td>Compléter votre profil et uploader tous vos documents, puis relancer une analyse.</td></tr>
+    <tr><td><strong>Bourses</strong></td><td>Nombre de bourses pour lesquelles vous avez un score d'éligibilité calculé.</td><td>Lancer une analyse IA depuis la page Analyse.</td></tr>
+    <tr><td><strong>Documents</strong></td><td>Nombre de documents uploadés sur les 6 requis.</td><td>Uploader les documents manquants dans la section Documents.</td></tr>
+    <tr><td><strong>Profil %</strong></td><td>Taux de complétion de votre profil académique.</td><td>Remplir toutes les sections de la page Profil.</td></tr>
+    <tr><td><strong>Bourses urgentes</strong></td><td>Bourses dont la deadline est dans moins de 30 jours.</td><td>Agir rapidement — les délais de candidature ne sont pas prolongés.</td></tr>
+  </table>
+
+  <div class="tip"><strong>Conseil :</strong> Consultez votre tableau de bord chaque semaine pour ne manquer aucune deadline urgente. Les bourses affichées en rouge ont moins de 21 jours.</div>
+</div>
+
+<!-- ═══════════════════════════
+     3. PROFIL ACADÉMIQUE
+════════════════════════════ -->
+<div class="section page-break">
+  <h2>3. Compléter votre profil académique</h2>
+  <p>Le profil est la <strong>base de toute l'intelligence</strong> de Wekili. Plus il est complet, plus vos analyses, correspondances bourses et recommandations seront précises. Accès via le menu <strong>« Mon profil »</strong> ou le bouton sur le tableau de bord.</p>
+
+  <h3>Sections du profil</h3>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Informations personnelles</div>
+      <ul>
+        <li><strong>Nationalité</strong> — important pour l'éligibilité aux bourses</li>
+        <li><strong>Pays de résidence actuel</strong></li>
+        <li><strong>Date de naissance</strong> — certaines bourses ont un âge maximum</li>
+        <li><strong>Téléphone</strong></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Parcours académique</div>
+      <ul>
+        <li><strong>Niveau d'études actuel</strong> (Licence, Master, Doctorat)</li>
+        <li><strong>Domaine d'études</strong></li>
+        <li><strong>Établissement actuel</strong></li>
+        <li><strong>Moyenne générale</strong> (sur 20)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Langues</div>
+      <ul>
+        <li><strong>Langue principale</strong> + niveau (A1 à C2)</li>
+        <li><strong>Certification</strong> (DELF, IELTS, TOEFL, TCF…)</li>
+        <li><strong>Langue secondaire</strong> (optionnel)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Projet d'études</div>
+      <ul>
+        <li><strong>Pays cibles</strong> (France, Canada, Belgique, Allemagne, Royaume-Uni)</li>
+        <li><strong>Niveau visé</strong> (Master, Doctorat…)</li>
+        <li><strong>Domaine visé</strong></li>
+        <li><strong>Budget mensuel disponible</strong></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Expérience et motivation</div>
+      <ul>
+        <li><strong>Expérience professionnelle</strong></li>
+        <li><strong>Activités extra-académiques</strong></li>
+        <li><strong>Lettre de motivation courte</strong> (décrit votre projet)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Logistique</div>
+      <ul>
+        <li><strong>Date d'arrivée souhaitée</strong></li>
+        <li><strong>Budget mensuel logement</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tip"><strong>Important :</strong> Remplissez au minimum ces champs pour obtenir une analyse pertinente : <strong>niveau d'études, domaine, moyenne, langue principale + niveau, pays cibles</strong>. Sans ces informations, l'IA ne peut pas calculer votre éligibilité aux bourses.</div>
+
+  <h3>Enregistrer votre profil</h3>
+  <p>Cliquez sur le bouton <strong>« Enregistrer »</strong> en bas de la page. Une notification verte confirme la sauvegarde. Vous pouvez revenir modifier votre profil à tout moment.</p>
+</div>
+
+<!-- ═══════════════════════════
+     4. DOCUMENTS
+════════════════════════════ -->
+<div class="section page-break">
+  <h2>4. Gérer vos documents officiels</h2>
+  <p>La section Documents vous permet de centraliser tous vos documents officiels de façon sécurisée. Ils sont stockés sur des serveurs chiffrés et utilisés par l'IA pour analyser votre dossier.</p>
+
+  <h3>4.1 Les 6 documents recommandés</h3>
+  <table>
+    <tr><th>Document</th><th>Format accepté</th><th>Utilité</th></tr>
+    <tr><td>Relevés de notes</td><td>PDF, JPG, PNG</td><td>Vérification de la moyenne, éligibilité bourses</td></tr>
+    <tr><td>Diplôme</td><td>PDF, JPG, PNG</td><td>Confirmation du niveau d'études</td></tr>
+    <tr><td>Passeport</td><td>PDF, JPG, PNG</td><td>Vérification de nationalité pour les bourses</td></tr>
+    <tr><td>Lettre de motivation</td><td>PDF, DOC, DOCX</td><td>Analyse IA de votre projet</td></tr>
+    <tr><td>Lettre de recommandation</td><td>PDF, DOC, DOCX</td><td>Évaluation du soutien académique</td></tr>
+    <tr><td>CV</td><td>PDF, DOC, DOCX</td><td>Analyse et correction IA</td></tr>
+  </table>
+
+  <h3>4.2 Comment uploader un document</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-body"><div class="step-title">Accéder à la section Documents</div>Depuis le menu de navigation, cliquez sur <strong>« Documents »</strong>.</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body"><div class="step-title">Si un PIN est actif — déverrouiller</div>Si vous avez configuré un PIN de sécurité, entrez-le pour accéder à vos documents. Sinon, la liste s'affiche directement.</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body"><div class="step-title">Choisir le type et le fichier</div>Cliquez sur <strong>« Ajouter un document »</strong>, sélectionnez le type dans la liste déroulante, puis choisissez votre fichier (taille max : 10 MB).</div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-body"><div class="step-title">Confirmer l'upload</div>Le fichier est téléchargé sur nos serveurs sécurisés. Une barre de progression et une confirmation apparaissent. L'action est enregistrée dans le journal d'activité.</div></div>
+
+  <div class="warning"><strong>Attention :</strong> Ne supprimez pas un document si vous avez une analyse en cours. Cela peut affecter les résultats. Si vous devez remplacer un document, uploadez la nouvelle version puis supprimez l'ancienne.</div>
+
+  <h3>4.3 Protéger vos documents avec un PIN</h3>
+  <p>Le PIN ajoute une couche de sécurité : même si quelqu'un accède à votre compte, il ne peut pas consulter vos documents sans le PIN.</p>
+  <div class="step"><div class="step-num">1</div><div class="step-body">Dans la section Documents, cliquez sur <strong>« Configurer un PIN »</strong>.</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body">Entrez un code à <strong>4 chiffres</strong> et confirmez-le. Cliquez sur <strong>« Créer le PIN »</strong>.</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body">À chaque visite de la page Documents, ce PIN vous sera demandé. En cas d'oubli, cliquez sur <strong>« PIN oublié »</strong> — un code de réinitialisation vous sera envoyé par email.</div></div>
+
+  <h3>4.4 Journal d'activité</h3>
+  <p>Chaque action (upload, suppression, accès) est enregistrée avec la date, l'heure et le type d'action. Consultez-le en cliquant sur <strong>« Journal »</strong> dans la barre latérale de la page Documents. Cela vous permet de détecter tout accès suspect.</p>
+</div>
+
+<!-- ═══════════════════════════
+     5. ANALYSE IA
+════════════════════════════ -->
+<div class="section page-break">
+  <h2>5. Analyse IA de votre dossier</h2>
+  <p>L'analyse IA est la fonctionnalité centrale de Wekili. Elle évalue votre profil complet et vous donne une vision claire de votre situation, de vos points forts et des bourses pour lesquelles vous êtes le plus éligible.</p>
+
+  <div class="info"><strong>Prérequis :</strong> Pour obtenir une analyse pertinente, assurez-vous d'avoir <strong>complété votre profil académique</strong> (niveau, domaine, moyenne, langues, pays cibles) et d'avoir <strong>uploadé au moins 2 documents</strong>.</div>
+
+  <h3>5.1 Lancer une analyse</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-body">Accédez à la page <strong>« Analyse »</strong> depuis le menu de navigation.</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body">Cliquez sur le bouton <strong>« Lancer l'analyse de mon dossier »</strong>. L'IA examine votre profil, vos documents et les données des bourses. Cette opération prend environ <strong>15 à 30 secondes</strong>.</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body">Les résultats s'affichent directement sur la page, structurés en plusieurs onglets.</div></div>
+
+  <h3>5.2 Comprendre les résultats</h3>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Score global (sur 100)</div>
+      Évalue la solidité globale de votre dossier pour étudier à l'étranger. Un score ≥ 70 indique un bon dossier. Un score &lt; 50 signifie qu'il y a des axes d'amélioration importants.
+    </div>
+    <div class="card">
+      <div class="card-title">Synthèse</div>
+      Un résumé en langage clair de votre profil, rédigé par l'IA. Il pointe les éléments les plus importants de votre dossier.
+    </div>
+    <div class="card">
+      <div class="card-title">Points forts / Faiblesses</div>
+      Liste structurée des atouts de votre dossier (ex : moyenne élevée, certification DELF B2) et des points à améliorer avant de candidater.
+    </div>
+    <div class="card">
+      <div class="card-title">Programmes recommandés</div>
+      Sélection de programmes universitaires dans vos pays cibles, adaptés à votre profil, avec la raison de chaque recommandation.
+    </div>
+    <div class="card">
+      <div class="card-title">Estimation des chances</div>
+      Pour chaque pays cible, une estimation en pourcentage et niveau (Faible / Moyen / Élevé) avec un commentaire contextuel.
+    </div>
+    <div class="card">
+      <div class="card-title">Recommandations</div>
+      Actions concrètes à entreprendre pour améliorer votre profil et augmenter vos chances (ex : passer le DELF B2, améliorer la LM, ajouter une lettre de recommandation).
+    </div>
+  </div>
+
+  <h3>5.3 Relancer une analyse</h3>
+  <p>Vous pouvez relancer une analyse après avoir amélioré votre profil ou uploadé de nouveaux documents. L'historique de toutes vos analyses est conservé — vous pouvez comparer votre progression dans le temps.</p>
+
+  <div class="tip"><strong>Stratégie :</strong> Commencez par lancer une première analyse pour identifier vos faiblesses. Corrigez-les (profil, documents, certification de langue), puis relancez pour mesurer l'amélioration de votre score.</div>
+</div>
+
+<!-- ═══════════════════════════
+     6. BOURSES
+════════════════════════════ -->
+<div class="section page-break">
+  <h2>6. Bourses — Trouver et comprendre votre éligibilité</h2>
+  <p>Wekili recense les principales bourses pour étudiants africains souhaitant étudier en France, Canada, Belgique, Allemagne et au Royaume-Uni. Chaque bourse affiche votre score d'éligibilité personnalisé (après analyse IA).</p>
+
+  <h3>6.1 Explorer le catalogue</h3>
+  <p>Accédez à la page <strong>« Bourses »</strong> depuis le menu. Vous pouvez filtrer par :</p>
+  <ul>
+    <li><strong>Pays</strong> — France, Canada, Belgique, Allemagne, Royaume-Uni</li>
+    <li><strong>Niveau</strong> — Licence, Master, Doctorat</li>
+    <li><strong>Domaine</strong> — Sciences, Droit, Médecine, etc.</li>
+    <li><strong>Type de financement</strong> — Bourse complète ou partielle</li>
+  </ul>
+
+  <h3>6.2 Lire une fiche bourse</h3>
+  <div class="screen">
+    <div class="screen-bar"><div class="screen-dot"></div><div class="screen-dot"></div><div class="screen-dot"></div><span class="screen-title">Exemple : Bourse Eiffel Excellence</span></div>
+    <svg viewBox="0 0 540 200" xmlns="http://www.w3.org/2000/svg" style="width:100%">
+      <rect x="10" y="10" width="520" height="180" rx="8" fill="white" stroke="#e8eef8" stroke-width="1.5"/>
+      <text x="24" y="34" fill="#1a3a6b" font-size="11" font-weight="700" font-family="Inter,sans-serif">Bourse Eiffel Excellence</text>
+      <text x="24" y="50" fill="#888" font-size="8.5" font-family="Inter,sans-serif">Campus France · France</text>
+      <!-- Badge score -->
+      <rect x="400" y="18" width="110" height="40" rx="6" fill="#e6f5ec"/>
+      <text x="455" y="35" text-anchor="middle" fill="#1a5c35" font-size="8" font-family="Inter,sans-serif">Score éligibilité</text>
+      <text x="455" y="52" text-anchor="middle" fill="#1a5c35" font-size="16" font-weight="700" font-family="Inter,sans-serif">78/100</text>
+      <!-- Info chips -->
+      <rect x="24" y="60" width="80" height="20" rx="10" fill="#e8eef8"/>
+      <text x="64" y="74" text-anchor="middle" fill="#1a3a6b" font-size="8" font-family="Inter,sans-serif">Master</text>
+      <rect x="112" y="60" width="110" height="20" rx="10" fill="#e8eef8"/>
+      <text x="167" y="74" text-anchor="middle" fill="#1a3a6b" font-size="8" font-family="Inter,sans-serif">Tous domaines</text>
+      <rect x="230" y="60" width="120" height="20" rx="10" fill="#fff3e0"/>
+      <text x="290" y="74" text-anchor="middle" fill="#8a4f00" font-size="8" font-family="Inter,sans-serif">jusqu'à 1 181 €/mois</text>
+      <rect x="358" y="60" width="80" height="20" rx="10" fill="#fde8e8"/>
+      <text x="398" y="74" text-anchor="middle" fill="#8a1515" font-size="8" font-family="Inter,sans-serif">Deadline : 9 janv.</text>
+      <!-- Desc -->
+      <text x="24" y="100" fill="#444" font-size="8.5" font-family="Inter,sans-serif">Bourse attribuée par le ministère des Affaires étrangères aux meilleurs étudiants</text>
+      <text x="24" y="114" fill="#444" font-size="8.5" font-family="Inter,sans-serif">étrangers souhaitant poursuivre des études en France. 70 places disponibles.</text>
+      <!-- Critères -->
+      <text x="24" y="134" fill="#1a3a6b" font-size="8.5" font-weight="600" font-family="Inter,sans-serif">Critères clés :</text>
+      <text x="24" y="150" fill="#555" font-size="8" font-family="Inter,sans-serif">✓ Excellence académique (Mention Bien minimum)   ✓ Âge max. 30 ans   ✓ Français B2</text>
+      <!-- Button -->
+      <rect x="410" y="160" width="110" height="24" rx="5" fill="#1a3a6b"/>
+      <text x="465" y="176" text-anchor="middle" fill="white" font-size="8.5" font-weight="600" font-family="Inter,sans-serif">Voir tous les détails</text>
+    </svg>
+  </div>
+
+  <h3>6.3 Interpréter votre score d'éligibilité</h3>
+  <table>
+    <tr><th>Score</th><th>Interprétation</th><th>Recommandation</th></tr>
+    <tr><td><span class="badge badge-green">80 – 100</span></td><td>Très éligible — votre profil correspond bien aux critères</td><td>Préparez votre dossier de candidature en priorité</td></tr>
+    <tr><td><span class="badge badge-blue">60 – 79</span></td><td>Bon potentiel — quelques points à renforcer</td><td>Travaillez les points identifiés dans votre analyse</td></tr>
+    <tr><td><span class="badge badge-orange">40 – 59</span></td><td>Éligibilité partielle — conditions non toutes remplies</td><td>Vérifiez les critères et améliorez le profil manquant</td></tr>
+    <tr><td><span class="badge badge-red">0 – 39</span></td><td>Peu éligible actuellement</td><td>Concentrez-vous sur d'autres bourses mieux adaptées</td></tr>
+  </table>
+
+  <div class="tip"><strong>Rappel :</strong> Le score est calculé par l'IA à partir de votre profil. Plus votre profil est complet et précis, plus le score est fiable. Si votre score vous semble incorrect, vérifiez et complétez votre profil.</div>
+
+  <h3>6.4 Surveiller les deadlines</h3>
+  <p>Les bourses dont la deadline est <strong>dans moins de 30 jours</strong> apparaissent en rouge. Consultez régulièrement votre tableau de bord pour ne rien manquer. Les candidatures aux bourses se font <strong>directement sur les sites officiels</strong> indiqués dans chaque fiche — Wekili vous prépare le dossier, mais la soumission finale se fait hors plateforme.</p>
+</div>
+
+<!-- ═══════════════════════════
+     7. UNIVERSITÉS
+════════════════════════════ -->
+<div class="section page-break">
+  <h2>7. Universités — Suivre vos candidatures</h2>
+  <p>La section Universités présente <strong>15 universités</strong> dans 5 pays (France, Canada, Belgique, Allemagne, Royaume-Uni) avec leurs critères d'admission détaillés. Vous pouvez suivre l'avancement de vos candidatures directement sur Wekili.</p>
+
+  <h3>7.1 Filtrer les universités</h3>
+  <p>Utilisez les filtres en haut de page pour affiner la liste :</p>
+  <ul>
+    <li><strong>Pays</strong> — France, Canada, Belgique, Allemagne, Royaume-Uni</li>
+    <li><strong>Niveau</strong> — Licence, Master, Doctorat</li>
+    <li><strong>Trier par</strong> — Mon score d'admission / Classement mondial / Taux d'admission</li>
+  </ul>
+
+  <h3>7.2 Lire une fiche université</h3>
+  <p>Chaque fiche affiche :</p>
+  <div class="grid2">
+    <ul>
+      <li>Pays, ville, type d'établissement</li>
+      <li>Classement mondial et national</li>
+      <li>Taux d'admission (%)</li>
+      <li>Frais de scolarité annuels</li>
+    </ul>
+    <ul>
+      <li>Langues d'enseignement</li>
+      <li>Plateforme de candidature (Campus France, uni-assist, UCAS…)</li>
+      <li>Dates d'ouverture et de clôture des candidatures</li>
+      <li>Documents requis pour candidater</li>
+    </ul>
+  </div>
+
+  <h3>7.3 Gérer votre candidature</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-body"><div class="step-title">Ajouter une candidature</div>Sur la fiche d'une université, cliquez sur <strong>« Candidater »</strong>. L'université apparaît alors dans votre liste de candidatures avec le statut <em>En préparation</em>.</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body"><div class="step-title">Mettre à jour le statut</div>Cliquez sur <strong>« Mettre à jour »</strong> pour modifier le statut de votre candidature au fil du temps.</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body"><div class="step-title">Numéroter vos vœux</div>Attribuez un numéro de vœu à chaque candidature pour prioriser vos choix.</div></div>
+
+  <h3>7.4 Statuts de candidature</h3>
+  <table>
+    <tr><th>Statut</th><th>Signification</th></tr>
+    <tr><td><span class="badge badge-blue">En préparation</span></td><td>Vous préparez votre dossier de candidature</td></tr>
+    <tr><td><span class="badge" style="background:#dbeafe;color:#1e40af">Soumise</span></td><td>Vous avez envoyé votre candidature à l'université</td></tr>
+    <tr><td><span class="badge badge-orange">En attente</span></td><td>Candidature reçue, en cours d'examen par l'université</td></tr>
+    <tr><td><span class="badge badge-orange">Liste d'attente</span></td><td>Sur liste d'attente — restez disponible</td></tr>
+    <tr><td><span class="badge badge-green">Admis</span></td><td>Félicitations ! Vous avez reçu une offre d'admission</td></tr>
+    <tr><td><span class="badge badge-red">Refusé</span></td><td>Candidature non retenue cette année</td></tr>
+  </table>
+</div>
+
+<!-- ═══════════════════════════
+     8. LETTRE DE MOTIVATION
+════════════════════════════ -->
+<div class="section page-break">
+  <h2>8. Lettre de motivation assistée par IA</h2>
+  <p>L'IA peut vous aider de deux façons : <strong>générer une lettre de motivation complète</strong> à partir de votre profil, ou <strong>corriger une lettre que vous avez déjà rédigée</strong>.</p>
+
+  <div class="info">Ces fonctionnalités se trouvent dans la page <strong>« Analyse »</strong>, onglet <strong>« Lettre de motivation »</strong> dans la barre latérale.</div>
+
+  <h3>8.1 Générer une lettre avec l'IA</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-body"><div class="step-title">Choisir l'université cible</div>Indiquez le nom de l'université et le programme visé. Plus vous êtes précis, meilleure sera la lettre générée.</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body"><div class="step-title">Générer</div>Cliquez sur <strong>« Générer une première version avec l'IA »</strong>. L'IA utilise votre profil (parcours, motivation, pays cibles) pour rédiger une lettre personnalisée en ~20 secondes.</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body"><div class="step-title">Réviser et personnaliser</div>La lettre générée est un point de départ solide. Modifiez-la dans l'éditeur de texte pour y ajouter vos anecdotes personnelles, vos projets spécifiques, vos expériences propres. <strong>Une bonne lettre reste personnelle.</strong></div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-body"><div class="step-title">Sauvegarder la version</div>Cliquez sur <strong>« Sauvegarder »</strong>. Chaque version est conservée avec un numéro (v1, v2…) pour retrouver l'historique.</div></div>
+
+  <h3>8.2 Faire corriger votre lettre par l'IA</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-body">Collez ou rédigez votre lettre dans l'éditeur de texte.</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body">Cliquez sur <strong>« Faire corriger par l'IA »</strong>. L'analyse dure ~15 secondes.</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body">Vous recevez : un <strong>score sur 100</strong>, la liste des <strong>points forts</strong>, les <strong>points à améliorer</strong> et une <strong>version corrigée complète</strong>. Comparez les deux versions et intégrez les corrections qui vous conviennent.</div></div>
+
+  <div class="tip"><strong>Conseil :</strong> Pour une lettre de qualité optimale, combinez les deux approches : générez une base avec l'IA, personnalisez-la avec vos expériences propres, puis faites-la corriger pour affiner le score.</div>
+
+  <div class="warning"><strong>Rappel :</strong> La lettre de motivation générée est un support de travail. Vérifiez toujours que le contenu reflète fidèlement votre parcours réel avant de la soumettre à une université ou organisme de bourse.</div>
+</div>
+
+<!-- ═══════════════════════════
+     9. CV
+════════════════════════════ -->
+<div class="section page-break">
+  <h2>9. CV — Analyse et correction IA</h2>
+  <p>L'IA analyse votre CV et le corrige en tenant compte des <strong>normes spécifiques au pays</strong> que vous ciblez. Un CV pour la France n'a pas le même format qu'un CV pour le Royaume-Uni.</p>
+
+  <div class="info">Ces fonctionnalités se trouvent dans la page <strong>« Analyse »</strong>, onglet <strong>« CV »</strong> dans la barre latérale.</div>
+
+  <h3>9.1 Importer votre CV</h3>
+  <p>Deux options :</p>
+  <ul>
+    <li><strong>Uploader un PDF</strong> — cliquez sur le bouton d'import. Le texte est extrait automatiquement du fichier.</li>
+    <li><strong>Coller le texte</strong> — collez directement le contenu de votre CV dans l'éditeur.</li>
+  </ul>
+
+  <h3>9.2 Choisir le pays cible</h3>
+  <p>Sélectionnez le pays pour lequel vous candidatez. L'IA adapte l'analyse aux normes locales :</p>
+  <table>
+    <tr><th>Pays</th><th>Spécificités du CV analysées</th></tr>
+    <tr><td>France</td><td>Photo recommandée, état civil, expériences en ordre chronologique inversé, compétences linguistiques détaillées</td></tr>
+    <tr><td>Royaume-Uni</td><td>Pas de photo ni de date de naissance, 2 pages max, Personal Statement en introduction</td></tr>
+    <tr><td>Canada</td><td>Format Résumé ou CV académique, pas de photo, réalisations chiffrées valorisées</td></tr>
+    <tr><td>Allemagne</td><td>Lebenslauf — photo obligatoire, date et lieu de naissance, très structuré</td></tr>
+    <tr><td>Belgique</td><td>Similaire à la France, photo optionnelle, format court valorisé</td></tr>
+  </table>
+
+  <h3>9.3 Lancer l'analyse</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-body">Sélectionnez le pays cible dans le menu déroulant.</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body">Cliquez sur <strong>« Analyser et corriger mon CV »</strong>. L'analyse prend ~20 secondes.</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body">Consultez les résultats : score, points forts, corrections prioritaires, sections manquantes, norme du pays, et version corrigée complète.</div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-body">Cliquez sur <strong>« Sauvegarder »</strong> pour conserver cette version dans l'historique.</div></div>
+</div>
+
+<!-- ═══════════════════════════
+     10. LOGEMENT
+════════════════════════════ -->
+<div class="section page-break">
+  <h2>10. Logement — Préparer votre arrivée</h2>
+  <p>La section Logement centralise toutes les ressources pour trouver un logement dans votre pays de destination : plateformes recommandées, aides financières, estimation de budget et checklist de démarches.</p>
+
+  <h3>10.1 Configurer votre recherche</h3>
+  <p>En haut de la page, renseignez :</p>
+  <ul>
+    <li><strong>Ville de destination</strong> (ex : Paris, Montréal, Berlin…)</li>
+    <li><strong>Budget mensuel</strong> en euros</li>
+    <li><strong>Statut de recherche</strong> — votre avancement actuel</li>
+  </ul>
+  <p>Cliquez sur <strong>« Sauvegarder »</strong> pour mémoriser ces informations. Le pays dans la barre latérale détermine les plateformes et aides affichées.</p>
+
+  <h3>10.2 Plateformes recommandées</h3>
+  <p>Pour chaque pays, Wekili liste les meilleures plateformes de recherche de logement avec :</p>
+  <ul>
+    <li>Le <strong>type de logement</strong> (résidence universitaire, colocation, particuliers…)</li>
+    <li>La <strong>fourchette de prix</strong> mensuelle</li>
+    <li>Le <strong>niveau de priorité</strong> (haute ou normale)</li>
+    <li>Un <strong>conseil pratique</strong> sur comment utiliser la plateforme</li>
+    <li>Le lien direct vers le site</li>
+  </ul>
+
+  <div class="tip"><strong>France :</strong> Commencez toujours par le CROUS (trouverunlogement.lescrous.fr) — les places sont limitées mais les prix sont les plus bas (200–400 €/mois). Faites la demande dès que vous avez votre admission.</div>
+
+  <h3>10.3 Aides financières au logement</h3>
+  <p>Wekili liste les aides disponibles dans votre pays de destination (ex : APL/CAF en France, CPAS en Belgique, bourses universitaires au Canada). Chaque aide indique le montant estimé, un lien vers le site officiel et un conseil sur la démarche à suivre.</p>
+
+  <h3>10.4 Estimation du budget mensuel</h3>
+  <p>En saisissant votre ville de destination, Wekili affiche une estimation du budget mensuel typique :</p>
+  <ul>
+    <li>Fourchette de loyer (min / max)</li>
+    <li>Charges estimées</li>
+    <li>Coût de vie mensuel moyen</li>
+    <li>Total estimé par mois</li>
+  </ul>
+  <p>Les données couvrent les principales villes étudiantes : Paris, Lyon, Bordeaux, Toulouse, Montréal, Québec, Berlin, Londres, Bruxelles, etc.</p>
+
+  <h3>10.5 Checklist logement</h3>
+  <p>La checklist répertorie toutes les démarches à effectuer, organisées en 5 groupes chronologiques :</p>
+  <ul>
+    <li><strong>Avant de chercher</strong> — budget, type de logement souhaité, assurance</li>
+    <li><strong>Dossier de location</strong> — documents à préparer (passeport, garant, justificatifs)</li>
+    <li><strong>Recherche active</strong> — inscription sur les plateformes, envoi de candidatures</li>
+    <li><strong>Visite et signature</strong> — état des lieux, lecture du bail, dépôt de garantie</li>
+    <li><strong>Après signature</strong> — demande APL, abonnements (eau, électricité, internet)</li>
+  </ul>
+  <p>Cochez chaque étape au fur et à mesure. Une barre de progression indique votre avancement global.</p>
+
+  <h3>10.6 Guide IA personnalisé</h3>
+  <p>Cliquez sur <strong>« Guide IA »</strong> pour recevoir des recommandations personnalisées sur votre situation logement. L'IA prend en compte votre ville, votre budget et votre statut pour vous suggérer les meilleures options et priorités.</p>
+</div>
+
+<!-- ═══════════════════════════
+     11. PARAMÈTRES
+════════════════════════════ -->
+<div class="section page-break">
+  <h2>11. Paramètres du compte</h2>
+  <p>Accédez aux paramètres via le menu de navigation → <strong>« Paramètres »</strong>. Cette section vous permet de gérer tous les aspects de sécurité et de personnalisation de votre compte.</p>
+
+  <h3>11.1 Modifier vos informations</h3>
+  <p>Dans l'onglet <strong>« Mon compte »</strong>, vous pouvez modifier :</p>
+  <ul>
+    <li>Votre <strong>prénom et nom</strong></li>
+    <li>Votre <strong>pays d'origine</strong></li>
+    <li>Votre <strong>photo de profil</strong> (URL d'une image)</li>
+  </ul>
+  <p>Cliquez sur <strong>« Enregistrer »</strong> pour confirmer les modifications.</p>
+
+  <h3>11.2 Changer votre mot de passe</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-body">Dans l'onglet <strong>« Sécurité »</strong>, cliquez sur <strong>« Changer le mot de passe »</strong>.</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body">Entrez votre <strong>mot de passe actuel</strong>, puis le <strong>nouveau mot de passe</strong> (minimum 8 caractères) et confirmez-le.</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body">Cliquez sur <strong>« Mettre à jour »</strong>. Une confirmation est affichée.</div></div>
+
+  <h3>11.3 Activer la double authentification (2FA)</h3>
+  <p>La 2FA ajoute une sécurité supplémentaire : même si quelqu'un connaît votre mot de passe, il ne pourra pas se connecter sans votre téléphone.</p>
+  <div class="step"><div class="step-num">1</div><div class="step-body">Dans l'onglet <strong>« Sécurité »</strong>, cliquez sur <strong>« Activer la 2FA »</strong>.</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body">Installez une application d'authentification sur votre téléphone : <strong>Google Authenticator</strong>, <strong>Authy</strong> ou <strong>Microsoft Authenticator</strong>.</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body">Scannez le QR code affiché avec l'application. Un code à 6 chiffres s'affiche, renouvelé toutes les 30 secondes.</div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-body">Entrez ce code dans le champ de confirmation et cliquez sur <strong>« Confirmer »</strong>. La 2FA est maintenant active.</div></div>
+  <div class="warning"><strong>Important :</strong> Conservez votre téléphone accessible lors de chaque connexion. Si vous perdez accès à votre application 2FA, contactez le support Wekili pour désactiver la 2FA manuellement.</div>
+
+  <h3>11.4 Historique des connexions</h3>
+  <p>Dans l'onglet <strong>« Sessions »</strong>, consultez toutes vos connexions récentes : adresse IP, appareil (navigateur + système), date et heure. Si vous voyez une connexion suspecte (pays inconnu, appareil non reconnu), changez immédiatement votre mot de passe.</p>
+
+  <h3>11.5 Supprimer votre compte</h3>
+  <p>En bas de la page Paramètres, le bouton <strong>« Supprimer mon compte »</strong> supprime définitivement toutes vos données. Cette action est <strong>irréversible</strong>. Une confirmation est demandée avant l'exécution.</p>
+  <div class="warning"><strong>Attention :</strong> La suppression de compte efface votre profil, vos analyses, vos candidatures et l'accès à vos documents. Téléchargez vos documents depuis S3 avant de supprimer votre compte si vous souhaitez les conserver.</div>
+</div>
+
+<!-- ═══════════════════════════
+     12. FAQ
+════════════════════════════ -->
+<div class="section page-break">
+  <h2>12. Questions fréquentes (FAQ)</h2>
+
+  <div class="faq-q">Wekili est-il gratuit ?</div>
+  <div class="faq-a">Oui, entièrement gratuit. Aucune carte bancaire n'est requise. Toutes les fonctionnalités (analyse IA, bourses, universités, LM, CV, logement) sont accessibles sans abonnement.</div>
+
+  <div class="faq-q">Mes documents sont-ils en sécurité sur Wekili ?</div>
+  <div class="faq-a">Vos documents sont stockés sur des serveurs AWS S3 sécurisés avec chiffrement. Seul votre compte peut y accéder. Le système de PIN ajoute une protection supplémentaire. Wekili ne partage vos documents avec aucun tiers.</div>
+
+  <div class="faq-q">Pourquoi mon score IA est-il bas ?</div>
+  <div class="faq-a">Plusieurs raisons possibles : profil incomplet (surtout moyenne, niveau et langue), documents manquants, ou objectif trop ambitieux par rapport à votre profil actuel. Complétez votre profil entièrement, uploadez tous vos documents et relancez l'analyse.</div>
+
+  <div class="faq-q">Puis-je candidater directement depuis Wekili ?</div>
+  <div class="faq-a">Non. Wekili prépare votre dossier et vous oriente, mais la candidature finale se fait directement sur les sites officiels des universités ou organismes de bourse (liens fournis dans chaque fiche). Campus France, uni-assist, UCAS sont des plateformes externes.</div>
+
+  <div class="faq-q">Je n'ai pas reçu l'email de vérification. Que faire ?</div>
+  <div class="faq-a">Vérifiez d'abord votre dossier spam/courrier indésirable. Si vous ne le trouvez pas après 5 minutes, sur la page de connexion, cliquez sur "Renvoyer l'email de vérification" et saisissez votre email.</div>
+
+  <div class="faq-q">Combien de fois puis-je lancer une analyse IA ?</div>
+  <div class="faq-a">Autant de fois que vous le souhaitez. Il est recommandé de relancer une analyse après chaque mise à jour significative de votre profil (nouveau document uploadé, niveau de langue amélioré, etc.) pour voir l'évolution de votre score.</div>
+
+  <div class="faq-q">La lettre de motivation générée est-elle directement utilisable ?</div>
+  <div class="faq-a">Elle constitue une excellente base de travail, mais doit impérativement être personnalisée. Les recruteurs et comités de sélection repèrent facilement les lettres génériques. Ajoutez des exemples concrets de votre parcours, vos motivations spécifiques pour l'établissement ciblé, et vos projets professionnels précis.</div>
+
+  <div class="faq-q">Mon CV est en Word. Puis-je l'analyser ?</div>
+  <div class="faq-a">Le module CV accepte les PDFs pour l'extraction automatique. Si votre CV est en Word (.doc/.docx), convertissez-le en PDF d'abord (Fichier → Exporter → PDF dans Word), ou copiez-collez le texte directement dans l'éditeur.</div>
+
+  <div class="faq-q">Comment changer le pays affiché dans le module Logement ?</div>
+  <div class="faq-a">Dans la barre latérale de la page Logement, cliquez sur le nom du pays actuel pour ouvrir le sélecteur de pays. Choisissez le pays de destination souhaité. Les plateformes et aides se mettent à jour automatiquement.</div>
+
+  <div class="faq-q">J'ai oublié mon PIN de documents. Comment le réinitialiser ?</div>
+  <div class="faq-a">Sur la page Documents, cliquez sur "PIN oublié" sous le formulaire de saisie. Entrez votre email et un code de réinitialisation vous sera envoyé. Entrez ce code pour définir un nouveau PIN.</div>
+
+  <div class="faq-q">Wekili fonctionne-t-il sur téléphone mobile ?</div>
+  <div class="faq-a">Oui, l'interface est entièrement responsive et s'adapte aux écrans mobiles. Pour une meilleure expérience lors de la rédaction de lettres de motivation ou l'analyse de CV, un ordinateur est recommandé.</div>
+
+  <div class="faq-q">Puis-je utiliser Wekili si je ne suis pas encore diplômé ?</div>
+  <div class="faq-a">Absolument. Si vous êtes en cours d'études (Licence par exemple), renseignez votre niveau actuel et votre moyenne actuelle. L'IA prend en compte votre situation présente et vous oriente vers les bourses et universités accessibles à votre niveau.</div>
+
+  <div class="faq-q">Wekili propose-t-il des universités hors des 5 pays actuels ?</div>
+  <div class="faq-a">Actuellement, Wekili couvre la France, le Canada, la Belgique, l'Allemagne et le Royaume-Uni. D'autres pays seront ajoutés dans les prochaines versions de la plateforme.</div>
+
+  <div style="margin-top:28px" class="card">
+    <div class="card-title">Vous avez une autre question ?</div>
+    Contactez le support Wekili par email : <strong>support@wekili.app</strong>. Décrivez votre problème avec captures d'écran si possible pour une résolution plus rapide.
+  </div>
+</div>
+
+<footer>
+  Guide d'utilisation — Wekili &nbsp;·&nbsp; Version 1.0 &nbsp;·&nbsp; Juin 2026
+</footer>
+
+</body>
+</html>

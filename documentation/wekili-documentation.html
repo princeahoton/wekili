@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Documentation Technique — Wekili</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;font-size:10.5pt;line-height:1.65;color:#1e2532;background:#fff}
+  h1{font-size:22pt;font-weight:700;color:#1a3a6b;margin-bottom:12px}
+  h2{font-size:15pt;font-weight:700;color:#1a3a6b;margin:32px 0 10px;padding-bottom:6px;border-bottom:2px solid #e8eef8}
+  h3{font-size:11.5pt;font-weight:600;color:#1a3a6b;margin:20px 0 8px}
+  h4{font-size:10pt;font-weight:600;color:#2d4a7a;margin:14px 0 5px}
+  p{margin-bottom:9px}
+  ul,ol{margin:6px 0 10px 20px}
+  li{margin-bottom:3px}
+  code{font-family:'JetBrains Mono',monospace;font-size:8.5pt;background:#f0f4fb;color:#1a3a6b;padding:1px 5px;border-radius:3px}
+  pre{font-family:'JetBrains Mono',monospace;font-size:8pt;background:#f8f9fc;border:1px solid #dde4f0;border-radius:6px;padding:12px 14px;margin:10px 0;overflow-x:auto;line-height:1.5;color:#1e2532}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:9pt}
+  th{background:#1a3a6b;color:#fff;padding:7px 10px;text-align:left;font-weight:600}
+  td{padding:6px 10px;border-bottom:1px solid #e8eef8;vertical-align:top}
+  tr:nth-child(even) td{background:#f7f9fd}
+  .cover{page-break-after:always;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;min-height:100vh;padding:80px 60px;background:linear-gradient(135deg,#0f2551 0%,#1a3a6b 60%,#2456a0 100%)}
+  .cover-logo{font-size:42pt;font-weight:800;color:#fff;letter-spacing:-1px;margin-bottom:10px}
+  .cover-logo span{color:#F5A623}
+  .cover-sub{font-size:14pt;color:#a8c4f0;margin-bottom:48px;font-weight:300}
+  .cover-title{font-size:26pt;font-weight:700;color:#fff;line-height:1.25;margin-bottom:20px}
+  .cover-meta{font-size:10pt;color:#7aa7e0;line-height:1.8}
+  .cover-badge{display:inline-block;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:20px;padding:5px 14px;font-size:9pt;color:#d0e4ff;margin-top:32px}
+  .toc{page-break-after:always;padding:40px 0}
+  .toc-item{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px dotted #ccd6ec;font-size:9.5pt}
+  .toc-item.l1{font-weight:600;color:#1a3a6b;margin-top:8px}
+  .toc-item.l2{padding-left:18px;color:#3a5a8a}
+  .toc-num{color:#999;font-size:8.5pt}
+  .section{padding:20px 0}
+  .page-break{page-break-before:always}
+  .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:8pt;font-weight:600}
+  .badge-blue{background:#e8eef8;color:#1a3a6b}
+  .badge-green{background:#e6f5ec;color:#1a5c35}
+  .badge-orange{background:#fff3e0;color:#8a4f00}
+  .badge-red{background:#fde8e8;color:#8a1515}
+  .badge-purple{background:#f0e8f8;color:#5a1a8a}
+  .card{background:#f7f9fd;border:1px solid #dde4f0;border-radius:8px;padding:14px 16px;margin:10px 0}
+  .card-title{font-weight:600;color:#1a3a6b;font-size:10pt;margin-bottom:6px}
+  .alert{border-left:4px solid #F5A623;background:#fffbf0;padding:10px 14px;margin:10px 0;border-radius:0 6px 6px 0}
+  .alert-blue{border-left-color:#1a3a6b;background:#f0f4fb}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:10px 0}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:10px 0}
+  .arch-box{background:#1a3a6b;color:#fff;border-radius:8px;padding:10px 14px;text-align:center;font-weight:600;font-size:9pt}
+  .arch-arrow{text-align:center;color:#1a3a6b;font-size:14pt;line-height:2}
+  .diagram{background:#f7f9fd;border:1px solid #dde4f0;border-radius:8px;padding:20px;margin:14px 0;text-align:center}
+  .db-table{margin:8px 0}
+  .db-table-name{background:#2456a0;color:#fff;font-weight:700;font-size:9pt;padding:5px 10px;border-radius:4px 4px 0 0}
+  .db-col{background:#f0f4fb;padding:4px 10px;border:1px solid #dde4f0;border-top:none;font-size:8.5pt;font-family:'JetBrains Mono',monospace}
+  .db-col.pk{color:#b8860b;font-weight:600}
+  .db-col.fk{color:#1a5c35}
+  .route-method{display:inline-block;padding:2px 7px;border-radius:4px;font-size:7.5pt;font-weight:700;margin-right:6px;font-family:'JetBrains Mono',monospace}
+  .GET{background:#e6f5ec;color:#1a5c35}
+  .POST{background:#fff3e0;color:#8a4f00}
+  .PATCH{background:#f0e8f8;color:#5a1a8a}
+  .DELETE{background:#fde8e8;color:#8a1515}
+  .PUT{background:#e8f0fe;color:#1a3a6b}
+  footer{text-align:center;color:#999;font-size:8pt;padding:30px 0;border-top:1px solid #e8eef8;margin-top:40px}
+  @media print{
+    body{font-size:10pt}
+    .cover{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .arch-box{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .db-table-name{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    pre{white-space:pre-wrap}
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     COUVERTURE
+════════════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-logo">Weki<span>li</span></div>
+  <div class="cover-sub">Plateforme d'orientation pour étudiants africains</div>
+  <div class="cover-title">Documentation Technique<br>Complète</div>
+  <div class="cover-meta">
+    Version 1.0 &nbsp;·&nbsp; Juin 2026<br>
+    Architecture · Base de données · API · Frontend · Sécurité · Déploiement
+  </div>
+  <div class="cover-badge">Confidentiel — usage interne</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     TABLE DES MATIÈRES
+════════════════════════════════════════════════════════ -->
+<div class="toc">
+  <h1 style="margin-bottom:24px">Table des matières</h1>
+  <div class="toc-item l1"><span>1. Présentation générale</span><span class="toc-num">3</span></div>
+  <div class="toc-item l2"><span>1.1 Vision et objectifs</span><span class="toc-num">3</span></div>
+  <div class="toc-item l2"><span>1.2 Publics cibles</span><span class="toc-num">3</span></div>
+  <div class="toc-item l2"><span>1.3 Fonctionnalités principales</span><span class="toc-num">3</span></div>
+  <div class="toc-item l1"><span>2. Architecture globale</span><span class="toc-num">4</span></div>
+  <div class="toc-item l2"><span>2.1 Vue d'ensemble</span><span class="toc-num">4</span></div>
+  <div class="toc-item l2"><span>2.2 Stack technologique</span><span class="toc-num">4</span></div>
+  <div class="toc-item l2"><span>2.3 Services externes</span><span class="toc-num">4</span></div>
+  <div class="toc-item l1"><span>3. Structure des fichiers</span><span class="toc-num">5</span></div>
+  <div class="toc-item l1"><span>4. Base de données</span><span class="toc-num">6</span></div>
+  <div class="toc-item l2"><span>4.1 Schéma des tables</span><span class="toc-num">6</span></div>
+  <div class="toc-item l2"><span>4.2 Diagramme entité-relation</span><span class="toc-num">8</span></div>
+  <div class="toc-item l1"><span>5. API Backend — Routes</span><span class="toc-num">9</span></div>
+  <div class="toc-item l2"><span>5.1 Authentification /api/auth</span><span class="toc-num">9</span></div>
+  <div class="toc-item l2"><span>5.2 Utilisateur /api/user</span><span class="toc-num">9</span></div>
+  <div class="toc-item l2"><span>5.3 Profil /api/profile</span><span class="toc-num">9</span></div>
+  <div class="toc-item l2"><span>5.4 Documents /api/documents</span><span class="toc-num">10</span></div>
+  <div class="toc-item l2"><span>5.5 Analyse IA /api/analysis</span><span class="toc-num">10</span></div>
+  <div class="toc-item l2"><span>5.6 Bourses /api/bourses</span><span class="toc-num">10</span></div>
+  <div class="toc-item l2"><span>5.7 Universités /api/universities</span><span class="toc-num">10</span></div>
+  <div class="toc-item l2"><span>5.8 Logement /api/logement</span><span class="toc-num">10</span></div>
+  <div class="toc-item l2"><span>5.9 Lettre de motivation /api/lm</span><span class="toc-num">10</span></div>
+  <div class="toc-item l2"><span>5.10 CV /api/cv</span><span class="toc-num">10</span></div>
+  <div class="toc-item l2"><span>5.11 Admin /api/admin</span><span class="toc-num">11</span></div>
+  <div class="toc-item l1"><span>6. Frontend — Pages et composants</span><span class="toc-num">12</span></div>
+  <div class="toc-item l1"><span>7. Flux d'authentification</span><span class="toc-num">14</span></div>
+  <div class="toc-item l2"><span>7.1 Inscription / Email</span><span class="toc-num">14</span></div>
+  <div class="toc-item l2"><span>7.2 Google OAuth2</span><span class="toc-num">14</span></div>
+  <div class="toc-item l2"><span>7.3 Téléphone OTP (Twilio)</span><span class="toc-num">14</span></div>
+  <div class="toc-item l2"><span>7.4 Double authentification (2FA)</span><span class="toc-num">14</span></div>
+  <div class="toc-item l1"><span>8. Gestion des documents</span><span class="toc-num">15</span></div>
+  <div class="toc-item l1"><span>9. Moteur d'analyse IA</span><span class="toc-num">16</span></div>
+  <div class="toc-item l1"><span>10. Diagrammes UML</span><span class="toc-num">17</span></div>
+  <div class="toc-item l2"><span>10.1 Diagramme de cas d'utilisation</span><span class="toc-num">17</span></div>
+  <div class="toc-item l2"><span>10.2 Diagramme de séquence — Analyse IA</span><span class="toc-num">18</span></div>
+  <div class="toc-item l1"><span>11. Sécurité</span><span class="toc-num">19</span></div>
+  <div class="toc-item l1"><span>12. Forces et faiblesses</span><span class="toc-num">20</span></div>
+  <div class="toc-item l1"><span>13. Recommandations techniques</span><span class="toc-num">21</span></div>
+  <div class="toc-item l1"><span>14. Installation et déploiement</span><span class="toc-num">22</span></div>
+  <div class="toc-item l1"><span>15. Guide de maintenance</span><span class="toc-num">23</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     1. PRÉSENTATION GÉNÉRALE
+════════════════════════════════════════════════════════ -->
+<div class="section page-break">
+  <h2>1. Présentation générale</h2>
+
+  <h3>1.1 Vision et objectifs</h3>
+  <p><strong>Wekili</strong> (du swahili : « avocat, défenseur ») est une plateforme web full-stack destinée à accompagner les étudiants africains francophones dans leur projet d'études à l'international. La plateforme centralise la recherche de bourses, l'évaluation du dossier académique par intelligence artificielle, la gestion des documents officiels, le suivi des candidatures universitaires, la préparation des lettres de motivation et CV, ainsi que la recherche de logement.</p>
+
+  <h3>1.2 Publics cibles</h3>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Étudiants africains</div>
+      Profils Licence, Master ou Doctorat souhaitant poursuivre leurs études en France, Canada, Belgique, Allemagne ou Royaume-Uni.
+    </div>
+    <div class="card">
+      <div class="card-title">Administrateurs</div>
+      Équipe Wekili gérant le catalogue de bourses et universités, supervisant les utilisateurs et les analyses.
+    </div>
+  </div>
+
+  <h3>1.3 Fonctionnalités principales</h3>
+  <table>
+    <tr><th>Module</th><th>Fonctionnalité</th><th>Technologie clé</th></tr>
+    <tr><td>Authentification</td><td>Email/mot de passe, Google OAuth2, OTP SMS, 2FA TOTP</td><td>JWT · Google Auth Library · Twilio · Resend</td></tr>
+    <tr><td>Profil académique</td><td>Saisie des données académiques, langues, pays cibles, budget</td><td>PostgreSQL · React Forms</td></tr>
+    <tr><td>Documents</td><td>Upload sécurisé (PDF/image), PIN, accès OTP, journal d'activité</td><td>AWS S3 · Multer · bcryptjs</td></tr>
+    <tr><td>Analyse IA</td><td>Score d'éligibilité, forces/faiblesses, programmes recommandés</td><td>Anthropic Claude API</td></tr>
+    <tr><td>Bourses</td><td>Catalogue enrichi, matching par profil, score d'éligibilité</td><td>PostgreSQL JSONB</td></tr>
+    <tr><td>Universités</td><td>15 universités avec critères détaillés, suivi de candidature</td><td>PostgreSQL · React</td></tr>
+    <tr><td>Lettre de motivation</td><td>Génération et correction IA, versioning</td><td>Anthropic Claude API</td></tr>
+    <tr><td>CV</td><td>Extraction PDF, analyse, correction adaptée au pays cible</td><td>pdf-parse v2 · Claude API</td></tr>
+    <tr><td>Logement</td><td>Plateformes par pays, aides financières, checklist, guide IA</td><td>React · Claude API</td></tr>
+    <tr><td>Administration</td><td>Gestion utilisateurs, rôles, bourses, universités, statistiques</td><td>ProtectedAdminRoute · RBAC</td></tr>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     2. ARCHITECTURE GLOBALE
+════════════════════════════════════════════════════════ -->
+<div class="section page-break">
+  <h2>2. Architecture globale</h2>
+
+  <h3>2.1 Vue d'ensemble</h3>
+  <p>Wekili suit une architecture <strong>SPA + API REST</strong> découplée. Le frontend React communique exclusivement avec le backend Express via des appels HTTP JSON. Aucun rendu côté serveur (SSR) n'est utilisé.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px">
+      <!-- Navigateur -->
+      <rect x="10" y="10" width="160" height="60" rx="8" fill="#1a3a6b"/>
+      <text x="90" y="35" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="Inter,sans-serif">Navigateur</text>
+      <text x="90" y="53" text-anchor="middle" fill="#a8c4f0" font-size="9" font-family="Inter,sans-serif">React 19 + Vite</text>
+      <!-- Arrow -->
+      <line x1="170" y1="40" x2="230" y2="40" stroke="#F5A623" stroke-width="2" marker-end="url(#arr)"/>
+      <text x="200" y="33" text-anchor="middle" fill="#888" font-size="8" font-family="Inter,sans-serif">HTTPS/JSON</text>
+      <!-- Backend -->
+      <rect x="230" y="10" width="160" height="60" rx="8" fill="#1a3a6b"/>
+      <text x="310" y="35" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="Inter,sans-serif">Backend API</text>
+      <text x="310" y="53" text-anchor="middle" fill="#a8c4f0" font-size="9" font-family="Inter,sans-serif">Node.js + Express</text>
+      <!-- Arrow down -->
+      <line x1="310" y1="70" x2="310" y2="110" stroke="#F5A623" stroke-width="2" marker-end="url(#arr)"/>
+      <!-- DB -->
+      <rect x="230" y="110" width="160" height="60" rx="8" fill="#2456a0"/>
+      <text x="310" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="Inter,sans-serif">PostgreSQL</text>
+      <text x="310" y="153" text-anchor="middle" fill="#a8c4f0" font-size="9" font-family="Inter,sans-serif">14 tables · Neon / Supabase</text>
+      <!-- Services externes -->
+      <text x="450" y="15" fill="#1a3a6b" font-size="10" font-weight="bold" font-family="Inter,sans-serif">Services externes</text>
+      <!-- S3 -->
+      <rect x="450" y="25" width="120" height="36" rx="6" fill="#e8f4e8" stroke="#2d7a3a" stroke-width="1"/>
+      <text x="510" y="44" text-anchor="middle" fill="#1a5c35" font-size="9" font-weight="600" font-family="Inter,sans-serif">AWS S3</text>
+      <text x="510" y="57" text-anchor="middle" fill="#1a5c35" font-size="8" font-family="Inter,sans-serif">Stockage documents</text>
+      <!-- Anthropic -->
+      <rect x="450" y="70" width="120" height="36" rx="6" fill="#f0e8f8" stroke="#5a1a8a" stroke-width="1"/>
+      <text x="510" y="89" text-anchor="middle" fill="#5a1a8a" font-size="9" font-weight="600" font-family="Inter,sans-serif">Anthropic Claude</text>
+      <text x="510" y="102" text-anchor="middle" fill="#5a1a8a" font-size="8" font-family="Inter,sans-serif">Analyse IA · LM · CV</text>
+      <!-- Resend -->
+      <rect x="450" y="115" width="120" height="36" rx="6" fill="#fff3e0" stroke="#8a4f00" stroke-width="1"/>
+      <text x="510" y="134" text-anchor="middle" fill="#8a4f00" font-size="9" font-weight="600" font-family="Inter,sans-serif">Resend</text>
+      <text x="510" y="147" text-anchor="middle" fill="#8a4f00" font-size="8" font-family="Inter,sans-serif">Emails transactionnels</text>
+      <!-- Twilio -->
+      <rect x="450" y="160" width="120" height="36" rx="6" fill="#fde8e8" stroke="#8a1515" stroke-width="1"/>
+      <text x="510" y="179" text-anchor="middle" fill="#8a1515" font-size="9" font-weight="600" font-family="Inter,sans-serif">Twilio</text>
+      <text x="510" y="192" text-anchor="middle" fill="#8a1515" font-size="8" font-family="Inter,sans-serif">OTP SMS</text>
+      <!-- Google -->
+      <rect x="450" y="205" width="120" height="36" rx="6" fill="#e8eef8" stroke="#1a3a6b" stroke-width="1"/>
+      <text x="510" y="224" text-anchor="middle" fill="#1a3a6b" font-size="9" font-weight="600" font-family="Inter,sans-serif">Google OAuth2</text>
+      <text x="510" y="237" text-anchor="middle" fill="#1a3a6b" font-size="8" font-family="Inter,sans-serif">Connexion sociale</text>
+      <!-- Arrows to services -->
+      <line x1="390" y1="43" x2="448" y2="43" stroke="#ccc" stroke-width="1.5" marker-end="url(#arrgray)"/>
+      <line x1="390" y1="43" x2="390" y2="88" stroke="#ccc" stroke-width="1" stroke-dasharray="4"/>
+      <line x1="390" y1="88" x2="448" y2="88" stroke="#ccc" stroke-width="1.5" marker-end="url(#arrgray)"/>
+      <line x1="390" y1="88" x2="390" y2="133" stroke="#ccc" stroke-width="1" stroke-dasharray="4"/>
+      <line x1="390" y1="133" x2="448" y2="133" stroke="#ccc" stroke-width="1.5" marker-end="url(#arrgray)"/>
+      <line x1="390" y1="133" x2="390" y2="178" stroke="#ccc" stroke-width="1" stroke-dasharray="4"/>
+      <line x1="390" y1="178" x2="448" y2="178" stroke="#ccc" stroke-width="1.5" marker-end="url(#arrgray)"/>
+      <line x1="390" y1="178" x2="390" y2="223" stroke="#ccc" stroke-width="1" stroke-dasharray="4"/>
+      <line x1="390" y1="223" x2="448" y2="223" stroke="#ccc" stroke-width="1.5" marker-end="url(#arrgray)"/>
+      <!-- Vercel + Render labels -->
+      <rect x="10" y="100" width="160" height="36" rx="6" fill="#f7f9fd" stroke="#dde4f0" stroke-width="1"/>
+      <text x="90" y="119" text-anchor="middle" fill="#1a3a6b" font-size="9" font-weight="600" font-family="Inter,sans-serif">Vercel</text>
+      <text x="90" y="132" text-anchor="middle" fill="#666" font-size="8" font-family="Inter,sans-serif">Hébergement frontend</text>
+      <rect x="10" y="145" width="160" height="36" rx="6" fill="#f7f9fd" stroke="#dde4f0" stroke-width="1"/>
+      <text x="90" y="164" text-anchor="middle" fill="#1a3a6b" font-size="9" font-weight="600" font-family="Inter,sans-serif">Render</text>
+      <text x="90" y="177" text-anchor="middle" fill="#666" font-size="8" font-family="Inter,sans-serif">Hébergement backend</text>
+      <!-- Markers -->
+      <defs>
+        <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#F5A623"/></marker>
+        <marker id="arrgray" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#ccc"/></marker>
+      </defs>
+    </svg>
+  </div>
+
+  <h3>2.2 Stack technologique</h3>
+  <div class="grid2">
+    <div>
+      <h4>Frontend</h4>
+      <table>
+        <tr><th>Outil</th><th>Version</th><th>Rôle</th></tr>
+        <tr><td>React</td><td>19.x</td><td>UI composants</td></tr>
+        <tr><td>Vite</td><td>6.x</td><td>Bundler / Dev server</td></tr>
+        <tr><td>React Router</td><td>7.x</td><td>Routage SPA</td></tr>
+        <tr><td>Tailwind CSS</td><td>3.x</td><td>Styles utilitaires</td></tr>
+        <tr><td>flag-icons</td><td>7.x</td><td>Drapeaux pays</td></tr>
+      </table>
+    </div>
+    <div>
+      <h4>Backend</h4>
+      <table>
+        <tr><th>Outil</th><th>Version</th><th>Rôle</th></tr>
+        <tr><td>Node.js</td><td>≥18</td><td>Runtime</td></tr>
+        <tr><td>Express</td><td>5.x</td><td>Framework HTTP</td></tr>
+        <tr><td>pg</td><td>8.x</td><td>Client PostgreSQL</td></tr>
+        <tr><td>jsonwebtoken</td><td>9.x</td><td>Tokens JWT</td></tr>
+        <tr><td>bcryptjs</td><td>3.x</td><td>Hachage mots de passe</td></tr>
+        <tr><td>multer</td><td>2.x</td><td>Upload fichiers</td></tr>
+        <tr><td>helmet</td><td>8.x</td><td>Headers sécurité</td></tr>
+        <tr><td>express-rate-limit</td><td>8.x</td><td>Rate limiting</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     3. STRUCTURE DES FICHIERS
+════════════════════════════════════════════════════════ -->
+<div class="section page-break">
+  <h2>3. Structure des fichiers</h2>
+  <div class="grid2">
+    <div>
+      <h4>Backend</h4>
+      <pre>backend/
+├── server.js              # Point d'entrée Express
+├── package.json
+├── config/
+│   └── database.js        # Pool PostgreSQL
+├── database/
+│   └── setup_all.js       # Migrations idempotentes
+├── middleware/
+│   ├── auth.js            # Vérification JWT (user)
+│   └── authAdmin.js       # Vérification JWT (admin)
+├── routes/
+│   ├── auth.js
+│   ├── user.js
+│   ├── profile.js
+│   ├── documents.js
+│   ├── analysis.js
+│   ├── bourses.js
+│   ├── universities.js
+│   ├── logement.js
+│   ├── lm.js
+│   ├── cv.js
+│   └── admin.js
+└── controllers/
+    ├── authController.js
+    ├── userController.js
+    ├── profileController.js
+    ├── documentsController.js
+    ├── analysisController.js
+    ├── boursesController.js
+    ├── universitiesController.js
+    ├── logementController.js
+    ├── lmController.js
+    ├── cvController.js
+    └── adminController.js</pre>
+    </div>
+    <div>
+      <h4>Frontend</h4>
+      <pre>frontend/
+├── index.html
+├── vite.config.js
+├── tailwind.config.js
+├── src/
+│   ├── App.jsx            # Routeur principal
+│   ├── App.css
+│   ├── main.jsx
+│   ├── utils/
+│   │   └── auth.js        # getToken / getUser
+│   ├── services/
+│   │   └── api.js         # Appels API centralisés
+│   ├── components/
+│   │   ├── Navbar.jsx
+│   │   └── Toast.jsx
+│   └── pages/
+│       ├── Home.jsx
+│       ├── Login.jsx
+│       ├── Register.jsx
+│       ├── Dashboard.jsx
+│       ├── Profile.jsx
+│       ├── Documents.jsx
+│       ├── Analysis.jsx
+│       ├── Bourses.jsx
+│       ├── Universities.jsx
+│       ├── Logement.jsx
+│       ├── Settings.jsx
+│       ├── VerifyEmail.jsx
+│       ├── ForgotPassword.jsx
+│       ├── PrivacyPolicy.jsx
+│       ├── TermsOfService.jsx
+│       ├── LegalNotice.jsx
+│       └── admin/
+│           ├── AdminLayout.jsx
+│           ├── AdminOverview.jsx
+│           ├── AdminUsers.jsx
+│           ├── AdminBourses.jsx
+│           └── AdminUniversites.jsx</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     4. BASE DE DONNÉES
+════════════════════════════════════════════════════════ -->
+<div class="section page-break">
+  <h2>4. Base de données</h2>
+  <p>PostgreSQL est utilisé avec le driver <code>pg</code>. Toutes les migrations sont regroupées dans <code>setup_all.js</code> et exécutées au démarrage du serveur dans une transaction unique. Les instructions <code>CREATE TABLE IF NOT EXISTS</code> et <code>ALTER TABLE ... ADD COLUMN IF NOT EXISTS</code> garantissent l'idempotence.</p>
+
+  <h3>4.1 Schéma des tables</h3>
+
+  <h4>users</h4>
+  <table>
+    <tr><th>Colonne</th><th>Type</th><th>Contrainte</th><th>Description</th></tr>
+    <tr><td><code>id</code></td><td>UUID</td><td>PK · DEFAULT gen_random_uuid()</td><td>Identifiant unique</td></tr>
+    <tr><td><code>email</code></td><td>VARCHAR(255)</td><td>UNIQUE</td><td>Email de connexion</td></tr>
+    <tr><td><code>password</code></td><td>VARCHAR(255)</td><td></td><td>Hash bcrypt (null si OAuth)</td></tr>
+    <tr><td><code>nom</code></td><td>VARCHAR(100)</td><td></td><td>Nom de famille</td></tr>
+    <tr><td><code>prenom</code></td><td>VARCHAR(100)</td><td></td><td>Prénom</td></tr>
+    <tr><td><code>pays</code></td><td>VARCHAR(100)</td><td></td><td>Pays d'origine</td></tr>
+    <tr><td><code>google_id</code></td><td>VARCHAR(255)</td><td>UNIQUE</td><td>ID Google OAuth</td></tr>
+    <tr><td><code>phone</code></td><td>VARCHAR(30)</td><td>UNIQUE</td><td>Numéro de téléphone</td></tr>
+    <tr><td><code>avatar_url</code></td><td>TEXT</td><td></td><td>URL photo de profil</td></tr>
+    <tr><td><code>auth_method</code></td><td>VARCHAR(20)</td><td>DEFAULT 'email'</td><td>email / google / phone</td></tr>
+    <tr><td><code>two_fa_enabled</code></td><td>BOOLEAN</td><td>DEFAULT FALSE</td><td>2FA TOTP activé</td></tr>
+    <tr><td><code>email_verified</code></td><td>BOOLEAN</td><td>DEFAULT FALSE</td><td>Email confirmé</td></tr>
+    <tr><td><code>role</code></td><td>VARCHAR(20)</td><td>DEFAULT 'user'</td><td>user / admin / superadmin</td></tr>
+    <tr><td><code>created_at</code></td><td>TIMESTAMPTZ</td><td>DEFAULT NOW()</td><td>Date de création</td></tr>
+  </table>
+
+  <h4>profiles</h4>
+  <p>Lié à <code>users</code> en relation 1-1 via <code>user_id</code>. Contient les données académiques : nationalité, niveau d'études, domaine, établissement, moyenne, langues maîtrisées, pays cibles, budget, motivation, expérience professionnelle.</p>
+
+  <h4>documents</h4>
+  <table>
+    <tr><th>Colonne</th><th>Type</th><th>Description</th></tr>
+    <tr><td><code>id</code></td><td>UUID PK</td><td>Identifiant document</td></tr>
+    <tr><td><code>user_id</code></td><td>UUID FK → users</td><td>Propriétaire</td></tr>
+    <tr><td><code>type</code></td><td>VARCHAR(100)</td><td>releve_notes / diplome / passeport / cv / lettre_motivation / etc.</td></tr>
+    <tr><td><code>nom_fichier</code></td><td>VARCHAR(500)</td><td>Nom original du fichier</td></tr>
+    <tr><td><code>url_s3</code></td><td>TEXT</td><td>Clé S3 du fichier</td></tr>
+    <tr><td><code>taille</code></td><td>INTEGER</td><td>Taille en octets</td></tr>
+    <tr><td><code>statut</code></td><td>VARCHAR(50)</td><td>en_attente / valide / rejete</td></tr>
+  </table>
+
+  <h4>analyses</h4>
+  <p>Stocke les résultats des analyses IA : <code>score_global</code> (INTEGER), <code>synthese</code> (TEXT), <code>points_forts</code>, <code>axes_amelioration</code>, <code>forces</code>, <code>faiblesses</code>, <code>recommandations</code>, <code>programmes_recommandes</code>, <code>estimation_chances</code> (tous JSONB).</p>
+
+  <h4>scholarships (bourses)</h4>
+  <p>Catalogue de 9 bourses enrichies : nom, organisme, pays, niveau, domaine, montant, deadline, critères (JSONB), avantages (TEXT), documents requis (TEXT[]), nationalités éligibles (TEXT[]), âge max, nombre de places, type de financement.</p>
+
+  <h4>universities</h4>
+  <p>15 universités pré-chargées couvrant France (5), Canada (3), Belgique (2), Allemagne (2), Royaume-Uni (2). Champs : classement mondial/national, taux d'admission, frais de scolarité, plateformes de candidature, dates d'ouverture/clôture, documents requis (TEXT[]).</p>
+
+  <h4>Autres tables</h4>
+  <table>
+    <tr><th>Table</th><th>Rôle</th></tr>
+    <tr><td><code>document_logs</code></td><td>Journal de toutes les actions sur documents (upload, suppression, accès)</td></tr>
+    <tr><td><code>login_sessions</code></td><td>Historique des connexions : IP, user-agent, device_hash</td></tr>
+    <tr><td><code>matches</code></td><td>Score d'éligibilité utilisateur × bourse (UNIQUE user_id + scholarship_id)</td></tr>
+    <tr><td><code>university_matches</code></td><td>Score d'admission utilisateur × université</td></tr>
+    <tr><td><code>candidatures</code></td><td>Suivi des candidatures : statut, numéro de vœu, notes, date de soumission</td></tr>
+    <tr><td><code>logements</code></td><td>Préférences et statut de recherche logement par utilisateur (1-1)</td></tr>
+    <tr><td><code>lm_versions</code></td><td>Versions des lettres de motivation : contenu, score IA, version corrigée</td></tr>
+    <tr><td><code>cv_versions</code></td><td>Versions CV : contenu, pays cible, corrections IA, sections manquantes</td></tr>
+  </table>
+
+  <h3>4.2 Diagramme entité-relation simplifié</h3>
+  <div class="diagram">
+    <svg viewBox="0 0 660 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:640px">
+      <defs>
+        <marker id="fk" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#1a3a6b"/></marker>
+      </defs>
+      <!-- users (center) -->
+      <rect x="240" y="140" width="140" height="90" rx="6" fill="#1a3a6b"/>
+      <text x="310" y="160" text-anchor="middle" fill="white" font-size="10" font-weight="bold" font-family="Inter,sans-serif">users</text>
+      <text x="310" y="178" text-anchor="middle" fill="#a8c4f0" font-size="8" font-family="Inter,sans-serif">id (PK)</text>
+      <text x="310" y="192" text-anchor="middle" fill="#a8c4f0" font-size="8" font-family="Inter,sans-serif">email · password</text>
+      <text x="310" y="206" text-anchor="middle" fill="#a8c4f0" font-size="8" font-family="Inter,sans-serif">role · auth_method</text>
+      <text x="310" y="220" text-anchor="middle" fill="#a8c4f0" font-size="8" font-family="Inter,sans-serif">two_fa_enabled</text>
+      <!-- profiles -->
+      <rect x="20" y="10" width="130" height="56" rx="6" fill="#2456a0"/>
+      <text x="85" y="30" text-anchor="middle" fill="white" font-size="9" font-weight="bold" font-family="Inter,sans-serif">profiles</text>
+      <text x="85" y="45" text-anchor="middle" fill="#a8c4f0" font-size="8" font-family="Inter,sans-serif">user_id (FK) 1-1</text>
+      <text x="85" y="58" text-anchor="middle" fill="#a8c4f0" font-size="8" font-family="Inter,sans-serif">données académiques</text>
+      <line x1="150" y1="38" x2="240" y2="155" stroke="#1a3a6b" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#fk)"/>
+      <!-- documents -->
+      <rect x="20" y="100" width="130" height="56" rx="6" fill="#2456a0"/>
+      <text x="85" y="120" text-anchor="middle" fill="white" font-size="9" font-weight="bold" font-family="Inter,sans-serif">documents</text>
+      <text x="85" y="135" text-anchor="middle" fill="#a8c4f0" font-size="8" font-family="Inter,sans-serif">user_id (FK) N-1</text>
+      <text x="85" y="148" text-anchor="middle" fill="#a8c4f0" font-size="8" font-family="Inter,sans-serif">type · url_s3</text>
+      <line x1="150" y1="128" x2="240" y2="168" stroke="#1a3a6b" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#fk)"/>
+      <!-- analyses -->
+      <rect x="20" y="190" width="130" height="56" rx="6" fill="#2456a0"/>
+      <text x="85" y="210" text-anchor="middle" fill="white" font-size="9" font-weight="bold" font-family="Inter,sans-serif">analyses</text>
+      <text x="85" y="225" text-anchor="middle" fill="#a8c4f0" font-size="8" font-family="Inter,sans-serif">user_id (FK)</text>
+      <text x="85" y="238" text-anchor="middle" fill="#a8c4f0" font-size="8" font-family="Inter,sans-serif">score_global (JSONB)</text>
+      <line x1="150" y1="218" x2="240" y2="195" stroke="#1a3a6b" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#fk)"/>
+      <!-- logements -->
+      <rect x="20" y="280" width="130" height="56" rx="6" fill="#2456a0"/>
+      <text x="85" y="300" text-anchor="middle" fill="white" font-size="9" font-weight="bold" font-family="Inter,sans-serif">logements</text>
+      <text x="85" y="315" text-anchor="middle" fill="#a8c4f0" font-size="8" font-family="Inter,sans-serif">user_id (FK) 1-1</text>
+      <text x="85" y="328" text-anchor="middle" fill="#a8c4f0" font-size="8" font-family="Inter,sans-serif">statut · budget</text>
+      <line x1="150" y1="308" x2="240" y2="225" stroke="#1a3a6b" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#fk)"/>
+      <!-- scholarships -->
+      <rect x="490" y="10" width="140" height="56" rx="6" fill="#2456a0"/>
+      <text x="560" y="30" text-anchor="middle" fill="white" font-size="9" font-weight="bold" font-family="Inter,sans-serif">scholarships</text>
+      <text x="560" y="45" text-anchor="middle" fill="#a8c4f0" font-size="8" font-family="Inter,sans-serif">id (PK)</text>
+      <text x="560" y="58" text-anchor="middle" fill="#a8c4f0" font-size="8" font-family="Inter,sans-serif">nom · deadline · criteres</text>
+      <!-- matches -->
+      <rect x="490" y="100" width="140" height="56" rx="6" fill="#5a2090"/>
+      <text x="560" y="120" text-anchor="middle" fill="white" font-size="9" font-weight="bold" font-family="Inter,sans-serif">matches</text>
+      <text x="560" y="135" text-anchor="middle" fill="#d0a8f0" font-size="8" font-family="Inter,sans-serif">user_id + scholarship_id</text>
+      <text x="560" y="148" text-anchor="middle" fill="#d0a8f0" font-size="8" font-family="Inter,sans-serif">score_eligibilite</text>
+      <line x1="490" y1="128" x2="380" y2="175" stroke="#5a2090" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#fk)"/>
+      <line x1="490" y1="118" x2="492" y2="66" stroke="#5a2090" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#fk)"/>
+      <!-- universities -->
+      <rect x="490" y="190" width="140" height="56" rx="6" fill="#2456a0"/>
+      <text x="560" y="210" text-anchor="middle" fill="white" font-size="9" font-weight="bold" font-family="Inter,sans-serif">universities</text>
+      <text x="560" y="225" text-anchor="middle" fill="#a8c4f0" font-size="8" font-family="Inter,sans-serif">15 universités</text>
+      <text x="560" y="238" text-anchor="middle" fill="#a8c4f0" font-size="8" font-family="Inter,sans-serif">classement · frais</text>
+      <!-- candidatures -->
+      <rect x="490" y="280" width="140" height="56" rx="6" fill="#5a2090"/>
+      <text x="560" y="300" text-anchor="middle" fill="white" font-size="9" font-weight="bold" font-family="Inter,sans-serif">candidatures</text>
+      <text x="560" y="315" text-anchor="middle" fill="#d0a8f0" font-size="8" font-family="Inter,sans-serif">user_id + university_id</text>
+      <text x="560" y="328" text-anchor="middle" fill="#d0a8f0" font-size="8" font-family="Inter,sans-serif">statut · voeu_numero</text>
+      <line x1="490" y1="308" x2="380" y2="215" stroke="#5a2090" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#fk)"/>
+      <line x1="490" y1="295" x2="492" y2="246" stroke="#5a2090" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#fk)"/>
+      <!-- lm/cv -->
+      <rect x="240" y="300" width="140" height="56" rx="6" fill="#2456a0"/>
+      <text x="310" y="320" text-anchor="middle" fill="white" font-size="9" font-weight="bold" font-family="Inter,sans-serif">lm_versions / cv_versions</text>
+      <text x="310" y="335" text-anchor="middle" fill="#a8c4f0" font-size="8" font-family="Inter,sans-serif">user_id (FK)</text>
+      <text x="310" y="348" text-anchor="middle" fill="#a8c4f0" font-size="8" font-family="Inter,sans-serif">contenu · score IA</text>
+      <line x1="310" y1="300" x2="310" y2="230" stroke="#1a3a6b" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#fk)"/>
+    </svg>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     5. API BACKEND
+════════════════════════════════════════════════════════ -->
+<div class="section page-break">
+  <h2>5. API Backend — Routes</h2>
+  <p>Le serveur Express écoute sur <code>PORT=5000</code> (configurable). Rate limiting global : <strong>200 req / 15 min</strong>. CORS autorisé sur <code>wekili.vercel.app</code>, <code>localhost:5173</code> et <code>localhost:3000</code>. Les routes protégées vérifient le header <code>Authorization: Bearer &lt;JWT&gt;</code> via le middleware <code>auth.js</code>.</p>
+
+  <h3>5.1 /api/auth — Authentification</h3>
+  <div class="alert-blue alert">Rate limit spécifique : 10 tentatives / 15 min (<code>skipSuccessfulRequests: true</code>)</div>
+  <table>
+    <tr><th>Méthode</th><th>Endpoint</th><th>Description</th></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/register</code></td><td>Inscription email + envoi email de vérification (Resend)</td></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/login</code></td><td>Connexion email / mot de passe → JWT</td></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/google</code></td><td>Connexion Google OAuth2 (token Google → JWT)</td></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/facebook</code></td><td>Connexion Facebook OAuth</td></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/phone/send-otp</code></td><td>Envoi OTP SMS via Twilio</td></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/phone/verify</code></td><td>Vérification OTP → JWT</td></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/2fa-verify</code></td><td>Vérification code TOTP 2FA</td></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/verify-email</code></td><td>Confirmation du lien email</td></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/resend-verify</code></td><td>Renvoi de l'email de vérification</td></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/forgot-password</code></td><td>Envoi lien de réinitialisation (Resend)</td></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/reset-password</code></td><td>Réinitialisation du mot de passe</td></tr>
+  </table>
+
+  <h3>5.2 /api/user — Compte utilisateur</h3>
+  <table>
+    <tr><th>Méthode</th><th>Endpoint</th><th>Description</th></tr>
+    <tr><td><span class="route-method PATCH">PATCH</span></td><td><code>/</code></td><td>Mise à jour nom, prénom, pays, avatar</td></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/change-password</code></td><td>Changement de mot de passe (ancien requis)</td></tr>
+    <tr><td><span class="route-method DELETE">DELETE</span></td><td><code>/</code></td><td>Suppression du compte</td></tr>
+    <tr><td><span class="route-method GET">GET</span></td><td><code>/sessions</code></td><td>Historique des connexions (IP, device, date)</td></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/2fa/enable</code></td><td>Activation 2FA → génération secret TOTP</td></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/2fa/confirm</code></td><td>Confirmation 2FA avec premier code</td></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/2fa/disable</code></td><td>Désactivation 2FA</td></tr>
+  </table>
+
+  <h3>5.3 /api/documents — Gestion documentaire</h3>
+  <table>
+    <tr><th>Méthode</th><th>Endpoint</th><th>Description</th></tr>
+    <tr><td><span class="route-method GET">GET</span></td><td><code>/</code></td><td>Liste des documents de l'utilisateur</td></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/upload</code></td><td>Upload vers S3 (max 10 MB, PDF/JPG/PNG/DOC/DOCX)</td></tr>
+    <tr><td><span class="route-method DELETE">DELETE</span></td><td><code>/:id</code></td><td>Suppression S3 + DB</td></tr>
+    <tr><td><span class="route-method GET">GET</span></td><td><code>/logs</code></td><td>Journal d'activité documents</td></tr>
+    <tr><td><span class="route-method GET">GET</span></td><td><code>/pin/check</code></td><td>Vérification existence PIN</td></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/pin/create</code></td><td>Création PIN (haché bcrypt)</td></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/pin/verify</code></td><td>Vérification PIN pour accès documents</td></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/pin/reset/request</code></td><td>Demande réinitialisation PIN (email OTP)</td></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/pin/reset/confirm</code></td><td>Confirmation réinitialisation PIN</td></tr>
+  </table>
+
+  <h3>5.4 /api/analysis — Analyse IA</h3>
+  <table>
+    <tr><th>Méthode</th><th>Endpoint</th><th>Description</th></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/launch</code></td><td>Lance l'analyse IA du profil → score + recommandations</td></tr>
+    <tr><td><span class="route-method GET">GET</span></td><td><code>/latest</code></td><td>Dernière analyse de l'utilisateur</td></tr>
+    <tr><td><span class="route-method GET">GET</span></td><td><code>/all</code></td><td>Historique de toutes les analyses</td></tr>
+  </table>
+
+  <h3>5.5 Routes supplémentaires</h3>
+  <table>
+    <tr><th>Préfixe</th><th>Endpoints</th><th>Description</th></tr>
+    <tr><td><code>/api/bourses</code></td><td>GET /public · GET / · GET /:id</td><td>Catalogue bourses (public + authentifié)</td></tr>
+    <tr><td><code>/api/universities</code></td><td>GET / · GET /:id · POST / (candidature) · PATCH /:id</td><td>Universités + gestion candidatures</td></tr>
+    <tr><td><code>/api/logement</code></td><td>GET / · PUT / · POST /guide-ia</td><td>Préférences logement + guide IA</td></tr>
+    <tr><td><code>/api/lm</code></td><td>GET / · POST /generate · POST /correct · POST /save</td><td>Lettre de motivation IA</td></tr>
+    <tr><td><code>/api/cv</code></td><td>GET / · POST /correct · POST /save · POST /upload</td><td>CV — extraction PDF + correction IA</td></tr>
+    <tr><td><code>/api/profile</code></td><td>GET / · PUT /</td><td>Profil académique complet</td></tr>
+  </table>
+
+  <h3>5.6 /api/admin — Administration (role admin/superadmin)</h3>
+  <div class="alert">Middleware <code>authAdmin.js</code> : vérifie JWT + <code>role IN ('admin', 'superadmin')</code>. Retourne 403 sinon.</div>
+  <table>
+    <tr><th>Méthode</th><th>Endpoint</th><th>Description</th></tr>
+    <tr><td><span class="route-method GET">GET</span></td><td><code>/stats</code></td><td>Statistiques globales (utilisateurs, analyses, documents)</td></tr>
+    <tr><td><span class="route-method GET">GET</span></td><td><code>/users</code></td><td>Liste paginée des utilisateurs</td></tr>
+    <tr><td><span class="route-method GET">GET</span></td><td><code>/users/:id</code></td><td>Détail utilisateur (profil + analyses + documents)</td></tr>
+    <tr><td><span class="route-method PATCH">PATCH</span></td><td><code>/users/:id/role</code></td><td>Modification du rôle utilisateur</td></tr>
+    <tr><td><span class="route-method DELETE">DELETE</span></td><td><code>/users/:id</code></td><td>Suppression compte utilisateur</td></tr>
+    <tr><td><span class="route-method GET">GET</span></td><td><code>/bourses</code></td><td>Toutes les bourses (admin)</td></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/bourses</code></td><td>Création bourse</td></tr>
+    <tr><td><span class="route-method PATCH">PATCH</span></td><td><code>/bourses/:id</code></td><td>Modification bourse</td></tr>
+    <tr><td><span class="route-method DELETE">DELETE</span></td><td><code>/bourses/:id</code></td><td>Suppression bourse</td></tr>
+    <tr><td><span class="route-method GET">GET</span></td><td><code>/universities</code></td><td>Toutes les universités</td></tr>
+    <tr><td><span class="route-method POST">POST</span></td><td><code>/universities</code></td><td>Création université</td></tr>
+    <tr><td><span class="route-method PATCH">PATCH</span></td><td><code>/universities/:id</code></td><td>Modification université</td></tr>
+    <tr><td><span class="route-method DELETE">DELETE</span></td><td><code>/universities/:id</code></td><td>Suppression université</td></tr>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     6. FRONTEND — PAGES ET COMPOSANTS
+════════════════════════════════════════════════════════ -->
+<div class="section page-break">
+  <h2>6. Frontend — Pages et composants</h2>
+
+  <h3>6.1 Routage et protection</h3>
+  <p>Le routage est géré par <strong>React Router v7</strong>. Trois gardes de route sont implémentés :</p>
+  <table>
+    <tr><th>Composant</th><th>Comportement</th></tr>
+    <tr><td><code>ProtectedRoute</code></td><td>Redirige vers <code>/login</code> si aucun JWT en localStorage. Mémorise la destination pour y revenir après connexion.</td></tr>
+    <tr><td><code>PublicOnlyRoute</code></td><td>Redirige vers <code>/dashboard</code> si déjà connecté (évite l'accès à /login et /register).</td></tr>
+    <tr><td><code>ProtectedAdminRoute</code></td><td>Vérifie JWT + <code>role IN ['admin', 'superadmin']</code>. Redirige vers <code>/dashboard</code> sinon.</td></tr>
+  </table>
+
+  <h3>6.2 Pages publiques</h3>
+  <table>
+    <tr><th>Page</th><th>Route</th><th>Description</th></tr>
+    <tr><td><code>Home</code></td><td>/</td><td>Landing page : présentation, étapes de préparation, niveaux d'étude, bourses vedettes dynamiques, statistiques, témoignages.</td></tr>
+    <tr><td><code>Login</code></td><td>/login</td><td>Connexion email, Google, téléphone. Gestion 2FA. Lien mot de passe oublié.</td></tr>
+    <tr><td><code>Register</code></td><td>/register</td><td>Inscription multi-étapes avec présentation des fonctionnalités. Connexion Google disponible.</td></tr>
+    <tr><td><code>VerifyEmail</code></td><td>/verify-email</td><td>Confirmation du lien reçu par email.</td></tr>
+    <tr><td><code>ForgotPassword</code></td><td>/forgot-password</td><td>Envoi email de réinitialisation + formulaire nouveau mot de passe.</td></tr>
+    <tr><td><code>PrivacyPolicy</code></td><td>/confidentialite</td><td>Politique de confidentialité RGPD.</td></tr>
+    <tr><td><code>TermsOfService</code></td><td>/cgu</td><td>Conditions générales d'utilisation.</td></tr>
+    <tr><td><code>LegalNotice</code></td><td>/mentions-legales</td><td>Mentions légales.</td></tr>
+  </table>
+
+  <h3>6.3 Pages protégées (utilisateur)</h3>
+  <table>
+    <tr><th>Page</th><th>Route</th><th>Fonctionnalités clés</th></tr>
+    <tr><td><code>Dashboard</code></td><td>/dashboard</td><td>Vue synthèse : score IA, compteur bourses, profil %, documents. Bourses urgentes. Accès rapide.</td></tr>
+    <tr><td><code>Profile</code></td><td>/profile</td><td>Formulaire académique complet : nationalité, niveau, domaine, moyenne, langues (2), pays cibles, budget, motivation, expérience.</td></tr>
+    <tr><td><code>Documents</code></td><td>/documents</td><td>Upload de 6 types de documents, système PIN de sécurité, journal d'activité, visualisation S3.</td></tr>
+    <tr><td><code>Analysis</code></td><td>/analysis</td><td>Score IA, synthèse, forces/faiblesses, programmes recommandés. Génération + correction IA de LM. Analyse + correction CV adaptée au pays cible.</td></tr>
+    <tr><td><code>Bourses</code></td><td>/bourses</td><td>Catalogue filtrable (pays, niveau, domaine, financement). Score d'éligibilité par bourse. Détail modal avec critères et documents.</td></tr>
+    <tr><td><code>Universities</code></td><td>/universities</td><td>15 universités filtrables. Score d'admission, suivi de candidature (statut + numéro de vœu), deadlines.</td></tr>
+    <tr><td><code>Logement</code></td><td>/logement</td><td>Plateformes par pays, aides financières, estimation budget par ville, checklist en groupes, guide IA.</td></tr>
+    <tr><td><code>Settings</code></td><td>/settings</td><td>Modification compte, changement mot de passe, gestion 2FA, historique sessions, suppression compte.</td></tr>
+  </table>
+
+  <h3>6.4 Pages admin</h3>
+  <table>
+    <tr><th>Page</th><th>Route</th><th>Fonctionnalités</th></tr>
+    <tr><td><code>AdminOverview</code></td><td>/admin</td><td>Statistiques globales, graphiques activité, métriques utilisateurs</td></tr>
+    <tr><td><code>AdminUsers</code></td><td>/admin/users</td><td>Liste utilisateurs, recherche, détail (profil + analyses), modification rôle, suppression</td></tr>
+    <tr><td><code>AdminBourses</code></td><td>/admin/bourses</td><td>CRUD complet du catalogue de bourses</td></tr>
+    <tr><td><code>AdminUniversites</code></td><td>/admin/universities</td><td>CRUD complet du catalogue d'universités</td></tr>
+  </table>
+
+  <h3>6.5 Composants partagés</h3>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Navbar</div>
+      Barre de navigation adaptative (mobile/desktop). Liens contextuels selon l'état de connexion. Lien vers /admin si rôle admin.
+    </div>
+    <div class="card">
+      <div class="card-title">Toast</div>
+      Système de notifications toast (succès, erreur, info). Utilisé dans toutes les pages pour les retours actions API.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     7. FLUX D'AUTHENTIFICATION
+════════════════════════════════════════════════════════ -->
+<div class="section page-break">
+  <h2>7. Flux d'authentification</h2>
+
+  <h3>7.1 Inscription par email</h3>
+  <div class="diagram">
+    <svg viewBox="0 0 580 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px">
+      <defs><marker id="a2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#1a3a6b"/></marker></defs>
+      <!-- Steps -->
+      <rect x="10" y="70" width="90" height="50" rx="6" fill="#e8eef8"/><text x="55" y="93" text-anchor="middle" fill="#1a3a6b" font-size="8.5" font-weight="600" font-family="Inter,sans-serif">Formulaire</text><text x="55" y="108" text-anchor="middle" fill="#1a3a6b" font-size="8" font-family="Inter,sans-serif">inscription</text>
+      <line x1="100" y1="95" x2="125" y2="95" stroke="#1a3a6b" stroke-width="1.5" marker-end="url(#a2)"/>
+      <rect x="125" y="70" width="90" height="50" rx="6" fill="#e8eef8"/><text x="170" y="93" text-anchor="middle" fill="#1a3a6b" font-size="8.5" font-weight="600" font-family="Inter,sans-serif">Hash password</text><text x="170" y="108" text-anchor="middle" fill="#1a3a6b" font-size="8" font-family="Inter,sans-serif">bcrypt (10 rounds)</text>
+      <line x1="215" y1="95" x2="240" y2="95" stroke="#1a3a6b" stroke-width="1.5" marker-end="url(#a2)"/>
+      <rect x="240" y="70" width="90" height="50" rx="6" fill="#e8eef8"/><text x="285" y="93" text-anchor="middle" fill="#1a3a6b" font-size="8.5" font-weight="600" font-family="Inter,sans-serif">INSERT users</text><text x="285" y="108" text-anchor="middle" fill="#1a3a6b" font-size="8" font-family="Inter,sans-serif">email_verified=false</text>
+      <line x1="330" y1="95" x2="355" y2="95" stroke="#1a3a6b" stroke-width="1.5" marker-end="url(#a2)"/>
+      <rect x="355" y="70" width="90" height="50" rx="6" fill="#fff3e0"/><text x="400" y="93" text-anchor="middle" fill="#8a4f00" font-size="8.5" font-weight="600" font-family="Inter,sans-serif">Resend email</text><text x="400" y="108" text-anchor="middle" fill="#8a4f00" font-size="8" font-family="Inter,sans-serif">lien vérification</text>
+      <line x1="445" y1="95" x2="470" y2="95" stroke="#1a3a6b" stroke-width="1.5" marker-end="url(#a2)"/>
+      <rect x="470" y="70" width="90" height="50" rx="6" fill="#e6f5ec"/><text x="515" y="93" text-anchor="middle" fill="#1a5c35" font-size="8.5" font-weight="600" font-family="Inter,sans-serif">email_verified</text><text x="515" y="108" text-anchor="middle" fill="#1a5c35" font-size="8" font-family="Inter,sans-serif">= true → JWT</text>
+    </svg>
+  </div>
+
+  <h3>7.2 Connexion Google OAuth2</h3>
+  <p>Le frontend reçoit le <code>credential</code> Google (ID Token) via Google Identity Services. Il l'envoie à <code>POST /api/auth/google</code>. Le backend vérifie le token avec <code>google-auth-library</code> (<code>OAuth2Client.verifyIdToken</code>), extrait l'email, prénom, nom, avatar. Si l'utilisateur n'existe pas, il est créé avec <code>auth_method='google'</code> et <code>email_verified=true</code>. Un JWT Wekili est retourné.</p>
+
+  <h3>7.3 Connexion par téléphone (Twilio OTP)</h3>
+  <ol>
+    <li><code>POST /phone/send-otp</code> : génération d'un code OTP, envoi SMS via Twilio Verify</li>
+    <li><code>POST /phone/verify</code> : vérification du code → création/récupération compte → JWT</li>
+  </ol>
+
+  <h3>7.4 Double authentification (2FA TOTP)</h3>
+  <p>Lors de l'activation via <code>POST /user/2fa/enable</code>, le backend génère un secret TOTP et retourne un QR code compatible Google Authenticator. L'utilisateur confirme avec un premier code (<code>/2fa/confirm</code>). Lors des connexions suivantes, si <code>two_fa_enabled=true</code>, le login retourne un token temporaire et redirige vers la vérification <code>POST /auth/2fa-verify</code>.</p>
+
+  <h3>7.5 Payload JWT</h3>
+  <pre>{
+  "id": "uuid-utilisateur",
+  "email": "user@example.com",
+  "role": "user" | "admin" | "superadmin"
+}</pre>
+  <p>Le token est stocké dans <code>localStorage</code> et transmis via le header <code>Authorization: Bearer &lt;token&gt;</code>. Le middleware <code>auth.js</code> décode le token et injecte <code>req.user</code>.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     8. GESTION DES DOCUMENTS
+════════════════════════════════════════════════════════ -->
+<div class="section page-break">
+  <h2>8. Gestion des documents</h2>
+
+  <h3>8.1 Pipeline d'upload</h3>
+  <p>Le fichier transite en mémoire via <code>multer.memoryStorage()</code> (max 10 MB). Le type MIME et l'extension sont validés côté serveur avant tout traitement. Le fichier est ensuite chargé sur <strong>AWS S3</strong> via le SDK <code>@aws-sdk/client-s3</code>. L'URL S3 (clé) est sauvegardée en base. Une entrée dans <code>document_logs</code> est créée pour chaque action.</p>
+
+  <div class="card">
+    <div class="card-title">Formats acceptés</div>
+    PDF · JPG · JPEG · PNG · DOC · DOCX (validation MIME + extension)
+  </div>
+
+  <div class="card">
+    <div class="card-title">Types de documents acceptés</div>
+    <code>releve_notes</code> · <code>diplome</code> · <code>passeport</code> · <code>lettre_motivation</code> · <code>lettre_recommandation</code> · <code>cv</code> · <code>justificatif_domicile</code> · <code>langue</code> · <code>autre</code>
+  </div>
+
+  <h3>8.2 Système de PIN de sécurité</h3>
+  <p>Les documents peuvent être protégés par un PIN à 4 chiffres. Le PIN est haché avec <code>bcryptjs</code> et stocké dans la colonne <code>doc_pin_hash</code> de la table <code>profiles</code>. Pour accéder aux documents :</p>
+  <ol>
+    <li><code>GET /documents/pin/check</code> — vérifie si un PIN est défini</li>
+    <li><code>POST /documents/pin/verify</code> — soumet le PIN pour déverrouillage</li>
+    <li>En cas d'oubli : <code>POST /documents/pin/reset/request</code> envoie un OTP par email (Resend), puis <code>POST /documents/pin/reset/confirm</code> crée un nouveau PIN</li>
+  </ol>
+
+  <h3>8.3 Journal d'activité</h3>
+  <p>La table <code>document_logs</code> enregistre toutes les actions : upload, suppression, accès, échec PIN. Accessible via <code>GET /documents/logs</code>, elle est indexée sur <code>(user_id, created_at DESC)</code> pour des lectures rapides.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     9. MOTEUR D'ANALYSE IA
+════════════════════════════════════════════════════════ -->
+<div class="section page-break">
+  <h2>9. Moteur d'analyse IA</h2>
+
+  <h3>9.1 Architecture de l'analyse</h3>
+  <p>L'analyse IA est le cœur différenciateur de Wekili. Lorsque l'utilisateur déclenche une analyse (<code>POST /api/analysis/launch</code>), le backend :</p>
+  <ol>
+    <li>Récupère le profil complet de l'utilisateur (profil académique + documents uploadés)</li>
+    <li>Récupère les données enrichies sur les pays cibles (bourses disponibles, taux d'admission, conditions de langue)</li>
+    <li>Construit un prompt structuré intégrant toutes ces données avec des règles anti-hallucination explicites</li>
+    <li>Appelle l'API Anthropic (<code>@anthropic-ai/sdk</code>) — modèle Claude</li>
+    <li>Parse la réponse JSON et sauvegarde en base (table <code>analyses</code>)</li>
+    <li>Calcule et sauvegarde les scores d'éligibilité dans la table <code>matches</code></li>
+  </ol>
+
+  <h3>9.2 Structure du résultat d'analyse</h3>
+  <pre>{
+  "score_global": 72,           // Score sur 100
+  "synthese": "...",            // Résumé du dossier
+  "points_forts": ["...", ...], // Forces identifiées
+  "axes_amelioration": [...],   // Points à améliorer
+  "forces": [...],
+  "faiblesses": [...],
+  "recommandations": [...],
+  "programmes_recommandes": [   // Programmes adaptés au profil
+    { "nom": "...", "universite": "...", "pays": "...", "raison": "..." }
+  ],
+  "estimation_chances": {       // Par pays cible
+    "France": { "niveau": "Élevé", "pourcentage": 75, "commentaire": "..." }
+  }
+}</pre>
+
+  <h3>9.3 Lettre de motivation IA</h3>
+  <p>Deux modes disponibles via <code>/api/lm</code> :</p>
+  <ul>
+    <li><strong>Génération</strong> (<code>POST /lm/generate</code>) : le modèle rédige une LM complète adaptée à l'université cible à partir du profil</li>
+    <li><strong>Correction</strong> (<code>POST /lm/correct</code>) : l'utilisateur soumet sa propre LM, le modèle l'analyse (score, points forts, améliorations) et propose une version corrigée</li>
+  </ul>
+  <p>Chaque version est stockée dans <code>lm_versions</code> avec versioning automatique.</p>
+
+  <h3>9.4 Analyse et correction de CV</h3>
+  <p>Le CV peut être soumis en texte libre ou extrait d'un PDF via <code>pdf-parse v2</code> (classe <code>PDFParse</code>, API <code>new PDFParse({ data: buffer })</code>). Le modèle IA adapte l'analyse et les corrections aux normes du pays cible (ex : format sans photo pour le Royaume-Uni, format avec photo pour la France). Les résultats incluent un score, les points forts, les corrections prioritaires, les sections manquantes et la norme du pays.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     10. DIAGRAMMES UML
+════════════════════════════════════════════════════════ -->
+<div class="section page-break">
+  <h2>10. Diagrammes UML</h2>
+
+  <h3>10.1 Diagramme de cas d'utilisation</h3>
+  <div class="diagram">
+    <svg viewBox="0 0 640 480" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:620px">
+      <!-- Acteur Étudiant -->
+      <circle cx="50" cy="100" r="14" stroke="#1a3a6b" stroke-width="2" fill="none"/>
+      <line x1="50" y1="114" x2="50" y2="150" stroke="#1a3a6b" stroke-width="2"/>
+      <line x1="30" y1="130" x2="70" y2="130" stroke="#1a3a6b" stroke-width="2"/>
+      <line x1="50" y1="150" x2="30" y2="175" stroke="#1a3a6b" stroke-width="2"/>
+      <line x1="50" y1="150" x2="70" y2="175" stroke="#1a3a6b" stroke-width="2"/>
+      <text x="50" y="195" text-anchor="middle" fill="#1a3a6b" font-size="9" font-weight="600" font-family="Inter,sans-serif">Étudiant</text>
+      <!-- Acteur Admin -->
+      <circle cx="590" cy="100" r="14" stroke="#1a3a6b" stroke-width="2" fill="none"/>
+      <line x1="590" y1="114" x2="590" y2="150" stroke="#1a3a6b" stroke-width="2"/>
+      <line x1="570" y1="130" x2="610" y2="130" stroke="#1a3a6b" stroke-width="2"/>
+      <line x1="590" y1="150" x2="570" y2="175" stroke="#1a3a6b" stroke-width="2"/>
+      <line x1="590" y1="150" x2="610" y2="175" stroke="#1a3a6b" stroke-width="2"/>
+      <text x="590" y="195" text-anchor="middle" fill="#1a3a6b" font-size="9" font-weight="600" font-family="Inter,sans-serif">Admin</text>
+      <!-- Système border -->
+      <rect x="100" y="20" width="440" height="440" rx="8" fill="none" stroke="#1a3a6b" stroke-width="1.5" stroke-dasharray="6"/>
+      <text x="320" y="40" text-anchor="middle" fill="#1a3a6b" font-size="10" font-weight="700" font-family="Inter,sans-serif">Système Wekili</text>
+      <!-- Use cases - colonne gauche -->
+      <ellipse cx="210" cy="90" rx="80" ry="18" fill="#e8eef8" stroke="#1a3a6b" stroke-width="1"/>
+      <text x="210" y="93" text-anchor="middle" fill="#1a3a6b" font-size="8.5" font-family="Inter,sans-serif">S'inscrire / Se connecter</text>
+      <ellipse cx="210" cy="140" rx="80" ry="18" fill="#e8eef8" stroke="#1a3a6b" stroke-width="1"/>
+      <text x="210" y="143" text-anchor="middle" fill="#1a3a6b" font-size="8.5" font-family="Inter,sans-serif">Compléter son profil</text>
+      <ellipse cx="210" cy="190" rx="80" ry="18" fill="#e8eef8" stroke="#1a3a6b" stroke-width="1"/>
+      <text x="210" y="193" text-anchor="middle" fill="#1a3a6b" font-size="8.5" font-family="Inter,sans-serif">Uploader des documents</text>
+      <ellipse cx="210" cy="240" rx="80" ry="18" fill="#e8eef8" stroke="#1a3a6b" stroke-width="1"/>
+      <text x="210" y="243" text-anchor="middle" fill="#1a3a6b" font-size="8.5" font-family="Inter,sans-serif">Lancer une analyse IA</text>
+      <ellipse cx="210" cy="290" rx="80" ry="18" fill="#e8eef8" stroke="#1a3a6b" stroke-width="1"/>
+      <text x="210" y="293" text-anchor="middle" fill="#1a3a6b" font-size="8.5" font-family="Inter,sans-serif">Consulter les bourses</text>
+      <ellipse cx="210" cy="340" rx="80" ry="18" fill="#e8eef8" stroke="#1a3a6b" stroke-width="1"/>
+      <text x="210" y="343" text-anchor="middle" fill="#1a3a6b" font-size="8.5" font-family="Inter,sans-serif">Gérer candidatures</text>
+      <ellipse cx="210" cy="390" rx="80" ry="18" fill="#e8eef8" stroke="#1a3a6b" stroke-width="1"/>
+      <text x="210" y="393" text-anchor="middle" fill="#1a3a6b" font-size="8.5" font-family="Inter,sans-serif">Générer LM / corriger CV</text>
+      <ellipse cx="210" cy="440" rx="80" ry="18" fill="#e8eef8" stroke="#1a3a6b" stroke-width="1"/>
+      <text x="210" y="443" text-anchor="middle" fill="#1a3a6b" font-size="8.5" font-family="Inter,sans-serif">Rechercher un logement</text>
+      <!-- Use cases - colonne droite -->
+      <ellipse cx="420" cy="90" rx="80" ry="18" fill="#f0e8f8" stroke="#5a1a8a" stroke-width="1"/>
+      <text x="420" y="93" text-anchor="middle" fill="#5a1a8a" font-size="8.5" font-family="Inter,sans-serif">Gérer les utilisateurs</text>
+      <ellipse cx="420" cy="140" rx="80" ry="18" fill="#f0e8f8" stroke="#5a1a8a" stroke-width="1"/>
+      <text x="420" y="143" text-anchor="middle" fill="#5a1a8a" font-size="8.5" font-family="Inter,sans-serif">CRUD bourses</text>
+      <ellipse cx="420" cy="190" rx="80" ry="18" fill="#f0e8f8" stroke="#5a1a8a" stroke-width="1"/>
+      <text x="420" y="193" text-anchor="middle" fill="#5a1a8a" font-size="8.5" font-family="Inter,sans-serif">CRUD universités</text>
+      <ellipse cx="420" cy="240" rx="80" ry="18" fill="#f0e8f8" stroke="#5a1a8a" stroke-width="1"/>
+      <text x="420" y="243" text-anchor="middle" fill="#5a1a8a" font-size="8.5" font-family="Inter,sans-serif">Voir statistiques</text>
+      <ellipse cx="420" cy="290" rx="80" ry="18" fill="#f0e8f8" stroke="#5a1a8a" stroke-width="1"/>
+      <text x="420" y="293" text-anchor="middle" fill="#5a1a8a" font-size="8.5" font-family="Inter,sans-serif">Modifier rôles</text>
+      <!-- Lines étudiant -->
+      <line x1="70" y1="100" x2="130" y2="90" stroke="#1a3a6b" stroke-width="1"/>
+      <line x1="70" y1="110" x2="130" y2="140" stroke="#1a3a6b" stroke-width="1"/>
+      <line x1="70" y1="120" x2="130" y2="190" stroke="#1a3a6b" stroke-width="1"/>
+      <line x1="70" y1="130" x2="130" y2="240" stroke="#1a3a6b" stroke-width="1"/>
+      <line x1="70" y1="140" x2="130" y2="290" stroke="#1a3a6b" stroke-width="1"/>
+      <line x1="70" y1="150" x2="130" y2="340" stroke="#1a3a6b" stroke-width="1"/>
+      <line x1="70" y1="155" x2="130" y2="390" stroke="#1a3a6b" stroke-width="1"/>
+      <line x1="70" y1="160" x2="130" y2="440" stroke="#1a3a6b" stroke-width="1"/>
+      <!-- Lines admin -->
+      <line x1="570" y1="100" x2="500" y2="90" stroke="#5a1a8a" stroke-width="1"/>
+      <line x1="570" y1="110" x2="500" y2="140" stroke="#5a1a8a" stroke-width="1"/>
+      <line x1="570" y1="120" x2="500" y2="190" stroke="#5a1a8a" stroke-width="1"/>
+      <line x1="570" y1="130" x2="500" y2="240" stroke="#5a1a8a" stroke-width="1"/>
+      <line x1="570" y1="140" x2="500" y2="290" stroke="#5a1a8a" stroke-width="1"/>
+    </svg>
+  </div>
+
+  <h3>10.2 Diagramme de séquence — Analyse IA</h3>
+  <div class="diagram">
+    <svg viewBox="0 0 580 340" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px">
+      <defs><marker id="seq" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#1a3a6b"/></marker><marker id="seq2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#999"/></marker></defs>
+      <!-- Acteurs -->
+      <rect x="10" y="10" width="80" height="28" rx="4" fill="#1a3a6b"/><text x="50" y="28" text-anchor="middle" fill="white" font-size="8.5" font-family="Inter,sans-serif">Frontend</text>
+      <rect x="145" y="10" width="80" height="28" rx="4" fill="#1a3a6b"/><text x="185" y="28" text-anchor="middle" fill="white" font-size="8.5" font-family="Inter,sans-serif">Backend</text>
+      <rect x="280" y="10" width="80" height="28" rx="4" fill="#2456a0"/><text x="320" y="28" text-anchor="middle" fill="white" font-size="8.5" font-family="Inter,sans-serif">PostgreSQL</text>
+      <rect x="415" y="10" width="80" height="28" rx="4" fill="#5a1a8a"/><text x="455" y="28" text-anchor="middle" fill="white" font-size="8.5" font-family="Inter,sans-serif">Anthropic</text>
+      <!-- Lifelines -->
+      <line x1="50" y1="38" x2="50" y2="330" stroke="#ccc" stroke-width="1" stroke-dasharray="4"/>
+      <line x1="185" y1="38" x2="185" y2="330" stroke="#ccc" stroke-width="1" stroke-dasharray="4"/>
+      <line x1="320" y1="38" x2="320" y2="330" stroke="#ccc" stroke-width="1" stroke-dasharray="4"/>
+      <line x1="455" y1="38" x2="455" y2="330" stroke="#ccc" stroke-width="1" stroke-dasharray="4"/>
+      <!-- Messages -->
+      <line x1="50" y1="70" x2="183" y2="70" stroke="#1a3a6b" stroke-width="1.5" marker-end="url(#seq)"/><text x="110" y="65" text-anchor="middle" fill="#333" font-size="8" font-family="Inter,sans-serif">POST /analysis/launch</text>
+      <line x1="185" y1="95" x2="318" y2="95" stroke="#1a3a6b" stroke-width="1.5" marker-end="url(#seq)"/><text x="252" y="90" text-anchor="middle" fill="#333" font-size="8" font-family="Inter,sans-serif">SELECT profil + documents</text>
+      <line x1="318" y1="118" x2="187" y2="118" stroke="#999" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#seq2)"/><text x="252" y="113" text-anchor="middle" fill="#666" font-size="8" font-family="Inter,sans-serif">données profil</text>
+      <line x1="185" y1="143" x2="318" y2="143" stroke="#1a3a6b" stroke-width="1.5" marker-end="url(#seq)"/><text x="252" y="138" text-anchor="middle" fill="#333" font-size="8" font-family="Inter,sans-serif">SELECT bourses pays cibles</text>
+      <line x1="318" y1="166" x2="187" y2="166" stroke="#999" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#seq2)"/><text x="252" y="161" text-anchor="middle" fill="#666" font-size="8" font-family="Inter,sans-serif">données bourses</text>
+      <line x1="185" y1="191" x2="453" y2="191" stroke="#1a3a6b" stroke-width="1.5" marker-end="url(#seq)"/><text x="320" y="186" text-anchor="middle" fill="#333" font-size="8" font-family="Inter,sans-serif">messages.create (prompt enrichi)</text>
+      <line x1="453" y1="225" x2="187" y2="225" stroke="#999" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#seq2)"/><text x="320" y="220" text-anchor="middle" fill="#666" font-size="8" font-family="Inter,sans-serif">réponse JSON structurée</text>
+      <line x1="185" y1="250" x2="318" y2="250" stroke="#1a3a6b" stroke-width="1.5" marker-end="url(#seq)"/><text x="252" y="245" text-anchor="middle" fill="#333" font-size="8" font-family="Inter,sans-serif">INSERT analyses + UPDATE matches</text>
+      <line x1="318" y1="273" x2="187" y2="273" stroke="#999" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#seq2)"/><text x="252" y="268" text-anchor="middle" fill="#666" font-size="8" font-family="Inter,sans-serif">OK</text>
+      <line x1="183" y1="298" x2="52" y2="298" stroke="#999" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#seq2)"/><text x="117" y="293" text-anchor="middle" fill="#666" font-size="8" font-family="Inter,sans-serif">{ score, synthese, programmes... }</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     11. SÉCURITÉ
+════════════════════════════════════════════════════════ -->
+<div class="section page-break">
+  <h2>11. Sécurité</h2>
+
+  <div class="grid2">
+    <div>
+      <h3>Mesures implémentées</h3>
+      <table>
+        <tr><th>Mesure</th><th>Implémentation</th></tr>
+        <tr><td>Headers HTTP</td><td><code>helmet</code> — Content-Security-Policy, X-Frame-Options, HSTS, etc.</td></tr>
+        <tr><td>CORS</td><td>Liste blanche stricte : vercel.app + localhost:5173/3000 uniquement</td></tr>
+        <tr><td>Rate limiting</td><td>200 req/15min global · 10 req/15min sur /auth</td></tr>
+        <tr><td>Mots de passe</td><td>bcryptjs, 10 rounds de salage</td></tr>
+        <tr><td>Tokens JWT</td><td>Signature HMAC-SHA256, expiration configurable</td></tr>
+        <tr><td>PIN documents</td><td>Hash bcrypt stocké en base, jamais en clair</td></tr>
+        <tr><td>Upload</td><td>Validation MIME + extension côté serveur (double vérification)</td></tr>
+        <tr><td>Rôles (RBAC)</td><td>Middleware authAdmin vérifie role en base à chaque requête</td></tr>
+        <tr><td>2FA</td><td>TOTP compatible Google Authenticator</td></tr>
+        <tr><td>OAuth</td><td>Tokens Google vérifiés côté serveur (google-auth-library)</td></tr>
+        <tr><td>Trust proxy</td><td><code>app.set('trust proxy', 1)</code> pour Render/Railway</td></tr>
+        <tr><td>Body limit</td><td><code>express.json({ limit: '2mb' })</code></td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>Vecteurs d'attaque identifiés</h3>
+      <div class="alert">
+        <strong>Injection SQL</strong> — Le driver <code>pg</code> utilise des requêtes paramétrées ($1, $2…) sur toutes les routes contrôleurs. Risque faible si les conventions sont respectées.
+      </div>
+      <div class="alert">
+        <strong>XSS</strong> — React échappe nativement le JSX. Les données affichées via <code>{variable}</code> sont protégées. Aucun <code>dangerouslySetInnerHTML</code> détecté.
+      </div>
+      <div class="alert">
+        <strong>CSRF</strong> — Pas de cookies de session, auth exclusivement par JWT Bearer token. Immunisé CSRF par design.
+      </div>
+      <div class="alert">
+        <strong>Exposition S3</strong> — Les URLs S3 ne sont exposées qu'aux utilisateurs authentifiés, via les endpoints API. Les buckets ne doivent pas être publics.
+      </div>
+      <div class="alert">
+        <strong>Secrets en variables d'environnement</strong> — AWS_ACCESS_KEY, ANTHROPIC_API_KEY, RESEND_API_KEY, TWILIO_* stockés en variables d'environnement. Ne jamais committer dans git.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     12. FORCES ET FAIBLESSES
+════════════════════════════════════════════════════════ -->
+<div class="section page-break">
+  <h2>12. Forces et faiblesses</h2>
+  <div class="grid2">
+    <div>
+      <h3 style="color:#1a5c35">Forces</h3>
+      <ul>
+        <li><strong>Architecture claire</strong> — Séparation frontend/backend, routes modulaires, contrôleurs isolés</li>
+        <li><strong>Migrations idempotentes</strong> — <code>setup_all.js</code> sécurise tous les déploiements avec <code>IF NOT EXISTS</code></li>
+        <li><strong>Multi-auth</strong> — 4 méthodes de connexion (email, Google, téléphone, 2FA) offrent une flexibilité maximale</li>
+        <li><strong>Sécurité documentaire</strong> — PIN bcrypt + OTP email + journal d'activité = triple protection</li>
+        <li><strong>IA contextuelle</strong> — Prompts enrichis par pays avec données bourses réelles et règles anti-hallucination</li>
+        <li><strong>Données structurées</strong> — JSONB PostgreSQL pour critères, avantages, corrections IA → requêtes riches</li>
+        <li><strong>Catalogue complet</strong> — 9 bourses + 15 universités pré-chargées avec critères détaillés</li>
+        <li><strong>UX soignée</strong> — Icônes SVG cohérentes, Tailwind, responsive, animations fluides</li>
+        <li><strong>Versioning LM/CV</strong> — Historique complet des versions avec scores IA</li>
+        <li><strong>RBAC</strong> — Système de rôles user/admin/superadmin complet</li>
+      </ul>
+    </div>
+    <div>
+      <h3 style="color:#8a1515">Faiblesses</h3>
+      <ul>
+        <li><strong>Absence de tests</strong> — Aucun test unitaire ni d'intégration. Toute régression est détectée manuellement</li>
+        <li><strong>Pas de refresh token</strong> — JWT sans rotation ; expiration longue = risque de session zombie</li>
+        <li><strong>setup_all.js monolithique</strong> — Toutes les migrations dans un seul fichier (640 lignes). Difficile à maintenir à grande échelle</li>
+        <li><strong>Erreurs générique</strong> — Messages d'erreur HTTP parfois peu informatifs pour l'UX utilisateur</li>
+        <li><strong>S3 sans CDN</strong> — Documents servis directement depuis S3 sans CloudFront → latence variable</li>
+        <li><strong>Pas de pagination côté DB</strong> — Les listes (bourses, universités) chargent tout en mémoire</li>
+        <li><strong>Pas de cache</strong> — Chaque appel analyse, bourses, universités = requête DB fraîche</li>
+        <li><strong>Twilio OTP non stocké</strong> — Dépendance externe totale pour la vérification téléphonique</li>
+        <li><strong>Suppression compte</strong> — La suppression en cascade DB ne supprime pas les fichiers S3</li>
+        <li><strong>Mots de passe oubliés</strong> — Pas d'indication si l'email est inconnu (réponse ambiguë côté UX)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     13. RECOMMANDATIONS TECHNIQUES
+════════════════════════════════════════════════════════ -->
+<div class="section page-break">
+  <h2>13. Recommandations techniques</h2>
+
+  <h3>Priorité haute</h3>
+  <table>
+    <tr><th>#</th><th>Recommandation</th><th>Impact</th></tr>
+    <tr><td>1</td><td><strong>Implémenter des tests automatisés</strong> — Vitest + React Testing Library pour le frontend, Jest + Supertest pour l'API. Viser 70% de couverture sur les contrôleurs critiques (auth, documents, analysis).</td><td>Qualité · Déploiement continu</td></tr>
+    <tr><td>2</td><td><strong>Ajouter un refresh token</strong> — JWT access token (15 min) + refresh token httpOnly cookie (7 jours). Réduire la durée du JWT et ajouter une table <code>refresh_tokens</code>.</td><td>Sécurité</td></tr>
+    <tr><td>3</td><td><strong>Supprimer les fichiers S3 à la suppression du compte</strong> — Lister et supprimer tous les objets S3 préfixés par <code>userId/</code> avant la suppression DB en cascade.</td><td>Conformité RGPD · Coûts S3</td></tr>
+    <tr><td>4</td><td><strong>Pagination côté base de données</strong> — Ajouter <code>LIMIT / OFFSET</code> sur toutes les listes (bourses, universités, users admin) avec paramètres de page dans les endpoints GET.</td><td>Performance · Scalabilité</td></tr>
+    <tr><td>5</td><td><strong>Migrer setup_all.js vers un système de migrations versionné</strong> — Adopter <code>node-pg-migrate</code> ou <code>Flyway</code> pour gérer les migrations par numéro de version.</td><td>Maintenabilité</td></tr>
+  </table>
+
+  <h3>Priorité moyenne</h3>
+  <table>
+    <tr><th>#</th><th>Recommandation</th><th>Impact</th></tr>
+    <tr><td>6</td><td><strong>Ajouter un CDN S3 (CloudFront)</strong> — Signer les URLs de documents avec expiration (pre-signed URLs) et servir via CloudFront pour la latence.</td><td>Performance · Sécurité</td></tr>
+    <tr><td>7</td><td><strong>Cache Redis pour les données statiques</strong> — Mettre en cache le catalogue bourses/universités (TTL 1h) pour éviter les requêtes DB répétées.</td><td>Performance</td></tr>
+    <tr><td>8</td><td><strong>Logging structuré</strong> — Remplacer les <code>console.log</code> par Winston ou Pino avec niveaux (info/warn/error) et export vers un service (Datadog, Logtail).</td><td>Observabilité</td></tr>
+    <tr><td>9</td><td><strong>Variables d'environnement validées au démarrage</strong> — Utiliser <code>zod</code> ou <code>envalid</code> pour valider toutes les variables d'environnement requises et stopper le serveur si une manque.</td><td>Fiabilité</td></tr>
+    <tr><td>10</td><td><strong>Rate limiting par utilisateur</strong> — Ajouter un rate limit sur <code>/api/analysis/launch</code> par userId (ex : 5 analyses/heure) pour contrôler les coûts API Claude.</td><td>Coûts · Abus</td></tr>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     14. INSTALLATION ET DÉPLOIEMENT
+════════════════════════════════════════════════════════ -->
+<div class="section page-break">
+  <h2>14. Installation et déploiement</h2>
+
+  <h3>14.1 Prérequis</h3>
+  <ul>
+    <li>Node.js ≥ 18.0.0</li>
+    <li>PostgreSQL 14+ (local ou Neon/Supabase)</li>
+    <li>Compte AWS S3 (bucket + IAM avec droits S3:GetObject, S3:PutObject, S3:DeleteObject)</li>
+    <li>Clé API Anthropic</li>
+    <li>Compte Resend (clé API + domaine vérifié)</li>
+    <li>Compte Twilio (Account SID + Auth Token + Verify Service SID)</li>
+    <li>Application Google OAuth2 (Client ID)</li>
+  </ul>
+
+  <h3>14.2 Installation locale</h3>
+  <pre># Cloner le dépôt
+git clone https://github.com/princeahoton/wekili.git
+cd wekili
+
+# Backend
+cd backend
+cp .env.example .env       # remplir les variables
+npm install
+npm run dev                # nodemon server.js → port 5000
+
+# Frontend (nouveau terminal)
+cd ../frontend
+npm install
+npm run start              # vite → http://localhost:5173</pre>
+
+  <h3>14.3 Variables d'environnement backend (.env)</h3>
+  <pre>DATABASE_URL=postgresql://user:pass@host:5432/wekili
+JWT_SECRET=votre-secret-jwt-long-et-aleatoire
+
+# AWS S3
+AWS_ACCESS_KEY_ID=AKIAxxxxxxxxxxx
+AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxx
+AWS_REGION=eu-west-3
+S3_BUCKET_NAME=wekili-documents
+
+# Anthropic
+ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxx
+
+# Resend (email)
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxx
+RESEND_FROM=noreply@votredomaine.com
+
+# Twilio (SMS OTP)
+TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxx
+TWILIO_VERIFY_SERVICE_SID=VAxxxxxxxxxxxxxxxx
+
+# Google OAuth
+GOOGLE_CLIENT_ID=xxxxxxxx.apps.googleusercontent.com
+
+PORT=5000</pre>
+
+  <h3>14.4 Déploiement production</h3>
+
+  <h4>Backend — Render</h4>
+  <ol>
+    <li>Créer un Web Service sur Render, connecter le dépôt GitHub</li>
+    <li>Build Command : <code>npm install</code></li>
+    <li>Start Command : <code>node server.js</code></li>
+    <li>Ajouter toutes les variables d'environnement dans l'interface Render</li>
+    <li>Les migrations s'exécutent automatiquement au premier démarrage via <code>runAll()</code></li>
+  </ol>
+
+  <h4>Frontend — Vercel</h4>
+  <ol>
+    <li>Importer le projet depuis GitHub dans Vercel</li>
+    <li>Définir le Root Directory sur <code>frontend/</code></li>
+    <li>Build Command : <code>npm run build</code> · Output : <code>dist/</code></li>
+    <li>Ajouter la variable d'environnement <code>VITE_API_URL=https://votre-backend.onrender.com</code></li>
+  </ol>
+
+  <h4>Premier administrateur</h4>
+  <pre>-- Après inscription, promouvoir le compte admin via SQL :
+UPDATE users SET role = 'admin'
+WHERE email = 'votre-email-admin@example.com';</pre>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     15. GUIDE DE MAINTENANCE
+════════════════════════════════════════════════════════ -->
+<div class="section page-break">
+  <h2>15. Guide de maintenance</h2>
+
+  <h3>15.1 Ajout d'une bourse</h3>
+  <p>Via l'interface admin (<code>/admin/bourses</code>) ou directement en base :</p>
+  <pre>INSERT INTO scholarships (nom, organisme, pays, code_pays, niveau, montant,
+  description, lien, deadline, langue_requise, niveau_langue_requis, type_financement)
+VALUES ('Nom bourse', 'Organisme', 'France', 'fr', 'Master', '1 000 €/mois',
+  'Description', 'https://lien.com', '2027-01-31', 'Français', 'B2', 'Bourse complète');</pre>
+
+  <h3>15.2 Ajout d'une université</h3>
+  <p>Via l'interface admin (<code>/admin/universities</code>). Les colonnes essentielles sont : <code>nom</code>, <code>pays</code>, <code>code_pays</code>, <code>ville</code>, <code>type</code>, <code>domaines</code> (TEXT[]), <code>niveaux</code> (TEXT[]), <code>taux_admission</code>, <code>classement_mondial</code>, <code>date_ouverture</code>, <code>date_cloture</code>.</p>
+
+  <h3>15.3 Mise à jour du modèle IA</h3>
+  <p>Le modèle Claude utilisé est configuré dans <code>backend/controllers/analysisController.js</code>. Pour passer à une version plus récente, modifier le paramètre <code>model</code> dans l'appel <code>anthropic.messages.create()</code>. Tester les prompts en environnement de staging avant de passer en production.</p>
+
+  <h3>15.4 Monitoring des coûts</h3>
+  <table>
+    <tr><th>Service</th><th>Point de contrôle</th><th>Fréquence</th></tr>
+    <tr><td>Anthropic</td><td>Console Anthropic → Usage dashboard</td><td>Hebdomadaire</td></tr>
+    <tr><td>AWS S3</td><td>AWS Cost Explorer → S3</td><td>Mensuelle</td></tr>
+    <tr><td>Resend</td><td>Dashboard Resend → Emails envoyés</td><td>Mensuelle</td></tr>
+    <tr><td>Twilio</td><td>Console Twilio → Usage</td><td>Mensuelle</td></tr>
+    <tr><td>Render</td><td>Dashboard Render → Metrics</td><td>Hebdomadaire</td></tr>
+  </table>
+
+  <h3>15.5 Sauvegardes</h3>
+  <ul>
+    <li><strong>Base de données</strong> : activer les sauvegardes automatiques sur Neon/Supabase (rétention 7 jours recommandée)</li>
+    <li><strong>S3</strong> : activer la versioning S3 sur le bucket pour récupérer les fichiers supprimés accidentellement</li>
+    <li><strong>Code</strong> : dépôt GitHub avec branches protégées sur <code>main</code></li>
+  </ul>
+
+  <h3>15.6 Procédure de mise à jour</h3>
+  <ol>
+    <li>Créer une branche feature depuis <code>main</code></li>
+    <li>Développer et tester localement</li>
+    <li>Pull Request → revue de code</li>
+    <li>Merge sur <code>main</code> → déploiement automatique Vercel + Render</li>
+    <li>Vérifier les logs Render au démarrage (migrations) et les métriques Vercel</li>
+  </ol>
+
+  <h3>15.7 Diagnostics fréquents</h3>
+  <table>
+    <tr><th>Symptôme</th><th>Cause probable</th><th>Action</th></tr>
+    <tr><td>Erreur 500 au démarrage backend</td><td>Migration échouée</td><td>Vérifier les logs Render, connexion DB, variables d'environnement</td></tr>
+    <tr><td>Upload documents échoue</td><td>Variables AWS incorrectes ou bucket inaccessible</td><td>Tester la connexion S3 avec aws-sdk en script isolé</td></tr>
+    <tr><td>Analyse IA timeout</td><td>Contexte prompt trop long ou quota Anthropic dépassé</td><td>Vérifier l'usage Anthropic, réduire le contexte si nécessaire</td></tr>
+    <tr><td>Emails non reçus</td><td>Domaine Resend non vérifié ou quota dépassé</td><td>Vérifier les logs Resend, statut DNS du domaine</td></tr>
+    <tr><td>Connexion Google échoue</td><td>Google Client ID incorrect ou origin non autorisée</td><td>Vérifier la console Google Cloud → Credentials → Authorized origins</td></tr>
+  </table>
+</div>
+
+<footer>
+  Documentation Technique — Wekili &nbsp;·&nbsp; Version 1.0 &nbsp;·&nbsp; Juin 2026 &nbsp;·&nbsp; Confidentiel — usage interne
+</footer>
+
+</body>
+</html>
